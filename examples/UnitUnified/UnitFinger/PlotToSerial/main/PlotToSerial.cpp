@@ -53,7 +53,9 @@ void setup()
     }
     M5_LOGI("getPin: %d,%d", pin_num_in, pin_num_out);
 
-#if SOC_UART_NUM > 2
+#if defined(CONFIG_IDF_TARGET_ESP32C6)
+    auto& s = Serial1;
+#elif SOC_UART_NUM > 2
     auto& s = Serial2;
 #elif SOC_UART_NUM > 1
     auto& s = Serial1;
