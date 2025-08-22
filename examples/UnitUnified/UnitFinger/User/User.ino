@@ -6,4 +6,4 @@
 /*
   User management example using M5UnitUnified for UnitFinger
 */
-#include "main/User.cpp
+#include "main/User.cpp"
