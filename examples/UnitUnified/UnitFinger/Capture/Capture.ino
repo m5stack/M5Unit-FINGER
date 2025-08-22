@@ -7,5 +7,3 @@
   Capture finger example using M5UnitUnified for UnitFinger
 */
 #include "main/Capture.cpp"
-
-
