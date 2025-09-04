@@ -28,6 +28,7 @@ namespace m5 {
 namespace unit {
 
 using UnitFinger = m5::unit::UnitFPC1020A;
+using HatFinger = m5::unit::UnitFPC1020A;
 
 }  // namespace unit
 }  // namespace m5

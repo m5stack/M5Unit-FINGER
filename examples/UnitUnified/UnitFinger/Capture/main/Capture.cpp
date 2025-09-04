@@ -11,6 +11,15 @@
 #include <M5UnitUnifiedFINGER.h>
 #include <M5Utility.hpp>
 
+// *************************************************************
+// Choose one define symbol to match the unit you are using
+// *************************************************************
+#if !defined(USING_UNIT_FINGER) && !defined(USING_HAT_FINGER)
+// #define USING_UNIT_FINGER
+// #define USING_HAT_FINGER
+#endif
+// *************************************************************
+
 using namespace m5::unit::fpc1xxx;
 
 namespace {
@@ -18,7 +27,13 @@ auto& lcd = M5.Display;
 LGFX_Sprite sprite4, sprite8;
 
 m5::unit::UnitUnified Units;
+#if defined(USING_UNIT_FINGER)
 m5::unit::UnitFinger unit;
+#elif defined(USING_HAT_FINGER)
+m5::unit::HatFinger unit;
+#else
+#error Please choose unit!
+#endif
 
 void make_sprite8(LGFX_Sprite& s, const std::vector<uint8_t>& v, const uint16_t wid, const uint16_t hgt)
 {
@@ -53,8 +68,13 @@ void setup()
         lcd.setRotation(1);
     }
 
+#if defined(USING_HAT_FINGER)
+    auto pin_num_in  = 26;
+    auto pin_num_out = 0;
+#else
     auto pin_num_in  = M5.getPin(m5::pin_name_t::port_c_rxd);
     auto pin_num_out = M5.getPin(m5::pin_name_t::port_c_txd);
+#endif
     if (pin_num_in < 0 || pin_num_out < 0) {
         M5_LOGW("PortC is not available");
         Wire.end();

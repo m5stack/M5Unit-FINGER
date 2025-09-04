@@ -58,6 +58,7 @@ jobs:
 
         unit:
           - UnitFinger
+#          - HatFinger
 
         board:
           - Core
@@ -96,6 +97,21 @@ jobs:
           - example: User
             unit: UnitFinger
             board: Core
+            framework: Arduino
+            espressif32: latest
+          - example: Capture
+            unit: HatFinger
+            board: StickCPlus2
+            framework: Arduino
+            espressif32: latest
+          - example: Characteristic
+            unit: HatFinger
+            board: StickCPlus2
+            framework: Arduino
+            espressif32: latest
+          - example: User
+            unit: HatFinger
+            board: StickCPlus2
             framework: Arduino
             espressif32: latest
 
