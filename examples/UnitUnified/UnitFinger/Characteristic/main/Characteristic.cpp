@@ -33,7 +33,6 @@ m5::unit::HatFinger unit;
 #else
 #error Please choose unit!
 #endif
-g
 uint16_t target_user_id{};
 
 }  // namespace
