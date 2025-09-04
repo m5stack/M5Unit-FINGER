@@ -61,6 +61,9 @@ void setup()
     }
     M5_LOGI("getPin: %d,%d", pin_num_in, pin_num_out);
 
+    m5::unit::UnitFinger& u = unit;
+
+    // clang-format off
 #if defined(CONFIG_IDF_TARGET_ESP32C6)
     auto& s = Serial1;
 #elif SOC_UART_NUM > 2
@@ -70,6 +73,8 @@ void setup()
 #else
 #error "Not enough Serial"
 #endif
+    // clang-format on
+
     s.end();
     s.begin(19200, SERIAL_8N1, pin_num_in, pin_num_out);
 
