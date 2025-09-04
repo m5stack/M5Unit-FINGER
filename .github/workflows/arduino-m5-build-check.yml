@@ -100,7 +100,7 @@ jobs:
         archi:
           - esp32
 
-       build-properties:
+        build-properties:
           - "-DUSING_UNIT_FINGER"
 
         include:
@@ -147,7 +147,6 @@ jobs:
             platform-version: 3.2.1
             board: m5stack_stickc_plus2
             build-properties: "-DUSING_HAT_FINGER"
-
 
     steps:
       - name: Checkout

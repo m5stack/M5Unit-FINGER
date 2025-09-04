@@ -99,7 +99,7 @@ jobs:
         archi:
           - esp32
 
-       build-properties:
+        build-properties:
           - "-DUSING_UNIT_FINGER"
 
         include:
