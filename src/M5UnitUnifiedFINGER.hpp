@@ -14,6 +14,7 @@
 #define M5_UNIT_UNIFIED_FINGER_HPP
 
 #include "unit/unit_FPC1xxx.hpp"
+#include "unit/unit_Finger2.hpp"
 
 /*!
   @namespace m5
@@ -27,8 +28,8 @@ namespace m5 {
  */
 namespace unit {
 
-using UnitFinger = m5::unit::UnitFPC1020A;
-using HatFinger  = m5::unit::UnitFPC1020A;
+using UnitFinger  = m5::unit::UnitFPC1020A;
+using HatFinger   = m5::unit::UnitFPC1020A;
 
 }  // namespace unit
 }  // namespace m5
