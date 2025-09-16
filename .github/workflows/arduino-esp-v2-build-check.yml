@@ -60,9 +60,9 @@ jobs:
         sketch:
           - PlotToSerial
 
-#        unit:
-#          - UnitFinger
-#          - HatFinger
+        unit:
+          - UnitFinger
+          - UnitFinger2
 
         board:
           - m5stack-atom
@@ -88,27 +88,48 @@ jobs:
         include:
           # Specific sketches
           - sketch: Capture
+            unit: UnitFinger
             platform-url: https://espressif.github.io/arduino-esp32/package_esp32_index.json
             platform: esp32
             archi: esp32
             platform-version: 2.0.17
             board: m5stack-core-esp32
-            build-properties: "-DUSING_UNIT_FINGER"
           - sketch: Characteristic
+            unit: UnitFinger
             platform-url: https://espressif.github.io/arduino-esp32/package_esp32_index.json
             platform: esp32
             archi: esp32
             platform-version: 2.0.17
             board: m5stack-core-esp32
-            build-properties: "-DUSING_UNIT_FINGER"
           - sketch: User
+            unit: UnitFinger
             platform-url: https://espressif.github.io/arduino-esp32/package_esp32_index.json
             platform: esp32
             archi: esp32
             platform-version: 2.0.17
             board: m5stack-core-esp32
-            build-properties: "-DUSING_UNIT_FINGER"
 
+          - sketch: Capture
+            unit: UnitFinger2
+            platform-url: https://espressif.github.io/arduino-esp32/package_esp32_index.json
+            platform: esp32
+            archi: esp32
+            platform-version: 2.0.17
+            board: m5stack-core-esp32
+          - sketch: Automatic
+            unit: UnitFinger2
+            platform-url: https://espressif.github.io/arduino-esp32/package_esp32_index.json
+            platform: esp32
+            archi: esp32
+            platform-version: 2.0.17
+            board: m5stack-core-esp32
+          - sketch: User
+            unit: UnitFinger2
+            platform-url: https://espressif.github.io/arduino-esp32/package_esp32_index.json
+            platform: esp32
+            archi: esp32
+            platform-version: 2.0.17
+            board: m5stack-core-esp32
 
     steps:
       - name: Checkout
@@ -125,7 +146,7 @@ jobs:
           platform-url: ${{ matrix.platform-url }}
           required-libraries: ${{ env.REQUIRED_LIBRARIES }}
           extra-arduino-cli-args: ${{ matrix.cli-args }}
-          build-properties: ${{ matrix.build-properties }}
+          build-properties: ${{ matrix.unit == 'UnitFinger' && '-DUSING_UNIT_FINGER' || '' }}
           sketch-names: ${{ matrix.sketch }}.ino
           sketch-names-find-start: ${{ env.SKETCH_NAMES_FIND_START }}/${{ matrix.unit }}
           #sketches-exclude: ${{ matrix.sketches-exclude }}
