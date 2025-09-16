@@ -189,10 +189,10 @@ TEST_P(TestFPC1020A, Settings)
         EXPECT_TRUE(unit->registerCharacteristic(unit->maximumUserID(), perm, characteristic.data()));
         EXPECT_TRUE(unit->registerCharacteristic(unit->maximumUserID() - 1, perm, characteristic.data()));
 
-        // Deny (Applies to fingerprint registration only)
-        EXPECT_TRUE(unit->writeRegistrationMode(Mode::DenyDuplicate));
+        // Prohibit (Applies to fingerprint registration only)
+        EXPECT_TRUE(unit->writeRegistrationMode(Mode::ProhibitDuplicate));
         EXPECT_TRUE(unit->readRegistrationMode(m));
-        EXPECT_EQ(m, Mode::DenyDuplicate);
+        EXPECT_EQ(m, Mode::ProhibitDuplicate);
         EXPECT_TRUE(unit->registerCharacteristic(unit->maximumUserID() - 2, perm, characteristic.data()));
     }
 
@@ -237,16 +237,16 @@ TEST_P(TestFPC1020A, User)
     EXPECT_EQ(users, 0);
     {
         uint16_t id{};
-        EXPECT_TRUE(unit->seachUnregisterdUserID(id));
+        EXPECT_TRUE(unit->findAvailableUserID(id));
         EXPECT_EQ(id, 1);
 
-        EXPECT_TRUE(unit->seachUnregisterdUserID(id, 1, 2));
+        EXPECT_TRUE(unit->findAvailableUserID(id, 1, 2));
         EXPECT_EQ(id, 1);
 
-        EXPECT_TRUE(unit->seachUnregisterdUserID(id, 100, 110));
+        EXPECT_TRUE(unit->findAvailableUserID(id, 100, 110));
         EXPECT_EQ(id, 100);
 
-        EXPECT_TRUE(unit->seachUnregisterdUserID(id, unit->maximumUserID(), unit->maximumUserID()));
+        EXPECT_TRUE(unit->findAvailableUserID(id, unit->maximumUserID(), unit->maximumUserID()));
         EXPECT_EQ(id, unit->maximumUserID());
     }
 
@@ -262,10 +262,10 @@ TEST_P(TestFPC1020A, User)
 
     {
         uint16_t id{};
-        EXPECT_TRUE(unit->seachUnregisterdUserID(id));
+        EXPECT_TRUE(unit->findAvailableUserID(id));
         EXPECT_EQ(id, 11);
 
-        EXPECT_FALSE(unit->seachUnregisterdUserID(id, 1, 10));
+        EXPECT_FALSE(unit->findAvailableUserID(id, 1, 10));
         EXPECT_EQ(id, 0);
     }
 

@@ -218,7 +218,7 @@ void loop()
             M5.Log.printf("==> Delete all user sure?\n");
             if (select_yesno()) {
                 if (unit.deleteAllUsers()) {
-                    M5.Log.printf("==> All users deleted\n", cur_user);
+                    M5.Log.printf("==> All users deleted\n");
                     cur_user = 1;
                 } else {
                     M5_LOGE("Failed to delete all users");

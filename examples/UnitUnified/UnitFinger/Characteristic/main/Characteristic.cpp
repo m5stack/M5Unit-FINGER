@@ -61,8 +61,6 @@ void setup()
     }
     M5_LOGI("getPin: %d,%d", pin_num_in, pin_num_out);
 
-    m5::unit::UnitFinger& u = unit;
-
     // clang-format off
 #if defined(CONFIG_IDF_TARGET_ESP32C6)
     auto& s = Serial1;
@@ -74,7 +72,6 @@ void setup()
 #error "Not enough Serial"
 #endif
     // clang-format on
-
     s.end();
     s.begin(19200, SERIAL_8N1, pin_num_in, pin_num_out);
 
@@ -90,7 +87,7 @@ void setup()
     M5_LOGI("%s", Units.debugInfo().c_str());
     lcd.fillScreen(TFT_DARKGREEN);
 
-    if (unit.seachUnregisterdUserID(target_user_id)) {
+    if (unit.findAvailableUserID(target_user_id)) {
         M5.Log.printf("Lowest unregistered UserID: %u\n", target_user_id);
     }
 }

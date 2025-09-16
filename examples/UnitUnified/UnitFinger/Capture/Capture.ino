@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: MIT
  */
 /*
-  Capture finger example using M5UnitUnified for UnitFinger
+  Capture finger and show image example using M5UnitUnified for Unit/HatFinger
 */
 // *************************************************************
 // Choose one define symbol to match the unit you are using

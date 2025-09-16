@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: MIT
  */
 /*
-  Capture finger example using M5UnitUnified for UnitFinger
+  Capture finger and show image example using M5UnitUnified for Unit/HatFinger
 */
 #include <M5Unified.h>
 #include <M5UnitUnified.h>
@@ -140,14 +140,17 @@ void loop()
         M5.Log.printf("Try capture %s\n", raw ? "RAW" : "COMPRESSED");
 
         std::vector<uint8_t> v{};
+        //
         // NOTE: It takes a lot of time if raw is true
+        //
         if (unit.captureImage(v, raw)) {
+            M5.Speaker.tone(3000, 20);
             if (lcd.width() && lcd.height()) {
                 if (raw) {
-                    make_sprite8(sprite8, v, unit.width(), unit.height());
+                    make_sprite8(sprite8, v, unit.imageWidth(raw), unit.imageHeight(raw));
                     sprite8.pushSprite(&lcd, 0, 0);
                 } else {
-                    make_sprite4(sprite4, v, unit.width() >> 1, unit.height() >> 1);
+                    make_sprite4(sprite4, v, unit.imageWidth(raw), unit.imageHeight(raw));
                     sprite4.pushSprite(&lcd, 0, 0);
                 }
             } else {

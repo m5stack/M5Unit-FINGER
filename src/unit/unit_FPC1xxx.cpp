@@ -313,7 +313,7 @@ bool UnitFPC1XXX::readUserCharacteristic(uint8_t characteristic[193], const uint
     return false;
 }
 
-bool UnitFPC1XXX::seachUnregisterdUserID(uint16_t& user_id, const uint16_t low, const uint16_t high)
+bool UnitFPC1XXX::findAvailableUserID(uint16_t& user_id, const uint16_t low, const uint16_t high)
 {
     user_id = 0;
 
@@ -325,12 +325,12 @@ bool UnitFPC1XXX::seachUnregisterdUserID(uint16_t& user_id, const uint16_t low, 
     payload[1] = low_id & 0xFF;
     payload[2] = high_id >> 8;
     payload[3] = high_id & 0xFF;
-    auto frame = make_variable_frame(CMD_SEARCH_UNREGISTERD_USER_ID, 4, payload.data(), payload.size());
+    auto frame = make_variable_frame(CMD_FIND_UNREGISTERD_USER_ID, 4, payload.data(), payload.size());
 
     Frame res{};
     if (writeWithTransaction(frame.data(), frame.size()) == m5::hal::error::error_t::OK &&
         readWithTransaction(res.data(), res.size()) == m5::hal::error::error_t::OK &&
-        res[OFFSET_CMD] == CMD_SEARCH_UNREGISTERD_USER_ID && is_valid_sum(res) && is_valid_ACK(res)) {
+        res[OFFSET_CMD] == CMD_FIND_UNREGISTERD_USER_ID && is_valid_sum(res) && is_valid_ACK(res)) {
         user_id = (((uint16_t)res[OFFSET_Q1]) << 8) | (uint16_t)res[OFFSET_Q2];
         return true;
     }
@@ -457,9 +457,9 @@ bool UnitFPC1XXX::capture_image(std::vector<uint8_t>& img, const bool raw)
 {
     img.clear();
 
-    uint16_t sz = width() * height();
+    uint16_t sz = imageWidth(raw) * imageHeight(raw);
     if (!raw) {
-        sz >>= 3;
+        sz >>= 1;  // 1pixel 1nibble
     }
 
     Frame res{};

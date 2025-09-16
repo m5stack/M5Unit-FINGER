@@ -87,7 +87,13 @@ void setup()
 #endif
     // clang-format on
     s.end();
-    s.begin(19200, SERIAL_8N1, pin_num_in, pin_num_out);
+
+    // When changing the chip's baud rate, make sure to synchronize it
+    // s.begin(9600, SERIAL_8N1, pin_num_in, pin_num_out);
+    s.begin(19200, SERIAL_8N1, pin_num_in, pin_num_out);  // as default
+    // s.begin(38400, SERIAL_8N1, pin_num_in, pin_num_out);
+    // s.begin(57600, SERIAL_8N1, pin_num_in, pin_num_out);
+    // s.begin(115200, SERIAL_8N1, pin_num_in, pin_num_out);
 
     if (!Units.add(unit, s) || !Units.begin()) {
         M5_LOGE("Failed to begin");
@@ -110,12 +116,13 @@ void setup()
         unit.readRegisteredUserCount(user_count);
 
         M5.Log.printf("=== %s information ===\n", unit.deviceName());
-        M5.Log.printf("           Mode: %s\n", mode == Mode::DenyDuplicate ? "Deny duplicate" : "Allow duplicate");
+        M5.Log.printf("           Mode: %s\n",
+                      mode == Mode::ProhibitDuplicate ? "Prohibit duplicate" : "Allow duplicate");
         M5.Log.printf("  Comparison Lv: %u\n", clv);
         M5.Log.printf("        Timeout: %u\n", timeout);
         M5.Log.printf("Registered user: %u\n", user_count);
         print_all_users();
-        if (unit.seachUnregisterdUserID(target_user_id)) {
+        if (unit.findAvailableUserID(target_user_id)) {
             M5.Log.printf("Lowest unregistered UserID: %u\n", target_user_id);
         }
 

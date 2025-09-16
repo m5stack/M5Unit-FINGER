@@ -7,8 +7,8 @@
   @file unit_FPC1xxx.hpp
   @brief FPC1xxx family with DSP unit for M5UnitUnified
  */
-#ifndef M5_UNIT_FINGER_UNIT_FPC_1XXX_HPP
-#define M5_UNIT_FINGER_UNIT_FPC_1XXX_HPP
+#ifndef M5_UNIT_FINGER_UNIT_FPC1XXX_HPP
+#define M5_UNIT_FINGER_UNIT_FPC1XXX_HPP
 
 #include <M5UnitComponent.hpp>
 #include <array>
@@ -50,8 +50,8 @@ enum class BaudRate : uint8_t {
   @note Applies to fingerprint registration only
  */
 enum class Mode : uint8_t {
-    AllowDuplicate,  //!< Allow duplicate registrations
-    DenyDuplicate,   //!< Deny duplicate registrations
+    AllowDuplicate,     //!< Allow duplicate registrations
+    ProhibitDuplicate,  //!< Characteristic duplication prohibited
 };
 
 /*!
@@ -87,9 +87,6 @@ class UnitFPC1XXX : public Component {
     M5_UNIT_COMPONENT_HPP_BUILDER(UnitFPC1XXX, 0x00);
 
 public:
-    using Frame         = std::array<uint8_t, 8>;  //    0xF5 CMD P1 P2 P3 0 CHK 0xF5
-    using VariableFrame = std::vector<uint8_t>;    //    0xF5 CMD LEN(MSB) LEN(LSB) 0 0 CHK 0xF5,...
-
     // The following variables must be defined in the derived class
     static constexpr uint16_t RESOLUTION_WIDTH{0};
     static constexpr uint16_t RESOLUTION_HEIGHT{0};
@@ -102,6 +99,9 @@ protected:
     }
 
 public:
+    using Frame         = std::array<uint8_t, 8>;  //    0xF5 CMD P1 P2 P3 0 CHK 0xF5
+    using VariableFrame = std::vector<uint8_t>;    //    0xF5 CMD LEN(MSB) LEN(LSB) 0 0 CHK 0xF5,...
+
     virtual ~UnitFPC1XXX() = default;
 
     virtual bool begin() override;
@@ -130,15 +130,25 @@ public:
 
     ///@name Properties
     ///@{
-    //! @brief Get the resolution width
-    inline virtual uint16_t width() const
+    //! @brief  Gets the width of resolutuin
+    inline virtual uint16_t resolutionWidth() const
     {
-        return RESOLUTION_WIDTH;
+        return 0;
+    }
+    //! @brief  Gets the height of resolutuin
+    inline virtual uint16_t resolutionHeight() const
+    {
+        return 0;
+    }
+    //! @brief Get the image width
+    inline uint16_t imageWidth(const bool raw) const
+    {
+        return resolutionWidth() >> (raw ? 0 : 1);
     }
     //! @brief Get the resolution height
-    inline virtual uint16_t height() const
+    inline uint16_t imageHeight(const bool raw) const
     {
-        return RESOLUTION_HEIGHT;
+        return resolutionHeight() >> (raw ? 0 : 1);
     }
     //! @brief Get the minimum user ID
     inline virtual uint16_t minimumUserID() const
@@ -233,13 +243,13 @@ public:
      */
     bool readUserCharacteristic(uint8_t characteristic[193], const uint16_t user_id);
     /*!
-      @brief Search the unregisted user id in specific range
+      @brief Find the unregisted user id in specific range
       @param[out] user_id User ID
       @param low Lowest user ID (Minimum user ID if zero)
       @param high Highest user ID (Maximum user ID if zero)
       @return True if successful
      */
-    bool seachUnregisterdUserID(uint16_t& user_id, const uint16_t low = 0, const uint16_t high = 0);
+    bool findAvailableUserID(uint16_t& user_id, const uint16_t low = 0, const uint16_t high = 0);
     /*!
       @brief Delete user data
       @param user_id UserID
@@ -261,18 +271,18 @@ public:
       @param permission Permission (1,2, or 3)
       @param step Number of intermediate step repetitions
       @return True if successful
-      @warning Data considered identical will fail if the mode is Mode::DenyDuplicate
+      @warning Data considered identical will fail if the mode is Mode::ProhibitDuplicate
      */
     bool registerFinger(const uint16_t user_id, const uint8_t permission, const uint8_t step = 4);
     /*!
-      @brief Verify specific user finger
+      @brief Verify specific user finger (1:1)
       @param[out] match Match if true
       @param user_id UserID
       @return True if successful
      */
     bool verifyFinger(bool& match, const uint16_t user_id);
     /*!
-      @brief Identify finger
+      @brief Identify finger (1:N)
       @param[out] user_id Matching UserID, 0 if NoUser
       @param[out] permission Matching user permission, 0 if NoUser
       @return True if successful
@@ -305,7 +315,7 @@ public:
     */
     bool registerCharacteristic(const uint16_t user_id, const uint8_t permission, const uint8_t characteristic[193]);
     /*!
-      @brief Verify specific user characteristic
+      @brief Verify specific user characteristic (1:1)
       @param[out] match Match if true
       @param user_id UserID
       @param characteristic Characteristic data
@@ -313,7 +323,7 @@ public:
      */
     bool verifyCharacteristic(bool& match, const uint16_t user_id, const uint8_t characteristic[193]);
     /*!
-      @brief Identify characteristic
+      @brief Identify characteristic (1:N)
       @param[out] user_id Matching UserID, 0 if NoUser
       @param characteristic Characteristic data
       @return True if successful
@@ -385,19 +395,19 @@ public:
 
     virtual bool begin() override;
 
-    inline virtual uint16_t width() const
+    inline virtual uint16_t resolutionWidth() const override
     {
-        return RESOLUTION_WIDTH;
+        return this->RESOLUTION_WIDTH;
     }
-    inline virtual uint16_t height() const
+    inline virtual uint16_t resolutionHeight() const override
     {
-        return RESOLUTION_HEIGHT;
+        return this->RESOLUTION_HEIGHT;
     }
-    inline virtual uint16_t minimumUserID() const
+    inline virtual uint16_t minimumUserID() const override
     {
         return MINIMUM_USER_ID;
     }
-    inline virtual uint16_t maximumUserID() const
+    inline virtual uint16_t maximumUserID() const override
     {
         return MAXIMUM_USER_ID;
     }
@@ -418,7 +428,7 @@ constexpr uint8_t CMD_DELETE_ALL_USERS{0x05};
 constexpr uint8_t CMD_READ_REGISTERED_USER_COUNT{0x09};
 constexpr uint8_t CMD_READ_USER_PERMISSION{0x0A};
 constexpr uint8_t CMD_READ_ALL_USER_DATA{0x2B};
-constexpr uint8_t CMD_SEARCH_UNREGISTERD_USER_ID{0x47};
+constexpr uint8_t CMD_FIND_UNREGISTERD_USER_ID{0x47};
 
 constexpr uint8_t CMD_BAUD_RATE{0x21};
 constexpr uint8_t CMD_READ_VERSION{0x26};
