@@ -58,6 +58,7 @@ jobs:
 
         unit:
           - UnitFinger
+          - UnitFinger2
 #          - HatFinger
 
         board:
@@ -99,6 +100,17 @@ jobs:
             board: Core
             framework: Arduino
             espressif32: latest
+
+          - example: PlotToSerial
+            unit: HatFinger
+            board: StickCPlus
+            framework: Arduino
+            espressif32: latest
+          - example: PlotToSerial
+            unit: HatFinger
+            board: StickCPlus2
+            framework: Arduino
+            espressif32: latest
           - example: Capture
             unit: HatFinger
             board: StickCPlus2
@@ -114,6 +126,24 @@ jobs:
             board: StickCPlus2
             framework: Arduino
             espressif32: latest
+
+
+          - example: Capture
+            unit: UnitFinger2
+            board: Core
+            framework: Arduino
+            espressif32: latest
+          - example: Automatic
+            unit: UnitFinger2
+            board: Core
+            framework: Arduino
+            espressif32: latest
+          - example: User
+            unit: UnitFinger2
+            board: Core
+            framework: Arduino
+            espressif32: latest
+
 
     steps:
       - name: Checkout
