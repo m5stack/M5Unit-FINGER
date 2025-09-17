@@ -46,9 +46,10 @@ void register_finger()
 
     if (unit.wakeup()) {
         // Available lowest/highest page_id
-        auto page = highlow ? unit.findLowestAvailablePage() : unit.findHighestAvailablePage();
-        if (page == 0xFFFF) {
-            M5_LOGE("Invalild page");
+        uint16_t page{0xFFFF};
+        if (!(highlow == false ? unit.findLowestAvailablePage(page) : unit.findHighestAvailablePage(page)) ||
+            page == 0xFFFF) {
+            M5_LOGE("Failed or Invalild page");
             return;
         }
         M5.Log.printf("Try register to %u\n", page);

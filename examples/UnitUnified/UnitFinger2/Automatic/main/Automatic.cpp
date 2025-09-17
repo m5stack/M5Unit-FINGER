@@ -77,9 +77,10 @@ void auto_enroll()
     if (unit.wakeup()) {
         ConfirmCode confirm{};
         // Available lowest/highest page_id
-        auto page = highlow ? unit.findLowestAvailablePage() : unit.findHighestAvailablePage();
-        if (page == 0xFFFF) {
-            M5_LOGE("Invalild page");
+        uint16_t page{0xFFFF};
+        if (!(highlow == false ? unit.findLowestAvailablePage(page) : unit.findHighestAvailablePage(page)) ||
+            page == 0xFFFF) {
+            M5_LOGE("Failed or Invalild page");
             return;
         }
 

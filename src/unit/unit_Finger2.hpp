@@ -67,36 +67,33 @@ enum class LEDColor : uint8_t {
   @brief writeReg() target
  */
 enum class RegisterID : uint8_t {
-    DelayTime,    //!< 0x00:The time delay for sending data packets
-    EnrollTimes,  //!< 0x01:Enroll times
-    ImageFormat,  //!< 0x02:Image format (only 0)
-    EnrollLogic,  /*!< 0x03:The logic for capturing fingerprints during registration (0 as default)
-                    |Logic|Description|
-                    |---|---|
-                    | 0 | No logical relationship |
-                    | 1 | Requires no relationship between enrolled fingers|
-                    | 2 | Requires a relationship between enrolled fingers|
-                  */
-    Prohibited,
-    ScoreLevel,    //!< 0x05:Match threshold (Lenient:0 - Strict:5) (3 as default)
-    PacketSize,    //!< 0x06:Data packet size (0:32,1:64,2:128,3:256) (2 as default)
-    SecurityLevel, /*!< 0x07:Encryption level (0 as default)
-                     <ul>
-                     <li>0: Supports all instructions except the security instruction set</li>
-                     <li>1: No security algorithms <br>
-                     Does not support the security instruction set, template upload, template download, or image
-                     download </li>
-                     <li>2: Reserved</li>
-                     <li>3: Supports AES (128-bit, ECB) <br>
-                     Does not support template upload, template download, image download, exact match, or
-                     search</li>
-                     </ol>
-                     @warning Once set, changes are not permitted
-                   */
-    Reserved08,
-    Reserved09,
-    ProductSerial,  //!< 0x0A:Product model number
-    LEDControl,     //!< 0x0B:Turn on or off the auto-light feature
+    DelayTime,           //!< 0x00:The time delay for sending data packets
+    EnrollTimes,         //!< 0x01:Enroll times
+    ImageFormat,         //!< 0x02:Image format (only 0)
+    EnrollLogic,         /*!< 0x03:The logic for capturing fingerprints during registration (0 as default)
+                           |Logic|Description|
+                           |---|---|
+                           | 0 | No logical relationship |
+                           | 1 | Requires no relationship between enrolled fingers|
+                           | 2 | Requires a relationship between enrolled fingers|
+                         */
+    ScoreLevel = 5,      //!< 0x05:Match threshold (Lenient:1 - Strict:5) (3 as default)
+    PacketSize,          //!< 0x06:Data packet size (0:32,1:64,2:128,3:256) (2 as default)
+    SecurityLevel,       /*!< 0x07:Encryption level (0 as default)
+                           <ul>
+                           <li>0: Supports all instructions except the security instruction set</li>
+                           <li>1: No security algorithms <br>
+                           Does not support the security instruction set, template upload, template download, or image
+                           download </li>
+                           <li>2: Reserved</li>
+                           <li>3: Supports AES (128-bit, ECB) <br>
+                           Does not support template upload, template download, image download, exact match, or
+                           search</li>
+                           </ol>
+                           @warning Once set, changes are not permitted
+                         */
+    ProductSerial = 10,  //!< 0x0A:Product model number
+    LEDControl,          //!< 0x0B:Turn on or off the auto-light feature
 };
 
 /*!
@@ -287,7 +284,8 @@ public:
     struct config_t {
         uint32_t timeout_ms{1000 * 4};                                   //!< Serial I/O timeout (ms)
         finger2::WorkMode work_mode{finger2::WorkMode::ScheduledSleep};  //!< Work mode
-        uint8_t score_level{3};                                          //!< Match threshold (Lenient:0 - Strict:5)
+        uint8_t sleep_time{10};                                          //!< Scheduled sleep time (10 - 254) sec
+        uint8_t score_level{3};                                          //!< Match threshold (Lenient:1 - Strict:5)
     };
 
     ///@name Settings for begin
@@ -420,9 +418,9 @@ public:
       @brief Write the LED control
       @details PS_ControlBLN
       @param mode LEDMode (Ignore LEDMode::Rainbow)
-      @param clr LEDColor
-      @param cycle Cycle (Ininity if zero) (Valid for LEDMode::Roundtrip, LEDMode::Blink)
-      @param eclr Roundtrip LEDColor (Valid for LEDMode::Roundtrip)
+      @param clr Start LEDColor
+      @param cycle Cycle count, ininity if zero. Valid for LEDMode::Breath, LEDMode::Blink
+      @param eclr End LEDColor (Valid for LEDMode::Breath)
       @return True if successful
       @warning Returns an error when device is sleeping
      */
@@ -432,10 +430,10 @@ public:
     /*!
       @brief Write the LED control for LEDMode::Rainbow
       @details PS_ControlBLN
-      @param tm Roundtrip time (0.1 second)
+      @param tm Color change time (decisecond)
       @param colors LEDColor array (maximum 10)
       @param colors_num Number of the colors (maximum 10)
-      @param cycle Cycle (Ininity if zero)
+      @param cycle Cycle count, ininity if zero. Valid for LEDMode::Breath, LEDMode::Blink
       @return True if successful
       @warning Returns an error when device is sleeping
      */
@@ -504,7 +502,7 @@ public:
       @pre registerModel() succeeded
       @warning This feature is supported when the security level is 0 or 1
     */
-    bool storeTemplate(const uint8_t page_id, const uint8_t buffer_id = 1);
+    bool storeTemplate(const uint16_t page_id, const uint8_t buffer_id = 1);
 
     /*!
       @brief Is match buffer 1 and 2? (1:1)
@@ -594,7 +592,7 @@ public:
      */
     bool writeTemplate(const uint16_t offset, const uint8_t* buf, const uint16_t buf_size);
     /*!
-      @brief Read the template
+      @brief Write the template
       @param buf Input buffer
       @param buf_size  size of buf
       @return True if successful
@@ -623,17 +621,15 @@ public:
       @details PS_ValidTempleteNum
       @param[out] num Number
       @return True if successful
-      @warning Returns an error when device is sleeping
      */
     bool readValidTemplates(uint16_t& num);
 
     /*!
-      @brief Read the index table
+      @brief Read the index table (Bits of existing templates)
       @details PS_ReadIndexTable
       @details Bit-level information for registered templates is retrieved
       @param[out] table Table data (at least 32 bytes)
       @return True if successful
-      @warning Returns an error when device is sleeping
      */
     bool readIndexTable(uint8_t table[32]);
 
@@ -647,6 +643,20 @@ public:
       @note it is better to call readIndexTable once and verify table yourself
      */
     bool existsTemplate(const uint8_t page_id);
+
+    /*!
+      @brief Find the lowest available page number
+      @param[out] page Page number (Not exists if 0xFFFF)
+      @return True if successful
+     */
+    bool findLowestAvailablePage(uint16_t& page);
+
+    /*!
+      @brief Find the highest available page number
+      @param[out] page Page number (Not exists if 0xFFFF)
+      @return True if successful
+     */
+    bool findHighestAvailablePage(uint16_t& page);
     ///@}
 
     ///@warning Returns an error when device is sleeping
@@ -769,23 +779,6 @@ public:
       @return True if successful
      */
     bool readFirmwareVersion(uint8_t& ver);
-
-    ///@warning Returns an error when device is sleeping
-    ///@name Utility
-    ///@{
-    /*!
-      @brief Find the lowest available page number
-      @retval < capacity() Page number
-      @retval 0xFFFF Not found
-     */
-    uint16_t findLowestAvailablePage();
-    /*!
-      @brief Find the highest available page number
-      @retval < capacity() Page number
-      @retval 0xFFFF Not found
-     */
-    uint16_t findHighestAvailablePage();
-    ///@}
 
 protected:
     bool write_command(const uint8_t cmd, const uint32_t addr, const uint8_t* payload = nullptr,

@@ -108,44 +108,8 @@ bool UnitFinger2::begin()
     }
     ad->setTimeout(_cfg.timeout_ms ? _cfg.timeout_ms : TIMEOUT_MS);
 
-#if 0    
-    // ad->flushRX();
-    auto serial = ad->impl()->getSerial();
-    if (!serial) {
-        M5_LIB_LOGE("Serial not available");
-        return false;
-    }
-
-    auto timeout_at = m5::utility::millis() + 2000;
-    bool beacon{};
-    do {
-        while (serial->available()) {
-            auto d = serial->read();
-            beacon |= (d == 0x55);
-            M5_LIB_LOGE(">>>>> [%02X]", d);
-        }
-    } while (!beacon && m5::utility::millis() <= timeout_at);
-    if (!beacon) {
-        M5_LIB_LOGE("Failed to detect the startup of the unit");
-        return false;
-    }
-#endif
-
-#if 0    
-    bool awake{};
-    auto timeout_at = m5::utility::millis() + 2000;
-    do {
-        wakeup();
-        readModuleStatus(awake);
-        m5::utility::delay(400);
-    } while (!awake && m5::utility::millis() <= timeout_at);
-    if (!awake) {
-        M5_LIB_LOGE("Unit NOT awaken");
-        return false;
-    }
-#endif
     uint8_t ver{};
-    if (!readFirmwareVersion(ver) || ver == 0x00) {
+    if (!wakeup() || !readFirmwareVersion(ver) || ver == 0x00) {
         M5_LIB_LOGE("UnitFinger2 was not deteced %02X", ver);
         return false;
     }
@@ -153,7 +117,11 @@ bool UnitFinger2::begin()
 
     // Set config param
     if (!writeWorkMode(_cfg.work_mode)) {
-        M5_LIB_LOGE("Failed to writeWorkMode");
+        M5_LIB_LOGE("Failed to writeWorkMode %u", _cfg.work_mode);
+        return false;
+    }
+    if (!writeSleepTime(_cfg.sleep_time)) {
+        M5_LIB_LOGE("Failed to writeSleepTime %u", _cfg.sleep_time);
         return false;
     }
 
@@ -338,10 +306,14 @@ bool UnitFinger2::generateTemplate()
     return transceive_command(pkt, CMD_REGISTER_MODEL, _address);
 }
 
-bool UnitFinger2::storeTemplate(const uint8_t page_id, const uint8_t buffer_id)
+bool UnitFinger2::storeTemplate(const uint16_t page_id, const uint8_t buffer_id)
 {
     if (buffer_id < BUFFER_ID_MIN || buffer_id > BUFFER_ID_MAX) {
         M5_LIB_LOGE("buffer_id must be between %u and %u (%u)", BUFFER_ID_MIN, BUFFER_ID_MAX, buffer_id);
+        return false;
+    }
+    if (page_id >= capacity()) {
+        M5_LIB_LOGE("page_id must be 0 - %u (%u)", capacity() - 1, page_id);
         return false;
     }
 
@@ -357,6 +329,10 @@ bool UnitFinger2::loadTemplate(const uint8_t buffer_id, const uint16_t page_id)
 {
     if (buffer_id < BUFFER_ID_MIN || buffer_id > BUFFER_ID_MAX) {
         M5_LIB_LOGE("buffer_id must be between %u and %u (%u)", BUFFER_ID_MIN, BUFFER_ID_MAX, buffer_id);
+        return false;
+    }
+    if (page_id >= capacity()) {
+        M5_LIB_LOGE("page_id must be 0 - %u (%u)", capacity() - 1, page_id);
         return false;
     }
 
@@ -548,6 +524,11 @@ bool UnitFinger2::writeTemplateAllBatches(const uint8_t* buf, const uint16_t buf
 
 bool UnitFinger2::deleteTemplate(const uint16_t page_id, const uint16_t num)
 {
+    if (page_id >= capacity()) {
+        M5_LIB_LOGE("page_id must be 0 - %u (%u)", capacity() - 1, page_id);
+        return false;
+    }
+
     Packet pkt{};
     uint8_t params[4]{};
     params[0] = page_id >> 8;
@@ -566,15 +547,37 @@ bool UnitFinger2::clear()
 bool UnitFinger2::writeSystemRegister(const finger2::RegisterID reg_id, const uint8_t value)
 {
     auto reg = m5::stl::to_underlying(reg_id);
-    if (reg == m5::stl::to_underlying(RegisterID::Prohibited) || reg > 11) {
+    if (reg == 4 /* internal baud rate */ || reg > 11) {
         M5_LIB_LOGE("Invalid reg_id %u", reg_id);
         return false;
+    }
+
+    // parameter check
+    switch (reg_id) {
+        case RegisterID::ScoreLevel:
+            if (value < 1 || value > 5) {
+                M5_LIB_LOGE("ScoreLevel must be 1 - 5 (%u)", value);
+                return false;
+            }
+            break;
+        case RegisterID::PacketSize:
+            if (value > 3) {
+                M5_LIB_LOGE("PacketSize must be 0 - 3 (%u)", value);
+                return false;
+            }
+            break;
+        case RegisterID::SecurityLevel:
+            if (value > 3) {
+                M5_LIB_LOGE("SecurityLevel must be 0 - 3 (%u)", value);
+                return false;
+            }
+        default:
+            break;
     }
 
     if (reg >= 10) {
         reg = 0x10 + (reg - 10);  // DEC 10,11... => HEX 0x10, 0x11,...
     }
-
     Packet pkt{};
     uint8_t params[2]{reg, value};
     return transceive_command(pkt, CMD_WRITE_REGISTER, _address, params, sizeof(params));
@@ -648,6 +651,11 @@ bool UnitFinger2::readIndexTable(uint8_t table[32])
 
 bool UnitFinger2::existsTemplate(const uint8_t page_id)
 {
+    if (page_id >= capacity()) {
+        M5_LIB_LOGE("page_id must be 0 - %u (%u)", capacity() - 1, page_id);
+        return false;
+    }
+
     uint8_t table[32]{};
     if (readIndexTable(table)) {
         uint32_t idx   = page_id >> 3;
@@ -726,6 +734,10 @@ bool UnitFinger2::autoEnroll(ConfirmCode& confirm, const uint16_t page_id, const
         M5_LIB_LOGE("capture times must be between 1 and 5 (%u)", capture_times);
         return false;
     }
+    if (page_id >= capacity()) {
+        M5_LIB_LOGE("page_id must be 0 - %u (%u)", capacity() - 1, page_id);
+        return false;
+    }
 
     Packet pkt{};
     uint8_t params[5]{};
@@ -742,9 +754,9 @@ bool UnitFinger2::autoEnroll(ConfirmCode& confirm, const uint16_t page_id, const
         // Depending on the flags specified, multiple responses may be returned
         do {
             confirm = read_response(pkt);
-            // An OK packet without a payload (not size 14) may arrive when passive activation
+            // An OK or PassiveActivation packet without a payload (not size 14) may arrive when passive activation
             if (pkt.size() != 14) {
-                if (confirm != ConfirmCode::OK) {
+                if (confirm != ConfirmCode::OK && confirm != ConfirmCode::PassiveActivation) {
                     break;
                 }
                 continue;
@@ -774,7 +786,7 @@ bool UnitFinger2::autoEnroll(ConfirmCode& confirm, const uint16_t page_id, const
     return false;
 }
 
-bool UnitFinger2::autoIdentify(bool& matched, uint16_t& matching_page_id, uint16_t& score, uint16_t page_id,
+bool UnitFinger2::autoIdentify(bool& matched, uint16_t& matching_page_id, uint16_t& score, const uint16_t page_id,
                                const uint8_t security_level, const finger2::auto_identify_flag_t flags,
                                auto_identify_callback_t callback)
 {
@@ -782,6 +794,10 @@ bool UnitFinger2::autoIdentify(bool& matched, uint16_t& matching_page_id, uint16
     matching_page_id = 0xFFFF;
     score            = 0;
 
+    if (page_id != 0xFFFF && page_id >= capacity()) {
+        M5_LIB_LOGE("page_id must be 0 - %u (%u) for Matching", capacity() - 1, page_id);
+        return false;
+    }
     if (security_level > 1) {
         M5_LIB_LOGE("security_level must be between 0 and 1 (%u)", security_level);
         return false;
@@ -801,9 +817,9 @@ bool UnitFinger2::autoIdentify(bool& matched, uint16_t& matching_page_id, uint16
         // Depending on the flags specified, multiple responses may be returned
         do {
             confirm = read_response(pkt);
-            // An OK packet without a payload (not size 17) may arrive when passive activation
+            // An OK or PassiveActivation packet without a payload (not size 17) may arrive when passive activation
             if (pkt.size() != 17) {
-                if (confirm != ConfirmCode::OK) {
+                if (confirm != ConfirmCode::OK && confirm != ConfirmCode::PassiveActivation) {
                     break;
                 }
                 continue;
@@ -888,11 +904,7 @@ bool UnitFinger2::readRandomNumber(uint32_t& value)
 bool UnitFinger2::wakeup()
 {
     Packet pkt{};
-    if (write_command(CMD_ACTIVATE_MODULE, _address)) {
-        auto confirm = read_response(pkt);
-        return (confirm == ConfirmCode::OK || confirm == ConfirmCode::PassiveActivation);
-    }
-    return false;
+    return transceive_command(pkt, CMD_ACTIVATE_MODULE, _address);
 }
 
 bool UnitFinger2::readSerialNumber(uint8_t sn[32])
@@ -916,48 +928,66 @@ bool UnitFinger2::readFirmwareVersion(uint8_t& ver)
     return false;
 }
 
-uint16_t UnitFinger2::findLowestAvailablePage()
+bool UnitFinger2::findLowestAvailablePage(uint16_t& page)
 {
-    uint16_t no{0xFFFF};
+    page = 0xFFFF;
+
+    uint16_t no{};
     uint8_t table[32]{};
     auto cap          = capacity();
     uint_fast8_t eidx = std::min(32, (cap >> 3) + 1);
-    if (cap && eidx && readIndexTable(table)) {
+    if (!cap || !eidx) {
+        M5_LIB_LOGE("Illegal status %u:%u", cap, eidx);
+        return false;
+    }
+
+    if (readIndexTable(table)) {
         for (uint_fast8_t i = 0; i < eidx; ++i) {
             if (table[i] == 0xFF) {
                 continue;
             }
             uint16_t v = table[i];
             auto pos   = __builtin_ctz(++v);
-
-            no = 8 * i + pos;
-            if (no >= cap) {
-                no = 0xFFFF;
+            if (pos < 8) {
+                no = 8 * i + pos;
+                if (no < cap) {
+                    break;
+                }
             }
-            break;
+            no = 0xFFFF;
         }
+        page = no;
+        return true;
     }
-    return no;
+    return false;
 }
 
-uint16_t UnitFinger2::findHighestAvailablePage()
+bool UnitFinger2::findHighestAvailablePage(uint16_t& page)
 {
-    uint16_t no{0xFFFF};
+    page = 0xFFFF;
+
+    uint16_t no{};
     uint8_t table[32]{};
 
-    auto cap = capacity();
-    //    int_fast8_t sidx = (cap >> 3) + ((cap & 0x07) != 0);
+    auto cap         = capacity();
     uint8_t remain   = (cap & 0x07);
     int_fast8_t sidx = (cap >> 3) - (remain == 0);
 
-    if (cap && sidx >= 0 && readIndexTable(table)) {
+    if (!cap || !sidx) {
+        M5_LIB_LOGE("Illegal status %u:%u", cap, sidx);
+        return false;
+    }
+    if (readIndexTable(table)) {
         if (remain) {
             uint8_t mask = (1U << remain) - 1;
             uint8_t inv  = ~table[sidx] & mask;
-            auto pos     = 7 - (__builtin_clz(inv) - (sizeof(unsigned int) * 8 - 8));
-            no           = 8 * sidx + pos;
-            if (no < cap) {
-                return no;
+            if (inv) {
+                auto pos = 7 - (__builtin_clz(inv) - (sizeof(unsigned int) * 8 - 8));
+                no       = 8 * sidx + pos;
+                if (no < cap) {
+                    page = no;
+                    return true;
+                }
             }
             --sidx;
         }
@@ -966,17 +996,20 @@ uint16_t UnitFinger2::findHighestAvailablePage()
             if (table[i] == 0xFF) {
                 continue;
             }
-
             uint8_t inv = ~table[i];
-            auto pos    = 7 - (__builtin_clz(inv) - (sizeof(unsigned int) * 8 - 8));
-            no          = 8 * i + pos;
-            if (no < cap) {
-                break;
+            if (inv) {
+                auto pos = 7 - (__builtin_clz(inv) - (sizeof(unsigned int) * 8 - 8));
+                no       = 8 * i + pos;
+                if (no < cap) {
+                    break;
+                }
             }
             no = 0xFFFF;
         }
+        page = no;
+        return true;
     }
-    return no;
+    return false;
 }
 
 //
@@ -984,7 +1017,7 @@ bool UnitFinger2::write_command(const uint8_t cmd, const uint32_t addr, const ui
                                 const uint16_t payload_len)
 {
     auto pkt = make_packet(cmd, addr, payload, payload_len);
-    // M5_LIB_LOGD(">>>> SEND");
+    // M5_LIB_LOGD(">>>> SEND:%02X", cmd);
     // m5::utility::log::dump(pkt.data(), pkt.size(), false);
     return writeWithTransaction(pkt.data(), pkt.size()) == m5::hal::error::error_t::OK;
 }
@@ -1028,22 +1061,24 @@ ConfirmCode UnitFinger2::read_response(Packet& rbuf)
         }
     }
 
+    //
     // m5::utility::log::dump(rbuf.data(), rbuf.size(), false);
 
     return ConfirmCode::PacketError;
 }
 
-// Only confirm code 0x00 is permitted
+// Only confirm code 0x00 and 0xFF is permitted
 bool UnitFinger2::transceive_command(Packet& rbuf, const uint8_t cmd, const uint32_t addr, const uint8_t* payload,
                                      const uint16_t payload_len)
 {
     if (write_command(cmd, addr, payload, payload_len)) {
-        return read_response(rbuf) == ConfirmCode::OK;
+        auto confirm = read_response(rbuf);
+        return confirm == ConfirmCode::OK || confirm == ConfirmCode::PassiveActivation;
     }
     return false;
 }
 
-// Only confirm code 0x00 is permitted
+// Only confirm code 0x00 and 0xFF is permitted
 bool UnitFinger2::transceive_command8(Packet& rbuf, const uint8_t cmd, const uint32_t addr, const uint8_t value)
 {
     return transceive_command(rbuf, cmd, addr, &value, 1);
