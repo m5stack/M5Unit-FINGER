@@ -932,7 +932,7 @@ bool UnitFinger2::findLowestAvailablePage(uint16_t& page)
 {
     page = 0xFFFF;
 
-    uint16_t no{};
+    uint16_t no{0xFFFF};
     uint8_t table[32]{};
     auto cap          = capacity();
     uint_fast8_t eidx = std::min(32, (cap >> 3) + 1);
@@ -966,7 +966,7 @@ bool UnitFinger2::findHighestAvailablePage(uint16_t& page)
 {
     page = 0xFFFF;
 
-    uint16_t no{};
+    uint16_t no{0xFFFF};
     uint8_t table[32]{};
 
     auto cap         = capacity();
