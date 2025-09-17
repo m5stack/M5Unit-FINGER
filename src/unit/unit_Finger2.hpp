@@ -509,14 +509,14 @@ public:
       @details PS_Match
       @param[out] matched true if matched
       @param[out] score Matching score (lowest: 0)
-      @pre Buffer IDs 1 and 2 contain characteristics
+      @pre Buffer IDs 1 and 2 contain template
       @return True if successful
       @warning This feature is supported when the security level is 0 or 1
     */
     bool match(bool& matched, uint16_t& score);
 
     /*!
-      @brief Search for matching characteristic (1:N)
+      @brief Search for matching template (1:N)
       @details PS_Search
       @param[out] matched true if matched
       @param[out] matching_page_id Matching page number
@@ -532,7 +532,7 @@ public:
                 const uint16_t start_page = 0, const uint16_t page_num = 0);
 
     /*!
-      @brief Search for matching characteristic using the last extracted characteristic (1:N)
+      @brief Search for matching template using the last extracted template (1:N)
       @details PS_SearchNow
       @param[out] matched true if matched
       @param[out] matching_page_id Matching page number
@@ -805,11 +805,11 @@ constexpr uint8_t CMD_MATCH{0x03};
 constexpr uint8_t CMD_SEARCH{0x04};
 constexpr uint8_t CMD_SEARCH_NOW{0x3E};
 constexpr uint8_t CMD_REGISTER_MODEL{0x05};
-constexpr uint8_t CMD_STORE_CHARACTERISTIC{0x06};
-constexpr uint8_t CMD_LOAD_CHARACTERISTIC{0x07};
+constexpr uint8_t CMD_STORE_TEMPLATE{0x06};
+constexpr uint8_t CMD_LOAD_TEMPLATE{0x07};
 
 constexpr uint8_t CMD_UPLOAD_IMAGE{0x0A};
-constexpr uint8_t CMD_DELETE_CHARACTERISTIC{0x0C};
+constexpr uint8_t CMD_DELETE_TEMPLATE{0x0C};
 constexpr uint8_t CMD_EMPTY{0x0D};
 
 constexpr uint8_t CMD_WRITE_REGISTER{0x0E};

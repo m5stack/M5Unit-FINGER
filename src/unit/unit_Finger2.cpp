@@ -322,7 +322,7 @@ bool UnitFinger2::storeTemplate(const uint16_t page_id, const uint8_t buffer_id)
     params[0] = buffer_id;
     params[1] = page_id >> 8;
     params[2] = page_id & 0xFF;
-    return transceive_command(pkt, CMD_STORE_CHARACTERISTIC, _address, params, sizeof(params));
+    return transceive_command(pkt, CMD_STORE_TEMPLATE, _address, params, sizeof(params));
 }
 
 bool UnitFinger2::loadTemplate(const uint8_t buffer_id, const uint16_t page_id)
@@ -341,7 +341,7 @@ bool UnitFinger2::loadTemplate(const uint8_t buffer_id, const uint16_t page_id)
     params[0] = buffer_id;
     params[1] = page_id >> 8;
     params[2] = page_id & 0xFF;
-    return transceive_command(pkt, CMD_LOAD_CHARACTERISTIC, _address, params, sizeof(params));
+    return transceive_command(pkt, CMD_LOAD_TEMPLATE, _address, params, sizeof(params));
 }
 
 bool UnitFinger2::match(bool& matched, uint16_t& score)
@@ -535,7 +535,7 @@ bool UnitFinger2::deleteTemplate(const uint16_t page_id, const uint16_t num)
     params[1] = page_id & 0xFF;
     params[2] = num >> 8;
     params[3] = num & 0xFF;
-    return transceive_command(pkt, CMD_DELETE_CHARACTERISTIC, _address, params, sizeof(params));
+    return transceive_command(pkt, CMD_DELETE_TEMPLATE, _address, params, sizeof(params));
 }
 
 bool UnitFinger2::clear()
