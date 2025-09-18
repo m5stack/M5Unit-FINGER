@@ -461,13 +461,14 @@ bool UnitFinger2::readTemplate(uint16_t& actual_size, uint8_t* buf, const uint16
 }
 
 bool UnitFinger2::readTemplateAllBatches(uint16_t& actual_size, uint8_t* buf, const uint16_t buf_size,
-                                         const uint16_t batch_size)
+                                         const uint16_t batch_size, batch_callback_t callback)
 {
     if (!buf || !buf_size || !batch_size) {
         return false;
     }
 
     uint16_t offset{};
+    uint16_t call_count{};
     while (offset < buf_size) {
         uint16_t actual{};
         if (!readTemplate(actual, buf + offset, batch_size, offset)) {
@@ -475,6 +476,13 @@ bool UnitFinger2::readTemplateAllBatches(uint16_t& actual_size, uint8_t* buf, co
         }
         offset += actual;
         actual_size += actual;
+
+        if (callback && !callback(call_count, actual, batch_size, actual_size, buf_size, actual < batch_size)) {
+            // Abort by callback
+            return true;
+        }
+        ++call_count;
+
         if (actual < batch_size) {  // No more data
             break;
         }
@@ -503,13 +511,14 @@ bool UnitFinger2::writeTemplate(const uint16_t offset, const uint8_t* buf, const
     return transceive_command(pkt, CMD_DOWNLOAD_TEMPLATE, _address, params.data(), params.size());
 }
 
-bool UnitFinger2::writeTemplateAllBatches(const uint8_t* buf, const uint16_t buf_size, const uint16_t batch_size)
+bool UnitFinger2::writeTemplateAllBatches(const uint8_t* buf, const uint16_t buf_size, const uint16_t batch_size,
+                                          batch_callback_t callback)
 {
     if (!buf || !buf_size || !batch_size) {
         return false;
     }
 
-    uint16_t offset{};
+    uint16_t offset{}, call_count{};
     uint16_t remain = buf_size;
     while (offset < buf_size) {
         uint16_t sz = std::min(remain, batch_size);
@@ -518,6 +527,12 @@ bool UnitFinger2::writeTemplateAllBatches(const uint8_t* buf, const uint16_t buf
         }
         offset += sz;
         remain -= sz;
+
+        if (callback && !callback(call_count, sz, batch_size, offset, buf_size, offset == buf_size)) {
+            // Abort by callback
+            return true;
+        }
+        ++call_count;
     }
     return offset == buf_size;
 }
@@ -749,6 +764,7 @@ bool UnitFinger2::autoEnroll(ConfirmCode& confirm, const uint16_t page_id, const
 
     AutoEnrollStage stage{};
     uint8_t state{};
+    uint8_t process_times{};
     confirm = ConfirmCode::PacketError;
     if (write_command(CMD_AUTO_ENROLL, _address, params, sizeof(params))) {
         // Depending on the flags specified, multiple responses may be returned
@@ -766,14 +782,16 @@ bool UnitFinger2::autoEnroll(ConfirmCode& confirm, const uint16_t page_id, const
             stage = static_cast<AutoEnrollStage>(pkt[10]);
             state = pkt[11];
 
-            bool abort =
-                (stage < AutoEnrollStage::StoreTemplate && callback) ? !callback(confirm, stage, state) : false;
+            bool abort = (callback && stage < AutoEnrollStage::StoreTemplate)
+                             ? !callback(process_times, page_id, confirm, stage, state)
+                             : false;
 
             // M5_LIB_LOGD(">>>> Confirm:%02x Stage:%02u State:%02X abort:%u", confirm, stage, state, abort);
             if (abort || confirm != ConfirmCode::OK) {
                 confirm = abort ? ConfirmCode::OperationBlocked : confirm;
                 break;
             }
+            ++process_times;
 
         } while (stage < AutoEnrollStage::StoreTemplate);
 
@@ -813,6 +831,7 @@ bool UnitFinger2::autoIdentify(bool& matched, uint16_t& matching_page_id, uint16
 
     AutoIdentifyStage stage{};
     auto confirm = ConfirmCode::PacketError;
+    uint8_t process_times{};
     if (write_command(CMD_AUTO_IDENTIFY, _address, params, sizeof(params))) {
         // Depending on the flags specified, multiple responses may be returned
         do {
@@ -827,13 +846,16 @@ bool UnitFinger2::autoIdentify(bool& matched, uint16_t& matching_page_id, uint16
             // 0:Verify command 1:GetImage 5:Registered fingerprint comparison
             stage = static_cast<AutoIdentifyStage>(pkt[10]);
 
-            bool abort = (stage < AutoIdentifyStage::Result && callback) ? !callback(confirm, stage) : false;
+            bool abort =
+                (callback && stage < AutoIdentifyStage::Result) ? !callback(process_times, confirm, stage) : false;
 
             // M5_LIB_LOGD(">>>> Confirm:%02x Stage:%02u abort:%u", confirm, stage, abort);
             if (abort || confirm != ConfirmCode::OK) {
                 confirm = abort ? ConfirmCode::OperationBlocked : confirm;
                 break;
             }
+
+            ++process_times;
         } while (stage < AutoIdentifyStage::Result);
 
         // Identify successful?

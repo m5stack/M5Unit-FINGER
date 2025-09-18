@@ -217,34 +217,51 @@ enum class ConfirmCode : uint8_t {
     SmallImage,            //!< 0x33:Image too small
     StaticObjectInImage,   //!< 0x34:Static foreign object in the image (Orange)
     IllegalData,           //!< 0x35:The data is illegal
-    NotUsed36,
-    StaticObjectInFeature,     //!< 0x37:Static Foreign Object in Feature (Orange)
-    PacketTimeout = 0xF9,      //!< 0xF9:Receive packet timeout
-    PacketBad,                 //!< 0xFA:Error Packet (e.g., data not fully received, other packet received)
-    PacketOverflow,            //!< 0xFB:Packet overflow (e.g., when a packet exceeds the maximum length)
-    OperationBlocked,          //!< 0xFC:This operation has been blocked
-    ParameterError,            //!< 0xFD:Parameter error
-    NotActive,                 //!< 0xFE:The fingerprint module is not activated
+    PacketTimeout = 0xF9,  //!< 0xF9:Receive packet timeout
+    PacketBad,             //!< 0xFA:Error Packet (e.g., data not fully received, other packet received)
+    PacketOverflow,        //!< 0xFB:Packet overflow (e.g., when a packet exceeds the maximum length)
+    OperationBlocked,      //!< 0xFC:This operation has been blocked
+    ParameterError,        //!< 0xFD:Parameter error
+    NotActive,             //!< 0xFE:The fingerprint module is not activated
     PassiveActivation = 0xFF,  //!< 0xFF:Passive activation
 };
 
 /*!
   @brief Callback function for autoEnroll
+  @brief call_times Number of callback invocations (zero origin)
+  @param page_id page_id being attempted to register
   @param confirm ConfirmCode
   @param stage AutoEnrollStage
-  @param state state value of the stage
-  @retval true: Contiue process
+  @param state State value of the stage
+  @retval true: Continue process
   @retval false: Abort process
 */
-using auto_enroll_callback_t = bool (*)(const ConfirmCode confirm, const AutoEnrollStage stage, const uint8_t state);
+using auto_enroll_callback_t = bool (*)(const uint16_t call_times, const uint16_t page_id, const ConfirmCode confirm,
+                                        const AutoEnrollStage stage, const uint8_t state);
 /*!
   @brief Callback function for autoIdentify
+  @brief call_times Number of callback invocations (zero origin)
   @param confirm ConfirmCode
   @param stage AutoIdentifyStage
-  @retval true: Contiue process
+  @retval true: Continue process
   @retval false: Abort process
 */
-using auto_identify_callback_t = bool (*)(const ConfirmCode confirm, const AutoIdentifyStage stage);
+using auto_identify_callback_t = bool (*)(const uint16_t call_times, const ConfirmCode confirm,
+                                          const AutoIdentifyStage stage);
+
+/*!
+  @brief Callback for batch read/write
+  @brief call_times Number of callback invocations (zero origin)
+  @brief actual_size Size processed in a single batch operation
+  @brief batch_size Processing size per batch
+  @brief total_size Total processed size
+  @brief planned_size Planned size
+  @brief completed Is this the final step?
+  @retval true: Continue process
+  @retval false: Abort process (If completed == true, ignore)
+ */
+using batch_callback_t = bool (*)(const uint16_t call_times, const uint16_t actual_size, const uint16_t batch_size,
+                                  const uint16_t total_size, const uint16_t planned_size, const bool completed);
 
 }  // namespace finger2
 
@@ -578,11 +595,13 @@ public:
       @brief Read the template
       @param [out] actual_size Actual size
       @param[out] buf Output buffer (at least 7262 bytes)
+      @param batch_size Processing size per batch
+      @param callback Callback invoked for each batch processing
       @return True if successful
       @pre The template exists in the buffer
      */
     bool readTemplateAllBatches(uint16_t& actual_size, uint8_t* buf, const uint16_t buf_size,
-                                const uint16_t batch_size = 128);
+                                const uint16_t batch_size = 128, finger2::batch_callback_t callback = nullptr);
     /*!
       @brief Write the specific size template to the specific offset
       @param offset Offset address
@@ -595,9 +614,12 @@ public:
       @brief Write the template
       @param buf Input buffer
       @param buf_size  size of buf
+      @param batch_size Processing size per batch
+      @param callback Callback invoked for each batch processing
       @return True if successful
      */
-    bool writeTemplateAllBatches(const uint8_t* buf, const uint16_t buf_size, const uint16_t batch_size = 128);
+    bool writeTemplateAllBatches(const uint8_t* buf, const uint16_t buf_size, const uint16_t batch_size = 128,
+                                 finger2::batch_callback_t callback = nullptr);
 
     /*!
       @brief Delete templates

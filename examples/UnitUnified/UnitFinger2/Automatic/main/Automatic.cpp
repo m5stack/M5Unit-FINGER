@@ -38,7 +38,8 @@ void print_exists_users()
     }
 }
 
-bool callback_enroll(const ConfirmCode confirm, const AutoEnrollStage stage, const uint8_t state)
+bool callback_enroll(const uint16_t call_times, const uint16_t page_id, const ConfirmCode confirm,
+                     const AutoEnrollStage stage, const uint8_t state)
 {
     lcd.startWrite();
     switch (stage) {
@@ -63,8 +64,8 @@ bool callback_enroll(const ConfirmCode confirm, const AutoEnrollStage stage, con
             break;
     }
     lcd.setCursor(0, 0);
-    lcd.printf("ENROLL:%02u [%02X] (%02X)", (uint8_t)stage, (uint8_t)confirm, state);
-    M5.Log.printf("  Enroll CB:%02u [%02X] (%02X)\n", (uint8_t)stage, (uint8_t)confirm, stage);
+    lcd.printf("ENROLL:%02u %02u [%02X] (%02X)", call_times, (uint8_t)stage, (uint8_t)confirm, state);
+    M5.Log.printf("  Enroll[%02u]:%02u [%02X] (%02X)\n", call_times, (uint8_t)stage, (uint8_t)confirm, stage);
     lcd.endWrite();
 
     return true;  // Abort if false
@@ -111,12 +112,12 @@ void auto_enroll()
     }
 }
 
-bool callback_identify(const ConfirmCode confirm, const AutoIdentifyStage stage)
+bool callback_identify(const uint16_t call_times, const ConfirmCode confirm, const AutoIdentifyStage stage)
 {
     lcd.setCursor(0, 0);
     lcd.printf("IDENTIFY:%02u [%02X]", (uint8_t)stage, (uint8_t)confirm);
     lcd.endWrite();
-    M5.Log.printf("  Identify CB:%02u [%02X]\n", (uint8_t)stage, (uint8_t)confirm);
+    M5.Log.printf("  Identify[%02u]:%02u [%02X]\n", call_times, (uint8_t)stage, (uint8_t)confirm);
     return true;  // Abort if false
 }
 

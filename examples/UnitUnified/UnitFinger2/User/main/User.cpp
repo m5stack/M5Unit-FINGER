@@ -27,12 +27,21 @@ m5::unit::UnitFinger2 unit;
 uint32_t cur_menu{};
 uint16_t cur_user{0};
 
+bool callback_batch(const uint16_t call_times, const uint16_t actual_size, const uint16_t batch_size,
+                    const uint16_t total_size, const uint16_t planned_size, const bool completed)
+{
+    M5.Log.printf("    [%03u]:%3u/%3u,%4u/%4u:%s\n", call_times, actual_size, batch_size, total_size, planned_size,
+                  completed ? "COMPLETED" : "CONTINUE");
+
+    return true;  // Abort if false
+}
+
 void make_random_user()
 {
     unit.wakeup();
 
     // Template to buffer
-    if (!unit.writeTemplateAllBatches(template_data, template_data_size)) {
+    if (!unit.writeTemplateAllBatches(template_data, template_data_size, 128, callback_batch)) {
         M5_LOGE("Failed to writeTemplateAllBatches");
         return;
     }
@@ -183,7 +192,7 @@ void loop()
                 std::vector<uint8_t> temp{};
                 temp.resize(m5::unit::UnitFinger2::TEMPLATE_SIZE);
                 uint16_t actual{};
-                if (unit.readTemplateAllBatches(actual, temp.data(), temp.size())) {
+                if (unit.readTemplateAllBatches(actual, temp.data(), temp.size(), 256, callback_batch)) {
                     m5::utility::log::dump(temp.data(), actual, false);
                 } else {
                     M5_LOGE("Failed to readTemplateAllBatches %u", cur_user);
