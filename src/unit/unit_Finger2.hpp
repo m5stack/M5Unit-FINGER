@@ -486,7 +486,6 @@ public:
       @details Uploading data in image buffer to the host
       @param[out] img Image vector (4 bits grayscale)
       @return True if successful
-      @pre capture() succeeded
      */
     bool readImage(std::vector<uint8_t>& img);
 
@@ -664,7 +663,7 @@ public:
       @note Therefore, when checking whether a large number of templates are existed,
       @note it is better to call readIndexTable once and verify table yourself
      */
-    bool existsTemplate(const uint8_t page_id);
+    bool existsTemplate(const uint16_t page_id);
 
     /*!
       @brief Find the lowest available page number

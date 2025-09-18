@@ -266,6 +266,7 @@ bool UnitFinger2::readImageInformation(uint8_t& percentage, bool& quarity)
 bool UnitFinger2::readImage(std::vector<uint8_t>& img)
 {
     img.clear();
+    img.reserve((imageWidth() * imageHeight()) >> 1);
 
     Packet pkt{};
     if (!transceive_command(pkt, CMD_UPLOAD_IMAGE, _address)) {
@@ -664,7 +665,7 @@ bool UnitFinger2::readIndexTable(uint8_t table[32])
     return false;
 }
 
-bool UnitFinger2::existsTemplate(const uint8_t page_id)
+bool UnitFinger2::existsTemplate(const uint16_t page_id)
 {
     if (page_id >= capacity()) {
         M5_LIB_LOGE("page_id must be 0 - %u (%u)", capacity() - 1, page_id);
