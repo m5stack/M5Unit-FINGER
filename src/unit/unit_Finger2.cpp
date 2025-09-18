@@ -107,6 +107,7 @@ bool UnitFinger2::begin()
         return false;
     }
     ad->setTimeout(_cfg.timeout_ms ? _cfg.timeout_ms : TIMEOUT_MS);
+    ad->flushRX();
 
     uint8_t ver{};
     if (!wakeup() || !readFirmwareVersion(ver) || ver == 0x00) {
@@ -1076,7 +1077,7 @@ ConfirmCode UnitFinger2::read_response(Packet& rbuf)
             auto sum      = sum16(rbuf.data() + 6, rbuf.size() - 8);
             uint16_t rsum = (rbuf[rbuf.size() - 2] << 8) | rbuf[rbuf.size() - 1];
 
-            // M5_LIB_LOGD(">>>> CONFIRM:%02X Sum:%04X/%04X", rbuf[9], sum, rsum);
+            M5_LIB_LOGV("CONFIRM:%02X Sum:%04X/%04X", rbuf[9], sum, rsum);
 
             if (sum == rsum) {
                 return static_cast<ConfirmCode>(rbuf[9]);
@@ -1084,9 +1085,7 @@ ConfirmCode UnitFinger2::read_response(Packet& rbuf)
         }
     }
 
-    //
-    // m5::utility::log::dump(rbuf.data(), rbuf.size(), false);
-
+    M5_DUMPV(rbuf.data(), rbuf.size());
     return ConfirmCode::PacketError;
 }
 
