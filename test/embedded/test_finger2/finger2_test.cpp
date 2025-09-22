@@ -156,7 +156,7 @@ TEST_P(TestFinger2, Basic)
     SCOPED_TRACE(ustr);
 
     /////
-    return;
+    //return;
 
     auto cfg = unit->config();
 
@@ -282,7 +282,7 @@ TEST_P(TestFinger2, LED)
     SCOPED_TRACE(ustr);
 
     /////
-    return;
+    //return;
 
     EXPECT_TRUE(unit->writeSleepTime(10));
 
@@ -338,7 +338,7 @@ TEST_P(TestFinger2, Notepad)
     SCOPED_TRACE(ustr);
 
     /////
-    return;
+    //return;
 
     uint8_t buf[32]{};
     constexpr uint8_t empty[32]{};
@@ -417,7 +417,7 @@ TEST_P(TestFinger2, Template)
     SCOPED_TRACE(ustr);
 
     /////
-    return;
+    //return;
 
     std::vector<uint8_t> tbuf{};
     tbuf.resize(UnitFinger2::TEMPLATE_SIZE);
@@ -593,7 +593,7 @@ TEST_P(TestFinger2, Finger)
     SCOPED_TRACE(ustr);
 
     /////
-    return;
+    //return;
 
     for (auto&& wm : workmode_table) {
         auto s = m5::utility::formatString("WorkMode:%u", wm);
