@@ -137,13 +137,13 @@ bool UnitFinger2::begin()
         M5_LIB_LOGE("Failed to ReadSysPara");
         return false;
     }
-    _pageCapacity = params.capacity;
+    _pageCapacity = params.database_capacity;
     M5_LIB_LOGD("Capacity:%u", _pageCapacity);
 
     M5_LIB_LOGD("---SystemBasicParams %zu---", sizeof(params));
     M5_LIB_LOGD("Status:  %04X", params.status);
-    M5_LIB_LOGD("TmpSize: %04X", params.template_size);
-    M5_LIB_LOGD("Capacity:%04X", params.capacity);
+    M5_LIB_LOGD("Type:    %04X", params.sensor_type);
+    M5_LIB_LOGD("DBCap:   %04X", params.database_capacity);
     M5_LIB_LOGD("ScoreLv: %04X", params.score_level);
     M5_LIB_LOGD("Address: %08X", params.address);
     M5_LIB_LOGD("PktSz:   %04X", params.packet_size);
@@ -194,10 +194,10 @@ bool UnitFinger2::readSystemParams(finger2::SystemBasicParams& params)
 
     Packet pkt{};
     if (transceive_command(pkt, CMD_READ_SYSTEM_PARAMETER, _address) && pkt.size() == 28) {
-        params.status        = ((uint16_t)pkt[10] << 8) | pkt[11];
-        params.template_size = ((uint16_t)pkt[12] << 8) | pkt[13];
-        params.capacity      = ((uint16_t)pkt[14] << 8) | pkt[15];
-        params.score_level   = ((uint16_t)pkt[16] << 8) | pkt[17];
+        params.status            = ((uint16_t)pkt[10] << 8) | pkt[11];
+        params.sensor_type       = ((uint16_t)pkt[12] << 8) | pkt[13];
+        params.database_capacity = ((uint16_t)pkt[14] << 8) | pkt[15];
+        params.score_level       = ((uint16_t)pkt[16] << 8) | pkt[17];
         params.address     = ((uint16_t)pkt[18] << 24) | ((uint16_t)pkt[19] << 16) | ((uint16_t)pkt[20] << 8) | pkt[21];
         params.packet_size = ((uint16_t)pkt[22] << 8) | pkt[23];
         params.baud_rate   = ((uint16_t)pkt[24] << 8) | pkt[25];
@@ -563,13 +563,7 @@ bool UnitFinger2::clear()
 
 bool UnitFinger2::writeSystemRegister(const finger2::RegisterID reg_id, const uint8_t value)
 {
-    auto reg = m5::stl::to_underlying(reg_id);
-    if (reg == 4 /* internal baud rate */ || reg > 11) {
-        M5_LIB_LOGE("Invalid reg_id %u", reg_id);
-        return false;
-    }
-
-    // parameter check
+    // Check args
     switch (reg_id) {
         case RegisterID::ScoreLevel:
             if (value < 1 || value > 5) {
@@ -583,20 +577,19 @@ bool UnitFinger2::writeSystemRegister(const finger2::RegisterID reg_id, const ui
                 return false;
             }
             break;
-        case RegisterID::SecurityLevel:
-            if (value > 3) {
-                M5_LIB_LOGE("SecurityLevel must be 0 - 3 (%u)", value);
-                return false;
-            }
         default:
-            break;
+            M5_LIB_LOGE("Invalid reg_id %u", reg_id);
+            return false;
     }
 
+#if 0
     if (reg >= 10) {
         reg = 0x10 + (reg - 10);  // DEC 10,11... => HEX 0x10, 0x11,...
     }
+#endif
+
     Packet pkt{};
-    uint8_t params[2]{reg, value};
+    uint8_t params[2]{m5::stl::to_underlying(reg_id), value};
     return transceive_command(pkt, CMD_WRITE_REGISTER, _address, params, sizeof(params));
 }
 

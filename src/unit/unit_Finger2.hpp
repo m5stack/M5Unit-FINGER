@@ -64,36 +64,11 @@ enum class LEDColor : uint8_t {
 
 /*!
   @enum RegisterID
-  @brief writeReg() target
+  @brief PS_WriteReg target register
  */
 enum class RegisterID : uint8_t {
-    DelayTime,           //!< 0x00:The time delay for sending data packets
-    EnrollTimes,         //!< 0x01:Enroll times
-    ImageFormat,         //!< 0x02:Image format (only 0)
-    EnrollLogic,         /*!< 0x03:The logic for capturing fingerprints during registration (0 as default)
-                           |Logic|Description|
-                           |---|---|
-                           | 0 | No logical relationship |
-                           | 1 | Requires no relationship between enrolled fingers|
-                           | 2 | Requires a relationship between enrolled fingers|
-                         */
-    ScoreLevel = 5,      //!< 0x05:Match threshold (Lenient:1 - Strict:5) (3 as default)
-    PacketSize,          //!< 0x06:Data packet size (0:32,1:64,2:128,3:256) (2 as default)
-    SecurityLevel,       /*!< 0x07:Encryption level (0 as default)
-                           <ul>
-                           <li>0: Supports all instructions except the security instruction set</li>
-                           <li>1: No security algorithms <br>
-                           Does not support the security instruction set, template upload, template download, or image
-                           download </li>
-                           <li>2: Reserved</li>
-                           <li>3: Supports AES (128-bit, ECB) <br>
-                           Does not support template upload, template download, image download, exact match, or
-                           search</li>
-                           </ol>
-                           @warning Once set, changes are not permitted
-                         */
-    ProductSerial = 10,  //!< 0x0A:Product model number
-    LEDControl,          //!< 0x0B:Turn on or off the auto-light feature
+    ScoreLevel = 5,  //!< 0x05:Match threshold (Lenient:1 - Strict:5) (3 as default)
+    PacketSize,      //!< 0x06:Data packet size (0:32,1:64,2:128,3:256) (1 as default)
 };
 
 /*!
@@ -101,14 +76,14 @@ enum class RegisterID : uint8_t {
  @brief The module’s basic parametrs
 */
 struct SystemBasicParams {
-    uint16_t status{};         //!< System operational status
-    uint16_t template_size{};  //!< Fingerprint template capacity (Not the actual template size)
-    uint16_t capacity{};       //!< Fingerprint library capacity
-    uint16_t score_level{};    //!< Match threshold (See also RegisterID::ScoreLevel)
-    uint32_t address{};        //!< Device address
-    uint16_t packet_size{};    //!< Packet size (See also RegisterID::PacketSize)
-    uint16_t baud_rate{};      //!< Baud rate between STM32 and device
-                               //!< (The value multiplied by 9600 is the actual)
+    uint16_t status{};             //!< System operational status
+    uint16_t sensor_type{};        //!< Sensor type
+    uint16_t database_capacity{};  //!< Fingerprint database capacity
+    uint16_t score_level{};        //!< Match threshold (See also RegisterID::ScoreLevel)
+    uint32_t address{};            //!< Device address
+    uint16_t packet_size{};        //!< Packet size (See also RegisterID::PacketSize)
+    uint16_t baud_rate{};          //!< Baud rate between STM32 and device
+                                   //!< (The value multiplied by 9600 is the actual)
 } __attribute__((packed));
 
 using auto_enroll_flag_t   = uint16_t;  //!< Flags for autoEnroll
@@ -273,7 +248,7 @@ class UnitFinger2 : public Component {
     M5_UNIT_COMPONENT_HPP_BUILDER(UnitFinger2, 0x00);
 
 public:
-    static constexpr uint32_t DEFAULT_MODULE_ADDRESS{0xFFFFFFFF};  //!< DEFAULT_ADDRESS
+    static constexpr uint32_t DEFAULT_MODULE_ADDRESS{0xFFFFFFFF};  //!< Default device address
     using Packet = std::vector<uint8_t>;
 
     static constexpr uint16_t IMAGE_WIDTH{80};      //!< Capture image width

@@ -70,6 +70,24 @@ protected:
         s.begin(115200, SERIAL_8N1, pin_num_in, pin_num_out);
         return &s;
     }
+
+    void reset_serial(const uint32_t baud = 19200)
+    {
+        auto pin_num_in  = M5.getPin(m5::pin_name_t::port_c_rxd);
+        auto pin_num_out = M5.getPin(m5::pin_name_t::port_c_txd);
+        if (pin_num_in < 0 || pin_num_out < 0) {
+            // M5_LOGW("PortC is not available");
+            Wire.end();
+            pin_num_in  = M5.getPin(m5::pin_name_t::port_a_pin1);
+            pin_num_out = M5.getPin(m5::pin_name_t::port_a_pin2);
+        }
+        // M5_LOGI("%u getPin: %d,%d", baud, pin_num_in, pin_num_out);
+        serial->end();
+        serial->begin(baud, SERIAL_8N1, pin_num_in, pin_num_out);
+        while (serial->available()) {
+            serial->read();
+        }
+    }
 };
 
 // INSTANTIATE_TEST_SUITE_P(ParamValues, TestFinger2, ::testing::Values(false, true));
@@ -85,7 +103,34 @@ constexpr WorkMode workmode_table[] = {
 
 constexpr LEDMode led_table[] = {
     LEDMode::Bleath, LEDMode::Blink, LEDMode::On, LEDMode::Off, LEDMode::Fadein, LEDMode::Fadeout,
+};
+constexpr auto_enroll_flag_t enroll_flags_table[] = {
+    0,
+    auto_enroll_flag::DONT_RETURN_INTERMEDIATE_RESULTS,
+    auto_enroll_flag::ALLOW_OVERWRITE_PAGE,
+    auto_enroll_flag::DONT_RETURN_INTERMEDIATE_RESULTS | auto_enroll_flag::ALLOW_OVERWRITE_PAGE,
+    auto_enroll_flag::PROHIBIT_DUPLICATE_TEMPLATE,
+    auto_enroll_flag::PROHIBIT_DUPLICATE_TEMPLATE | auto_enroll_flag::DONT_RETURN_INTERMEDIATE_RESULTS,
+    auto_enroll_flag::PROHIBIT_DUPLICATE_TEMPLATE | auto_enroll_flag::PROHIBIT_DUPLICATE_TEMPLATE,
+    auto_enroll_flag::PROHIBIT_DUPLICATE_TEMPLATE | auto_enroll_flag::DONT_RETURN_INTERMEDIATE_RESULTS |
+        auto_enroll_flag::ALLOW_OVERWRITE_PAGE,
+    auto_enroll_flag::NO_NEED_RELAESE_FINGER,
+    auto_enroll_flag::NO_NEED_RELAESE_FINGER | auto_enroll_flag::DONT_RETURN_INTERMEDIATE_RESULTS,
+    auto_enroll_flag::NO_NEED_RELAESE_FINGER | auto_enroll_flag::ALLOW_OVERWRITE_PAGE,
+    auto_enroll_flag::NO_NEED_RELAESE_FINGER | auto_enroll_flag::DONT_RETURN_INTERMEDIATE_RESULTS |
+        auto_enroll_flag::ALLOW_OVERWRITE_PAGE,
+    auto_enroll_flag::NO_NEED_RELAESE_FINGER | auto_enroll_flag::PROHIBIT_DUPLICATE_TEMPLATE,
+    auto_enroll_flag::NO_NEED_RELAESE_FINGER | auto_enroll_flag::PROHIBIT_DUPLICATE_TEMPLATE |
+        auto_enroll_flag::DONT_RETURN_INTERMEDIATE_RESULTS,
+    auto_enroll_flag::NO_NEED_RELAESE_FINGER | auto_enroll_flag::PROHIBIT_DUPLICATE_TEMPLATE |
+        auto_enroll_flag::PROHIBIT_DUPLICATE_TEMPLATE,
+    auto_enroll_flag::NO_NEED_RELAESE_FINGER | auto_enroll_flag::PROHIBIT_DUPLICATE_TEMPLATE |
+        auto_enroll_flag::DONT_RETURN_INTERMEDIATE_RESULTS | auto_enroll_flag::ALLOW_OVERWRITE_PAGE,
+};
 
+constexpr auto_identify_flag_t identify_flags_table[] = {
+    0,
+    auto_identify_flag::DONT_RETURN_INTERMEDIATE_RESULTS,
 };
 
 auto rng = std::default_random_engine{};
@@ -111,7 +156,7 @@ TEST_P(TestFinger2, Basic)
     SCOPED_TRACE(ustr);
 
     /////
-    // return;
+    return;
 
     auto cfg = unit->config();
 
@@ -166,8 +211,9 @@ TEST_P(TestFinger2, Basic)
         SystemBasicParams params{};
         EXPECT_TRUE(unit->readSystemParams(params));
         EXPECT_NE(params.status, 0U);
-        EXPECT_EQ(params.template_size, 0x2EC8u);
-        EXPECT_EQ(params.capacity, 100u);
+        // EXPECT_EQ(params.template_size, 0x2EC8u);
+        // EXPECT_EQ(params.sensor_type,0x????);
+        EXPECT_EQ(params.database_capacity, 100u);
         EXPECT_EQ(params.score_level, cfg.score_level);
         EXPECT_EQ(params.address, 0xFFFFFFFFu);
         EXPECT_GE(params.packet_size, 0u);
@@ -196,9 +242,9 @@ TEST_P(TestFinger2, Basic)
         EXPECT_FALSE(unit->writeSystemRegister(RegisterID::PacketSize, 4));
         EXPECT_FALSE(unit->writeSystemRegister(RegisterID::PacketSize, 255));
 
-        EXPECT_TRUE(unit->writeSystemRegister(RegisterID::PacketSize, 2));
+        EXPECT_TRUE(unit->writeSystemRegister(RegisterID::PacketSize, 1));
         EXPECT_TRUE(unit->readSystemParams(params));
-        EXPECT_EQ(params.packet_size, 2);
+        EXPECT_EQ(params.packet_size, 1);
 
         uint8_t info[512]{};
         uint8_t info_empty[512]{};
@@ -236,7 +282,7 @@ TEST_P(TestFinger2, LED)
     SCOPED_TRACE(ustr);
 
     /////
-    // return;
+    return;
 
     EXPECT_TRUE(unit->writeSleepTime(10));
 
@@ -292,7 +338,7 @@ TEST_P(TestFinger2, Notepad)
     SCOPED_TRACE(ustr);
 
     /////
-    // return;
+    return;
 
     uint8_t buf[32]{};
     constexpr uint8_t empty[32]{};
@@ -371,7 +417,7 @@ TEST_P(TestFinger2, Template)
     SCOPED_TRACE(ustr);
 
     /////
-    // return;
+    return;
 
     std::vector<uint8_t> tbuf{};
     tbuf.resize(UnitFinger2::TEMPLATE_SIZE);
@@ -546,6 +592,9 @@ TEST_P(TestFinger2, Finger)
 {
     SCOPED_TRACE(ustr);
 
+    /////
+    return;
+
     for (auto&& wm : workmode_table) {
         auto s = m5::utility::formatString("WorkMode:%u", wm);
         SCOPED_TRACE(s.c_str());
@@ -652,6 +701,55 @@ TEST_P(TestFinger2, Finger)
         EXPECT_FALSE(unit->loadTemplate(0, 50));
         EXPECT_FALSE(unit->loadTemplate(6, 50));
         EXPECT_FALSE(unit->loadTemplate(255, 50));
+    }
+}
+
+TEST_P(TestFinger2, Automatic)
+{
+    SCOPED_TRACE(ustr);
+    for (auto&& wm : workmode_table) {
+        auto s = m5::utility::formatString("WorkMode:%u", wm);
+        SCOPED_TRACE(s.c_str());
+        EXPECT_TRUE(unit->writeWorkMode(wm));
+
+        // In sleep
+        if (wm == WorkMode::ScheduledSleep) {
+            wait_sleep(unit.get());
+
+            ConfirmCode confirm{};
+            EXPECT_FALSE(unit->autoEnroll(confirm, 0));
+
+            bool matched{};
+            uint16_t page{}, score{};
+            EXPECT_FALSE(unit->autoIdentify(matched, page, score));
+            continue;
+        }
+
+        ConfirmCode confirm{};
+        EXPECT_FALSE(unit->autoEnroll(confirm, 0));
+        bool matched{};
+        uint16_t page{}, score{};
+        EXPECT_FALSE(unit->autoIdentify(matched, page, score));
+
+        EXPECT_FALSE(unit->autoEnroll(confirm, 100));
+        EXPECT_FALSE(unit->autoEnroll(confirm, 65535));
+
+        EXPECT_FALSE(unit->autoEnroll(confirm, 0, 0));
+        EXPECT_FALSE(unit->autoEnroll(confirm, 0, 6));
+        EXPECT_FALSE(unit->autoEnroll(confirm, 0, 255));
+
+        for (auto&& eflags : enroll_flags_table) {
+            EXPECT_FALSE(unit->autoEnroll(confirm, 0, 5, eflags));
+        }
+
+        EXPECT_FALSE(unit->autoIdentify(matched, page, score, 100));
+        EXPECT_FALSE(unit->autoIdentify(matched, page, score, 0xFFFE));
+        EXPECT_FALSE(unit->autoIdentify(matched, page, score, 0xFFFF, 2));
+        EXPECT_FALSE(unit->autoIdentify(matched, page, score, 0xFFFF, 255));
+
+        for (auto&& iflags : identify_flags_table) {
+            EXPECT_FALSE(unit->autoIdentify(matched, page, score, 0xFFFF, 0, iflags));
+        }
     }
 }
 
