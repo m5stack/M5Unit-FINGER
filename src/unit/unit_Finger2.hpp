@@ -614,7 +614,7 @@ public:
 
     /*!
       @brief Read the number of valid templates
-      @details PS_ValidTempleteNum
+      @details PS_ValidTemplateNum
       @param[out] num Number
       @return True if successful
      */
