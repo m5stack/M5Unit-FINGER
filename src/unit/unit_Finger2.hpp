@@ -67,8 +67,7 @@ enum class LEDColor : uint8_t {
   @brief PS_WriteReg target register
  */
 enum class RegisterID : uint8_t {
-    ScoreLevel = 5,  //!< 0x05:Match threshold (Lenient:1 - Strict:5) (3 as default)
-    PacketSize,      //!< 0x06:Data packet size (0:32,1:64,2:128,3:256) (1 as default)
+    PacketSize = 6,  //!< 0x06:Data packet size (0:32,1:64,2:128,3:256) (1 as default)
 };
 
 /*!
@@ -277,7 +276,6 @@ public:
         uint32_t timeout_ms{1000 * 4};                                   //!< Serial I/O timeout (ms)
         finger2::WorkMode work_mode{finger2::WorkMode::ScheduledSleep};  //!< Work mode
         uint8_t sleep_time{10};                                          //!< Scheduled sleep time (10 - 254) sec
-        uint8_t score_level{3};                                          //!< Match threshold (Lenient:1 - Strict:5)
     };
 
     ///@name Settings for begin
@@ -727,10 +725,10 @@ public:
     /*!
       @brief Read the the information page in FLASH( 512 bytes)
       @details PS_ReadINFpage
-      @param inf Buffer (at least 512 bytes)
+      @param info Buffer (at least 512 bytes)
       @return True if successful
      */
-    bool readInformationPage(uint8_t inf[512]);
+    bool readInformationPage(uint8_t info[512]);
 
     /*!
       @brief Read the random number (32bits)

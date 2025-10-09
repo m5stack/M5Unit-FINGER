@@ -126,11 +126,6 @@ bool UnitFinger2::begin()
         return false;
     }
 
-    if (!wakeup() || !writeSystemRegister(RegisterID::ScoreLevel, _cfg.score_level)) {
-        M5_LIB_LOGE("Failed to writeSystemRegister");
-        return false;
-    }
-
     // Get maximum page id
     SystemBasicParams params{};
     if (!wakeup() || !readSystemParams(params)) {
@@ -565,12 +560,6 @@ bool UnitFinger2::writeSystemRegister(const finger2::RegisterID reg_id, const ui
 {
     // Check args
     switch (reg_id) {
-        case RegisterID::ScoreLevel:
-            if (value < 1 || value > 5) {
-                M5_LIB_LOGE("ScoreLevel must be 1 - 5 (%u)", value);
-                return false;
-            }
-            break;
         case RegisterID::PacketSize:
             if (value > 3) {
                 M5_LIB_LOGE("PacketSize must be 0 - 3 (%u)", value);
@@ -593,12 +582,12 @@ bool UnitFinger2::writeSystemRegister(const finger2::RegisterID reg_id, const ui
     return transceive_command(pkt, CMD_WRITE_REGISTER, _address, params, sizeof(params));
 }
 
-bool UnitFinger2::readInformationPage(uint8_t inf[512])
+bool UnitFinger2::readInformationPage(uint8_t info[512])
 {
-    if (!inf) {
+    if (!info) {
         return false;
     }
-    memset(inf, 0x00, 512);
+    memset(info, 0x00, 512);
 
     Packet pkt{};
     if (!transceive_command(pkt, CMD_READ_FLASH_INFORMATION, _address)) {
@@ -614,10 +603,16 @@ bool UnitFinger2::readInformationPage(uint8_t inf[512])
             break;
         }
         uint16_t sz = (((uint16_t)rbuf[7]) << 8) | (uint16_t)rbuf[8];
-        memcpy(inf + pos, rbuf.data() + 9, sz - 2);
-        pos += sz - 2;
+        if (sz <= 2) {
+            break;
+        }
+        sz -= 2;
+        if (pos + sz < 512) {
+            memcpy(info + pos, rbuf.data() + 9, sz);
+        }
+        pos += sz;
         if (confirm == PID_TERMINATE_DATA) {
-            return true;
+            return pos == 512;
         }
     }
     return false;
