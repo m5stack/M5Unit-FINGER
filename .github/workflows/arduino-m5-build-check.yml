@@ -163,7 +163,7 @@ jobs:
             build-properties: "-DUSING_HAT_FINGER"
 
           - sketch: Capture
-            unit: UnitFinge2r
+            unit: UnitFinger2
             platform-url: https://m5stack.oss-cn-shenzhen.aliyuncs.com/resource/arduino/package_m5stack_index.json
             platform: esp32
             archi: esp32
