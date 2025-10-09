@@ -184,7 +184,11 @@ jobs:
 
 
     steps:
-      - name: Checkout
+      - name: Checkout (push)
+        if: ${{ github.event_name != 'pull_request' }}
+        uses: actions/checkout@v4
+      - name: Checkout (PR, pin to head)
+        if: ${{ github.event_name == 'pull_request' }}
         uses: actions/checkout@v4
         with:
           ref: ${{ github.event.pull_request.head.sha }}
@@ -200,5 +204,6 @@ jobs:
           extra-arduino-cli-args: ${{ matrix.cli-args }}
           build-properties: ${{ matrix.unit == 'UnitFinger' && '-DUSING_UNIT_FINGER' || (matrix.unit == 'HatFinger' && '-DUSING_HAT_FINGER' || '') }}
           sketch-names: ${{ matrix.sketch }}.ino
-          sketch-names-find-start: ${{ env.SKETCH_NAMES_FIND_START }}/${{ matrix.unit }}
+          #sketch-names-find-start: ${{ env.SKETCH_NAMES_FIND_START }}/${{ matrix.unit }}
+          sketch-names-find-start: ${{ env.SKETCH_NAMES_FIND_START }}/${{ (matrix.unit == 'HatFinger') && 'UnitFinger' || matrix.unit }}
           #sketches-exclude: ${{ matrix.sketches-exclude }}
