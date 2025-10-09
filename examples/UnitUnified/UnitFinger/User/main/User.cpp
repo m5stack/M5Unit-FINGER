@@ -172,7 +172,7 @@ void setup()
         unit.readRegisteredUserCount(user_count);
 
         M5.Log.printf("=== %s information ===\n", unit.deviceName());
-        M5.Log.printf("           Mode: %s\n", mode == Mode::DenyDuplicate ? "Deny duplicate" : "Allow duplicate");
+        M5.Log.printf("           Mode: %s\n", mode == Mode::ProhibitDuplicate ? "Prohibity duplicate" : "Allow duplicate");
         M5.Log.printf("  Comparison Lv: %u\n", clv);
         M5.Log.printf("        Timeout: %u\n", timeout);
         M5.Log.printf("Registered user: %u\n", user_count);
