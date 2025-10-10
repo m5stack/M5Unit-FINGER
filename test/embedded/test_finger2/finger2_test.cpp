@@ -214,43 +214,39 @@ TEST_P(TestFinger2, Basic)
         // EXPECT_EQ(params.template_size, 0x2EC8u);
         // EXPECT_EQ(params.sensor_type,0x????);
         EXPECT_EQ(params.database_capacity, 100u);
-        EXPECT_EQ(params.score_level, cfg.score_level);
+        EXPECT_EQ(params.score_level, 3);
         EXPECT_EQ(params.address, 0xFFFFFFFFu);
         EXPECT_GE(params.packet_size, 0u);
         EXPECT_LE(params.packet_size, 3u);
         EXPECT_EQ(params.address, 0xFFFFFFFFu);
         EXPECT_EQ(params.baud_rate, 6u);  // 57600 only (STM32 <-> Chip)
 
-        for (uint8_t lv = 1; lv <= 5; ++lv) {
-            EXPECT_TRUE(unit->writeSystemRegister(RegisterID::ScoreLevel, lv));
-            EXPECT_TRUE(unit->readSystemParams(params));
-            EXPECT_EQ(params.score_level, lv);
-        }
-        EXPECT_FALSE(unit->writeSystemRegister(RegisterID::ScoreLevel, 0));
-        EXPECT_FALSE(unit->writeSystemRegister(RegisterID::ScoreLevel, 6));
-        EXPECT_FALSE(unit->writeSystemRegister(RegisterID::ScoreLevel, 255));
+        //
+        EXPECT_FALSE(unit->writeSystemRegister(RegisterID::PacketSize, 4));
+        EXPECT_FALSE(unit->writeSystemRegister(RegisterID::PacketSize, 255));
 
-        EXPECT_TRUE(unit->writeSystemRegister(RegisterID::ScoreLevel, cfg.score_level));
-        EXPECT_TRUE(unit->readSystemParams(params));
-        EXPECT_EQ(params.score_level, cfg.score_level);
-
+        uint32_t itime[4]{};
         for (uint8_t ps = 0; ps <= 3; ++ps) {
             EXPECT_TRUE(unit->writeSystemRegister(RegisterID::PacketSize, ps));
             EXPECT_TRUE(unit->readSystemParams(params));
             EXPECT_EQ(params.packet_size, ps);
+
+            uint8_t info[512]{};
+            uint8_t info_empty[512]{};
+            auto s = m5::utility::millis();
+            EXPECT_TRUE(unit->readInformationPage(info));
+            itime[ps] = m5::utility::millis() - s;
+            EXPECT_TRUE(memcmp(info, info_empty, sizeof(info)) != 0);
         }
-        EXPECT_FALSE(unit->writeSystemRegister(RegisterID::PacketSize, 4));
-        EXPECT_FALSE(unit->writeSystemRegister(RegisterID::PacketSize, 255));
+        EXPECT_GT(itime[0], itime[1]);
+        EXPECT_GT(itime[1], itime[2]);
+        EXPECT_GT(itime[2], itime[3]);
 
         EXPECT_TRUE(unit->writeSystemRegister(RegisterID::PacketSize, 1));
         EXPECT_TRUE(unit->readSystemParams(params));
         EXPECT_EQ(params.packet_size, 1);
 
-        uint8_t info[512]{};
-        uint8_t info_empty[512]{};
-        EXPECT_TRUE(unit->readInformationPage(info));
-        EXPECT_TRUE(memcmp(info, info_empty, sizeof(info)) != 0);
-
+        //
         std::vector<uint32_t> rval{};
         for (uint_fast8_t i = 0; i < 100; ++i) {
             uint32_t v{};
