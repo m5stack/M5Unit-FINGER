@@ -2,7 +2,7 @@
 
 ## Overview
 
-Library for Meters using [M5UnitUnified](https://github.com/m5stack/M5UnitUnified).  
+Library for Finger units using [M5UnitUnified](https://github.com/m5stack/M5UnitUnified).  
 M5UnitUnified is a library for unified handling of various M5 units products.
 
 ### SKU:U008
@@ -13,11 +13,22 @@ Unit Finger is a fingerprint recognition sensor. It integrates the FPC1020A capa
 Hat Finger is a fingerprint recognition sensor. It integrates the FPC1020SC capacitive fingerprint recognition module, featuring multi-fingerprint entry, image processing, feature extraction, fingerprint matching, and search functions. 
 
 
+### SKU:U203
+The Unit Fingerprint2 is a high-performance fingerprint recognition sensor unit, internally integrating an STM32 core controller and an A-K323CP all-in-one fingerprint recognition module. It uses a semiconductor capacitive sensor with functions such as fingerprint acquisition, feature extraction, registration, comparison, storage, and retrieval. 
+
 ## Related Link
 See also examples using conventional methods here.
 
 - [Unit Finger Document & Datasheet](https://docs.m5stack.com/en/unit/finger)
 - [Hat Finger Document & Datasheet](https://docs.m5stack.com/en/hat/hat-finger)
+- [Unit Fingerprint2 Document & Datasheet](https://docs.m5stack.com/en/unit/Unit_Fingerprint2)
+
+
+## Required Libraries:
+
+- [M5UnitUnified](https://github.com/m5stack/M5UnitUnified)
+- [M5Utility](https://github.com/m5stack/M5Utility)
+- [M5HAL](https://github.com/m5stack/M5HAL)
 
 
 ## License
@@ -43,4 +54,5 @@ If you want to output Git commit hashes to html, do it for the git cloned folder
 - [Doxyegn](https://www.doxygen.nl/)
 - [pcregrep](https://formulae.brew.sh/formula/pcre2)
 - [Git](https://git-scm.com/) (Output commit hash to html)
+
 
