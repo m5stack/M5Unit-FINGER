@@ -49,7 +49,7 @@ void register_finger()
         uint16_t page{0xFFFF};
         if (!(highlow == false ? unit.findLowestAvailablePage(page) : unit.findHighestAvailablePage(page)) ||
             page == 0xFFFF) {
-            M5_LOGE("Failed or Invalild page");
+            M5_LOGE("Failed or Invalid page");
             return;
         }
         M5.Log.printf("Try register to %u\n", page);
@@ -129,7 +129,7 @@ void match_finger(const uint16_t page)
         if (unit.match(matched, score)) {
             M5.Log.printf("<1:1>%u %s, Score:%u\n", page, matched ? "Matched" : "Unmatched", score);
         } else {
-            M5_LOGE("Failed to macth");
+            M5_LOGE("Failed to match");
         }
     } else {
         M5_LOGE("Failed to any function");
@@ -145,7 +145,7 @@ uint16_t search_finger()
         bool matched{};
         uint16_t page{};
         uint16_t score{};
-        if (unit.search(matched, page, score, 1 /* bufer id */)) {
+        if (unit.search(matched, page, score, 1 /* buffer id */)) {
             M5.Log.printf("<1:N> %s Page:%u Score:%u\n", matched ? "Found" : "Not found", page, score);
             return matched ? page : 0xFFFF;
         } else {
@@ -161,7 +161,7 @@ uint16_t search_finger()
 uint16_t search_now_finger()
 {
     bool detected{};
-    // seachNow is performed on the last generated characteristic
+    // searchNow is performed on the last generated characteristic
     if (unit.capture(detected) && detected && unit.generateCharacteristic(2)) {
         bool matched{};
         uint16_t page{};
@@ -183,6 +183,7 @@ uint16_t search_now_finger()
 void setup()
 {
     M5.begin();
+    M5.setTouchButtonHeightByRatio(100);
 
     // The screen shall be in landscape mode
     if (lcd.height() > lcd.width()) {
@@ -193,6 +194,11 @@ void setup()
     auto pin_num_out = M5.getPin(m5::pin_name_t::port_c_txd);
     if (pin_num_in < 0 || pin_num_out < 0) {
         M5_LOGW("PortC is not available");
+        // NanoC6: Ex_I2C.setPort() registers m5gfx::i2c on GROVE pins;
+        // Wire.end() alone won't release it, causing dual-driver conflict on uart_driver_install
+        if (M5.getBoard() == m5::board_t::board_M5NanoC6) {
+            M5.Ex_I2C.release();
+        }
         Wire.end();
         pin_num_in  = M5.getPin(m5::pin_name_t::port_a_pin1);
         pin_num_out = M5.getPin(m5::pin_name_t::port_a_pin2);
@@ -214,13 +220,13 @@ void setup()
 
     if (!Units.add(unit, s) || !Units.begin()) {
         M5_LOGE("Failed to begin");
-        lcd.clear(TFT_RED);
+        lcd.fillScreen(TFT_RED);
         while (true) {
             m5::utility::delay(10000);
         }
     }
 
-    M5_LOGI("M5UnitUnified has been begun");
+    M5_LOGI("M5UnitUnified initialized");
     M5_LOGI("%s", Units.debugInfo().c_str());
 
     lcd.fillScreen(TFT_DARKGREEN);
@@ -232,11 +238,10 @@ void setup()
 void loop()
 {
     M5.update();
-    auto touch = M5.Touch.getDetail();
     Units.update();
 
     // Search,Match
-    if (M5.BtnA.wasClicked() || touch.wasClicked()) {
+    if (M5.BtnA.wasClicked()) {
         M5.Speaker.tone(2000, 20);
         auto page = search_finger();
         if (page != 0xFFFF) {
@@ -248,7 +253,7 @@ void loop()
     }
 
     // Register
-    if (M5.BtnA.wasHold() || touch.wasHold()) {
+    if (M5.BtnA.wasHold()) {
         M5.Speaker.tone(4000, 20);
         register_finger();
         lcd.fillScreen(TFT_DARKGREEN);
