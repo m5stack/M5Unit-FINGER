@@ -16,7 +16,7 @@
 #include <chrono>
 #include <thread>
 #include <iostream>
-#include <random>
+#include <esp_random.h>
 #include <algorithm>
 
 using namespace m5::unit::googletest;
@@ -28,9 +28,7 @@ using m5::unit::types::elapsed_time_t;
 extern const uint8_t template_data[];    // template_data.cpp
 extern const size_t template_data_size;  // template_data.cpp
 
-const ::testing::Environment* global_fixture = ::testing::AddGlobalTestEnvironment(new GlobalFixture<400000U>());
-
-class TestFinger2 : public UARTComponentTestBase<UnitFinger2, bool> {
+class TestFinger2 : public UARTComponentTestBase<UnitFinger2> {
 protected:
     virtual UnitFinger2* get_instance() override
     {
@@ -38,16 +36,16 @@ protected:
         return ptr;
     }
 
-    virtual bool is_using_hal() const override
-    {
-        return GetParam();
-    };
     virtual HardwareSerial* init_serial() override
     {
         auto pin_num_in  = M5.getPin(m5::pin_name_t::port_c_rxd);
         auto pin_num_out = M5.getPin(m5::pin_name_t::port_c_txd);
         if (pin_num_in < 0 || pin_num_out < 0) {
-            // M5_LOGW("PortC is not available");
+            // NanoC6: Ex_I2C.setPort() registers m5gfx::i2c on GPIO 1/2;
+            // Wire.end() alone won't release it, causing dual-driver conflict on uart_driver_install
+            if (M5.getBoard() == m5::board_t::board_M5NanoC6) {
+                M5.Ex_I2C.release();
+            }
             Wire.end();
             pin_num_in  = M5.getPin(m5::pin_name_t::port_a_pin1);
             pin_num_out = M5.getPin(m5::pin_name_t::port_a_pin2);
@@ -71,12 +69,16 @@ protected:
         return &s;
     }
 
-    void reset_serial(const uint32_t baud = 19200)
+    void reset_serial(const uint32_t baud = 115200)
     {
         auto pin_num_in  = M5.getPin(m5::pin_name_t::port_c_rxd);
         auto pin_num_out = M5.getPin(m5::pin_name_t::port_c_txd);
         if (pin_num_in < 0 || pin_num_out < 0) {
-            // M5_LOGW("PortC is not available");
+            // NanoC6: Ex_I2C.setPort() registers m5gfx::i2c on GPIO 1/2;
+            // Wire.end() alone won't release it, causing dual-driver conflict on uart_driver_install
+            if (M5.getBoard() == m5::board_t::board_M5NanoC6) {
+                M5.Ex_I2C.release();
+            }
             Wire.end();
             pin_num_in  = M5.getPin(m5::pin_name_t::port_a_pin1);
             pin_num_out = M5.getPin(m5::pin_name_t::port_a_pin2);
@@ -90,10 +92,6 @@ protected:
     }
 };
 
-// INSTANTIATE_TEST_SUITE_P(ParamValues, TestFinger2, ::testing::Values(false, true));
-// INSTANTIATE_TEST_SUITE_P(ParamValues, TestFinger2, ::testing::Values(true));
-INSTANTIATE_TEST_SUITE_P(ParamValues, TestFinger2, ::testing::Values(false));
-
 namespace {
 
 constexpr WorkMode workmode_table[] = {
@@ -102,7 +100,7 @@ constexpr WorkMode workmode_table[] = {
 };
 
 constexpr LEDMode led_table[] = {
-    LEDMode::Bleath, LEDMode::Blink, LEDMode::On, LEDMode::Off, LEDMode::Fadein, LEDMode::Fadeout,
+    LEDMode::Breath, LEDMode::Blink, LEDMode::On, LEDMode::Off, LEDMode::Fadein, LEDMode::Fadeout,
 };
 constexpr auto_enroll_flag_t enroll_flags_table[] = {
     0,
@@ -111,20 +109,20 @@ constexpr auto_enroll_flag_t enroll_flags_table[] = {
     auto_enroll_flag::DONT_RETURN_INTERMEDIATE_RESULTS | auto_enroll_flag::ALLOW_OVERWRITE_PAGE,
     auto_enroll_flag::PROHIBIT_DUPLICATE_TEMPLATE,
     auto_enroll_flag::PROHIBIT_DUPLICATE_TEMPLATE | auto_enroll_flag::DONT_RETURN_INTERMEDIATE_RESULTS,
-    auto_enroll_flag::PROHIBIT_DUPLICATE_TEMPLATE | auto_enroll_flag::PROHIBIT_DUPLICATE_TEMPLATE,
+    auto_enroll_flag::PROHIBIT_DUPLICATE_TEMPLATE | auto_enroll_flag::ALLOW_OVERWRITE_PAGE,
     auto_enroll_flag::PROHIBIT_DUPLICATE_TEMPLATE | auto_enroll_flag::DONT_RETURN_INTERMEDIATE_RESULTS |
         auto_enroll_flag::ALLOW_OVERWRITE_PAGE,
-    auto_enroll_flag::NO_NEED_RELAESE_FINGER,
-    auto_enroll_flag::NO_NEED_RELAESE_FINGER | auto_enroll_flag::DONT_RETURN_INTERMEDIATE_RESULTS,
-    auto_enroll_flag::NO_NEED_RELAESE_FINGER | auto_enroll_flag::ALLOW_OVERWRITE_PAGE,
-    auto_enroll_flag::NO_NEED_RELAESE_FINGER | auto_enroll_flag::DONT_RETURN_INTERMEDIATE_RESULTS |
+    auto_enroll_flag::NO_NEED_RELEASE_FINGER,
+    auto_enroll_flag::NO_NEED_RELEASE_FINGER | auto_enroll_flag::DONT_RETURN_INTERMEDIATE_RESULTS,
+    auto_enroll_flag::NO_NEED_RELEASE_FINGER | auto_enroll_flag::ALLOW_OVERWRITE_PAGE,
+    auto_enroll_flag::NO_NEED_RELEASE_FINGER | auto_enroll_flag::DONT_RETURN_INTERMEDIATE_RESULTS |
         auto_enroll_flag::ALLOW_OVERWRITE_PAGE,
-    auto_enroll_flag::NO_NEED_RELAESE_FINGER | auto_enroll_flag::PROHIBIT_DUPLICATE_TEMPLATE,
-    auto_enroll_flag::NO_NEED_RELAESE_FINGER | auto_enroll_flag::PROHIBIT_DUPLICATE_TEMPLATE |
+    auto_enroll_flag::NO_NEED_RELEASE_FINGER | auto_enroll_flag::PROHIBIT_DUPLICATE_TEMPLATE,
+    auto_enroll_flag::NO_NEED_RELEASE_FINGER | auto_enroll_flag::PROHIBIT_DUPLICATE_TEMPLATE |
         auto_enroll_flag::DONT_RETURN_INTERMEDIATE_RESULTS,
-    auto_enroll_flag::NO_NEED_RELAESE_FINGER | auto_enroll_flag::PROHIBIT_DUPLICATE_TEMPLATE |
-        auto_enroll_flag::PROHIBIT_DUPLICATE_TEMPLATE,
-    auto_enroll_flag::NO_NEED_RELAESE_FINGER | auto_enroll_flag::PROHIBIT_DUPLICATE_TEMPLATE |
+    auto_enroll_flag::NO_NEED_RELEASE_FINGER | auto_enroll_flag::PROHIBIT_DUPLICATE_TEMPLATE |
+        auto_enroll_flag::ALLOW_OVERWRITE_PAGE,
+    auto_enroll_flag::NO_NEED_RELEASE_FINGER | auto_enroll_flag::PROHIBIT_DUPLICATE_TEMPLATE |
         auto_enroll_flag::DONT_RETURN_INTERMEDIATE_RESULTS | auto_enroll_flag::ALLOW_OVERWRITE_PAGE,
 };
 
@@ -132,8 +130,6 @@ constexpr auto_identify_flag_t identify_flags_table[] = {
     0,
     auto_identify_flag::DONT_RETURN_INTERMEDIATE_RESULTS,
 };
-
-auto rng = std::default_random_engine{};
 
 void wait_sleep(UnitFinger2* u)
 {
@@ -151,12 +147,11 @@ void wait_sleep(UnitFinger2* u)
 
 }  // namespace
 
-TEST_P(TestFinger2, Basic)
+TEST_F(TestFinger2, Basic)
 {
     SCOPED_TRACE(ustr);
 
     /////
-    // return;
 
     auto cfg = unit->config();
 
@@ -273,12 +268,11 @@ TEST_P(TestFinger2, Basic)
     }
 }
 
-TEST_P(TestFinger2, LED)
+TEST_F(TestFinger2, LED)
 {
     SCOPED_TRACE(ustr);
 
     /////
-    // return;
 
     EXPECT_TRUE(unit->writeSleepTime(10));
 
@@ -325,16 +319,15 @@ TEST_P(TestFinger2, LED)
         m5::utility::delay(2 * 1000);
 
         M5.Speaker.tone(4000, 20);
-        EXPECT_TRUE(unit->writeControlLED(LEDMode::Bleath, LEDColor::Blue, 36, LEDColor::Blue));
+        EXPECT_TRUE(unit->writeControlLED(LEDMode::Breath, LEDColor::Blue, 36, LEDColor::Blue));
     }
 }
 
-TEST_P(TestFinger2, Notepad)
+TEST_F(TestFinger2, Notepad)
 {
     SCOPED_TRACE(ustr);
 
     /////
-    // return;
 
     uint8_t buf[32]{};
     constexpr uint8_t empty[32]{};
@@ -408,12 +401,11 @@ TEST_P(TestFinger2, Notepad)
     }
 }
 
-TEST_P(TestFinger2, Template)
+TEST_F(TestFinger2, Template)
 {
     SCOPED_TRACE(ustr);
 
     /////
-    // return;
 
     std::vector<uint8_t> tbuf{};
     tbuf.resize(UnitFinger2::TEMPLATE_SIZE);
@@ -584,12 +576,11 @@ TEST_P(TestFinger2, Template)
     }
 }
 
-TEST_P(TestFinger2, Finger)
+TEST_F(TestFinger2, Finger)
 {
     SCOPED_TRACE(ustr);
 
     /////
-    // return;
 
     for (auto&& wm : workmode_table) {
         auto s = m5::utility::formatString("WorkMode:%u", wm);
@@ -700,7 +691,7 @@ TEST_P(TestFinger2, Finger)
     }
 }
 
-TEST_P(TestFinger2, Automatic)
+TEST_F(TestFinger2, Automatic)
 {
     SCOPED_TRACE(ustr);
     for (auto&& wm : workmode_table) {
@@ -747,6 +738,53 @@ TEST_P(TestFinger2, Automatic)
             EXPECT_FALSE(unit->autoIdentify(matched, page, score, 0xFFFF, 0, iflags));
         }
     }
+}
+
+// --- deprecated API compatibility (no hardware required) ---
+
+TEST_F(TestFinger2, DeprecatedAPI)
+{
+    // LEDMode::Bleath is a deprecated alias for LEDMode::Breath
+    EXPECT_EQ(LEDMode::Bleath, LEDMode::Breath);
+    EXPECT_EQ(static_cast<uint8_t>(LEDMode::Bleath), static_cast<uint8_t>(LEDMode::Breath));
+
+    // NO_NEED_RELAESE_FINGER is a deprecated alias for NO_NEED_RELEASE_FINGER
+    EXPECT_EQ(auto_enroll_flag::NO_NEED_RELAESE_FINGER, auto_enroll_flag::NO_NEED_RELEASE_FINGER);
+
+    // ResettFailed is a deprecated alias for ResetFailed
+    EXPECT_EQ(ConfirmCode::ResettFailed, ConfirmCode::ResetFailed);
+
+    // initializeFailed is a deprecated alias for InitializeFailed
+    EXPECT_EQ(ConfirmCode::initializeFailed, ConfirmCode::InitializeFailed);
+}
+
+TEST_F(TestFinger2, BeginConfig)
+{
+    SCOPED_TRACE(ustr);
+
+    // Verify that begin() applied config values to hardware
+    auto cfg = unit->config();
+
+    WorkMode mode{};
+    EXPECT_TRUE(unit->readWorkMode(mode));
+    EXPECT_EQ(mode, cfg.work_mode);
+
+    uint8_t sec{};
+    EXPECT_TRUE(unit->readSleepTime(sec));
+    EXPECT_EQ(sec, cfg.sleep_time);
+
+    // Write non-default values, re-read to verify
+    EXPECT_TRUE(unit->writeWorkMode(WorkMode::AlwaysActive));
+    EXPECT_TRUE(unit->readWorkMode(mode));
+    EXPECT_EQ(mode, WorkMode::AlwaysActive);
+
+    EXPECT_TRUE(unit->writeSleepTime(128));
+    EXPECT_TRUE(unit->readSleepTime(sec));
+    EXPECT_EQ(sec, 128);
+
+    // Restore defaults
+    EXPECT_TRUE(unit->writeWorkMode(cfg.work_mode));
+    EXPECT_TRUE(unit->writeSleepTime(cfg.sleep_time));
 }
 
 #if 0
