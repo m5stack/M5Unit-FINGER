@@ -6,7 +6,7 @@ Library for Finger units using [M5UnitUnified](https://github.com/m5stack/M5Unit
 M5UnitUnified is a library for unified handling of various M5 units products.
 
 ### SKU:U008
-Unit Finger is a fingerprint recognition sensor. It integrates the FPC1020A capacitive fingerprint recognition module, featuring multi-fingerprint entry, image processing, feature extraction, fingerprint comparison, and search functions.
+Unit Finger is a fingerprint recognition sensor. It integrates the FPC1020A capacitive fingerprint recognition module, featuring multi-fingerprint enrollment, image processing, feature extraction, fingerprint matching, and search functions.
 
 ### SKU:U074
 
@@ -38,6 +38,23 @@ See also examples using conventional methods here.
 ## Examples
 See also [examples/UnitUnified](examples/UnitUnified)
 
+### For ArduinoIDE settings
+You must choose a define symbol for the unit you will use.
+(Rewrite source or specify with compile options)
+
+- UnitFinger / HatFinger examples (PlotToSerial / Capture / Characteristic / User)
+```cpp
+// *************************************************************
+// Choose one define symbol to match the unit you are using
+// *************************************************************
+#if !defined(USING_UNIT_FINGER) && !defined(USING_HAT_FINGER)
+// For UnitFinger (U008)
+// #define USING_UNIT_FINGER
+// For HatFinger (U074)
+// #define USING_HAT_FINGER
+#endif
+```
+
 ## Doxygen document
 [GitHub Pages](https://m5stack.github.io/M5Unit-FINGER/)
 
@@ -51,7 +68,7 @@ It will output it under docs/html
 If you want to output Git commit hashes to html, do it for the git cloned folder.
 
 ### Required
-- [Doxyegn](https://www.doxygen.nl/)
+- [Doxygen](https://www.doxygen.nl/)
 - [pcregrep](https://formulae.brew.sh/formula/pcre2)
 - [Git](https://git-scm.com/) (Output commit hash to html)
 
