@@ -32,13 +32,12 @@ enum FrameOffset : uint8_t {
 
 };
 
-namespace {
-constexpr uint32_t TIMEOUT_MS{1000 * 4};
+using namespace m5::unit::fpc1xxx::detail;
 
-using Frame         = m5::unit::UnitFPC1XXX::Frame;
-using VariableFrame = m5::unit::UnitFPC1XXX::VariableFrame;
-
-constexpr uint8_t MARKER{0xF5};  // Frame marker for head and tail
+namespace m5 {
+namespace unit {
+namespace fpc1xxx {
+namespace detail {
 
 uint8_t xorSum(const uint8_t* data, const uint16_t len)
 {
@@ -48,6 +47,35 @@ uint8_t xorSum(const uint8_t* data, const uint16_t len)
     }
     return sum;
 }
+
+bool is_valid_sum(const Frame response, const bool check_marker)
+{
+    return (xorSum(response.data() + 1, 5) == response[OFFSET_CRC]) &&
+           (check_marker ? (response[OFFSET_HEAD] == MARKER && response[OFFSET_TAIL] == MARKER) : true);
+}
+
+bool is_valid_payload(const uint8_t* data, const uint16_t len)
+{
+    // 0xF5 Data... CHK 0xF5
+    return data && len >= 4 && data[0] == MARKER && data[len - 1] == MARKER &&
+           xorSum(data + 1, len - 3) == data[len - 2];
+}
+
+}  // namespace detail
+}  // namespace fpc1xxx
+}  // namespace unit
+}  // namespace m5
+
+namespace {
+constexpr uint32_t TIMEOUT_MS{1000 * 4};
+
+using Frame         = m5::unit::UnitFPC1XXX::Frame;
+using VariableFrame = m5::unit::UnitFPC1XXX::VariableFrame;
+
+constexpr size_t OVERHEAD{3};                    // marker x2 + checksum
+constexpr size_t MAX_USER_PAYLOAD{150 * 3 + 3};  // 150 users x 3 bytes + header
+constexpr size_t CHARACTERISTIC_LEN{196};
+constexpr size_t VERSION_LEN{9};
 
 Frame make_frame(const uint8_t cmd, const uint8_t p1 = 0, const uint8_t p2 = 0, const uint8_t p3 = 0)
 {
@@ -89,20 +117,6 @@ VariableFrame make_variable_frame(const uint8_t cmd, const uint16_t len, const u
 
     assert(ptr - frame.data() == frame.size() && "Illegal size");
     return frame;
-}
-
-bool is_valid_sum(const Frame response, const bool check_marker = true)
-{
-    return (xorSum(response.data() + 1, 5) == response[OFFSET_CRC]) && check_marker
-               ? (response[OFFSET_HEAD] == MARKER && response[OFFSET_TAIL] == MARKER)
-               : true;
-}
-
-bool is_valid_payload(const uint8_t* data, const uint16_t len)
-{
-    // 0xF5 Data... CHK 0xF5
-    return data && len >= 4 && data[0] == MARKER && data[len - 1] == MARKER &&
-           xorSum(data + 1, len - 3) == data[len - 2];
 }
 
 bool is_valid_ACK(const Frame& f)
@@ -192,7 +206,7 @@ bool UnitFPC1XXX::writeComparisonLevel(const uint8_t lv)
 {
     Frame res{};
     if (lv > 9) {
-        M5_LIB_LOGE("lv must be must be 0-9 (%u)", lv);
+        M5_LIB_LOGE("lv must be 0-9 (%u)", lv);
         return false;
     }
     return transceive_command(res, CMD_COMPARISON_LEVEL, 0, lv, 0 /* write */) && is_valid_ACK(res);
@@ -232,7 +246,7 @@ bool UnitFPC1XXX::readRegisteredUserCount(uint16_t& count)
     count = 0;
 
     Frame res{};
-    if (transceive_command(res, CMD_READ_REGISTERED_USER_COUNT)) {
+    if (transceive_command(res, CMD_READ_REGISTERED_USER_COUNT) && is_valid_ACK(res)) {
         count |= ((uint16_t)res[OFFSET_Q1]) << 8;
         count |= ((uint16_t)res[OFFSET_Q2]);
         return true;
@@ -265,7 +279,11 @@ bool UnitFPC1XXX::readAllUser(std::vector<fpc1xxx::User>& v)
     Frame res{};
     if (transceive_command(res, CMD_READ_ALL_USER_DATA) && is_valid_ACK(res)) {
         uint16_t vlen = (((uint16_t)res[OFFSET_Q1]) << 8) | res[OFFSET_Q2];
-        uint8_t vbuf[vlen + 3]{};
+        uint8_t vbuf[MAX_USER_PAYLOAD + OVERHEAD]{};
+        if (vlen + OVERHEAD > sizeof(vbuf)) {
+            M5_LIB_LOGE("Payload too large %u", vlen);
+            return false;
+        }
         if (readWithTransaction(vbuf, vlen + 3) == m5::hal::error::error_t::OK && is_valid_payload(vbuf, vlen + 3)) {
             uint16_t user_count = ((uint16_t)vbuf[1] << 8) | vbuf[2];
             const uint8_t* data = vbuf + 3;
@@ -294,9 +312,9 @@ bool UnitFPC1XXX::readUserCharacteristic(uint8_t characteristic[193], const uint
     if (transceive_command(res, CMD_READ_USER_CHARACTERISTIC, user_id >> 8, user_id & 0xFF) && is_valid_ACK(res)) {
         uint16_t vlen = (((uint16_t)res[OFFSET_Q1]) << 8) | res[OFFSET_Q2];
         if (vlen == 196) {
-            uint8_t vbuf[vlen + 3]{};
-            if (readWithTransaction(vbuf, vlen + 3) == m5::hal::error::error_t::OK &&
-                is_valid_payload(vbuf, vlen + 3)) {
+            uint8_t vbuf[CHARACTERISTIC_LEN + OVERHEAD]{};
+            if (readWithTransaction(vbuf, vlen + OVERHEAD) == m5::hal::error::error_t::OK &&
+                is_valid_payload(vbuf, vlen + OVERHEAD)) {
                 //                m5::utility::log::dump(vbuf, vlen + 3, false);
                 uint16_t read_user_id = (((uint16_t)vbuf[1]) << 8) | vbuf[2];
                 if (user_id != read_user_id) {
@@ -444,8 +462,9 @@ bool UnitFPC1XXX::scanCharacteristic(uint8_t characteristic[193])
             M5_LIB_LOGE("Illegal size %u", vlen);
             return false;
         }
-        uint8_t vbuf[vlen + 3]{};
-        if (readWithTransaction(vbuf, vlen + 3) == m5::hal::error::error_t::OK && is_valid_payload(vbuf, vlen + 3)) {
+        uint8_t vbuf[CHARACTERISTIC_LEN + OVERHEAD]{};
+        if (readWithTransaction(vbuf, vlen + OVERHEAD) == m5::hal::error::error_t::OK &&
+            is_valid_payload(vbuf, vlen + OVERHEAD)) {
             memcpy(characteristic, vbuf + 4, vlen - 3);
             return true;
         }
@@ -597,10 +616,10 @@ bool UnitFPC1XXX::readVersion(char str[9])
         if (transceive_command(res, CMD_READ_VERSION) && is_valid_ACK(res)) {
             uint16_t vlen = (((uint16_t)res[OFFSET_Q1]) << 8) | res[OFFSET_Q2];
             if (vlen == 9) {
-                uint8_t vbuf[vlen + 3]{};
-                if (readWithTransaction(vbuf, vlen + 3 /* markerx2, crc */) == m5::hal::error::error_t::OK &&
-                    is_valid_payload(vbuf, vlen + 3)) {
-                    memcpy((uint8_t*)str, vbuf + 1, vlen);
+                uint8_t vbuf[VERSION_LEN + OVERHEAD]{};
+                if (readWithTransaction(vbuf, vlen + OVERHEAD) == m5::hal::error::error_t::OK &&
+                    is_valid_payload(vbuf, vlen + OVERHEAD)) {
+                    memcpy(reinterpret_cast<uint8_t*>(str), vbuf + 1, vlen);
                     return true;
                 }
             } else {
