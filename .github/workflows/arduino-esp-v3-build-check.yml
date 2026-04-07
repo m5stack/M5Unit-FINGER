@@ -12,28 +12,28 @@ on:
     branches:
       - '*'
     paths:
-      - 'src/unit/**.cpp'
-      - 'src/unit/**.hpp'
-      - 'src/unit/**.h'
-      - 'src/unit/**.c'
+      - 'src/**.cpp'
+      - 'src/**.hpp'
+      - 'src/**.h'
+      - 'src/**.c'
       - 'examples/UnitUnified/**.ino'
       - 'examples/UnitUnified/**.cpp'
       - 'examples/UnitUnified/**.hpp'
       - 'examples/UnitUnified/**.h'
       - 'examples/UnitUnified/**.c'
-      - '**arduino-esp-v3-build-check.yml'
+      - '.github/workflows/arduino-esp-v3-build-check.yml'
   pull_request:
     paths:
-      - 'src/unit/**.cpp'
-      - 'src/unit/**.hpp'
-      - 'src/unit/**.h'
-      - 'src/unit/**.c'
+      - 'src/**.cpp'
+      - 'src/**.hpp'
+      - 'src/**.h'
+      - 'src/**.c'
       - 'examples/UnitUnified/**.ino'
       - 'examples/UnitUnified/**.cpp'
       - 'examples/UnitUnified/**.hpp'
       - 'examples/UnitUnified/**.h'
       - 'examples/UnitUnified/**.c'
-      - '**arduino-esp-v3-build-check.yml'
+      - '.github/workflows/arduino-esp-v3-build-check.yml'
   workflow_dispatch:
 
 defaults:
@@ -48,7 +48,7 @@ jobs:
   build:
     name: ${{ matrix.unit }}:${{ matrix.sketch }}:${{matrix.board}}@${{matrix.platform-version}}
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 12
 
     strategy:
       fail-fast: false
@@ -65,33 +65,27 @@ jobs:
           - UnitFinger2
 
         board:
+          - arduino_nesso_n1
           - m5stack_atom
           - m5stack_atoms3
           - m5stack_capsule
-#          - m5stack_cardputer
+          - m5stack_cardputer
           - m5stack_core
           - m5stack_core2
           - m5stack_coreink
           - m5stack_cores3
           - m5stack_dial
+          - m5stack_dinmeter
           - m5stack_fire
           - m5stack_nanoc6
           - m5stack_paper
-#          - m5stack_poe_cam
-#          - m5stack_stamp_c3
-#          - m5stack_stamp_pico
           - m5stack_stamp_s3
-#          - m5stack_station
-#          - m5stack_stickc
           - m5stack_stickc_plus
           - m5stack_stickc_plus2
-#          - m5stack_timer_cam
-#          - m5stack_tough
-#          - m5stack_unit_cam
-#          - m5stack_unit_cams3
+          - m5stack_tab5
 
         platform-version:
-          - 3.1.3
+          - 3.3.6
 
         platform:
           - esp32
@@ -106,104 +100,103 @@ jobs:
             platform-url: https://espressif.github.io/arduino-esp32/package_esp32_index.json
             platform: esp32
             archi: esp32
-            platform-version: 3.1.3
+            platform-version: 3.3.6
             board: m5stack_core
           - sketch: Characteristic
             unit: UnitFinger
             platform-url: https://espressif.github.io/arduino-esp32/package_esp32_index.json
             platform: esp32
             archi: esp32
-            platform-version: 3.1.3
+            platform-version: 3.3.6
             board: m5stack_core
           - sketch: User
             unit: UnitFinger
             platform-url: https://espressif.github.io/arduino-esp32/package_esp32_index.json
             platform: esp32
             archi: esp32
-            platform-version: 3.1.3
+            platform-version: 3.3.6
             board: m5stack_core
 
+          # HatFinger
           - sketch: PlotToSerial
             unit: HatFinger
             platform-url: https://espressif.github.io/arduino-esp32/package_esp32_index.json
             platform: esp32
             archi: esp32
-            platform-version: 3.1.3
+            platform-version: 3.3.6
             board: m5stack_stickc_plus
           - sketch: PlotToSerial
             unit: HatFinger
             platform-url: https://espressif.github.io/arduino-esp32/package_esp32_index.json
             platform: esp32
             archi: esp32
-            platform-version: 3.1.3
+            platform-version: 3.3.6
             board: m5stack_stickc_plus2
+          - sketch: PlotToSerial
+            unit: HatFinger
+            platform-url: https://espressif.github.io/arduino-esp32/package_esp32_index.json
+            platform: esp32
+            archi: esp32
+            platform-version: 3.3.6
+            board: m5stack_coreink
           - sketch: Capture
             unit: HatFinger
             platform-url: https://espressif.github.io/arduino-esp32/package_esp32_index.json
             platform: esp32
             archi: esp32
-            platform-version: 3.1.3
-            board: m5stack_stickc_plus2
-          - sketch: Characteristic
-            unit: UnitFinger
-            platform-url: https://espressif.github.io/arduino-esp32/package_esp32_index.json
-            platform: esp32
-            archi: esp32
-            platform-version: 3.1.3
-            board: m5stack_stickc_plus2
-          - sketch: User
-            unit: UnitFinger
-            platform-url: https://espressif.github.io/arduino-esp32/package_esp32_index.json
-            platform: esp32
-            archi: esp32
-            platform-version: 3.1.3
+            platform-version: 3.3.6
             board: m5stack_stickc_plus2
 
+          # UnitFinger2 extra sketches
           - sketch: Capture
             unit: UnitFinger2
             platform-url: https://espressif.github.io/arduino-esp32/package_esp32_index.json
             platform: esp32
             archi: esp32
-            platform-version: 3.1.3
+            platform-version: 3.3.6
             board: m5stack_core
           - sketch: Automatic
             unit: UnitFinger2
             platform-url: https://espressif.github.io/arduino-esp32/package_esp32_index.json
             platform: esp32
             archi: esp32
-            platform-version: 3.1.3
+            platform-version: 3.3.6
             board: m5stack_core
           - sketch: User
             unit: UnitFinger2
             platform-url: https://espressif.github.io/arduino-esp32/package_esp32_index.json
             platform: esp32
             archi: esp32
-            platform-version: 3.1.3
+            platform-version: 3.3.6
             board: m5stack_core
 
-
-
     steps:
-      - name: Checkout (push)
-        if: ${{ github.event_name != 'pull_request' }}
+      - name: Checkout
         uses: actions/checkout@v4
-      - name: Checkout (PR, pin to head)
-        if: ${{ github.event_name == 'pull_request' }}
-        uses: actions/checkout@v4
-        with:
-          ref: ${{ github.event.pull_request.head.sha }}
 
-      # Build 
+      - name: Prepare libraries list
+        id: libs
+        run: |
+          {
+            echo "yaml<<EOF"
+            echo "$REQUIRED_LIBRARIES" | tr ',' '\n' | while read -r lib; do
+              echo "- name: $lib"
+            done
+            echo "- source-path: ./"
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
+
       - name: Compile examples
-        uses: ArminJo/arduino-test-compile@master
+        uses: arduino/compile-sketches@v1
         with:
-          arduino-board-fqbn: ${{ matrix.platform }}:${{ matrix.archi }}:${{ matrix.board }}
-          arduino-platform: ${{ matrix.platform }}:${{ matrix.archi }}@${{ matrix.platform-version }}
-          platform-url: ${{ matrix.platform-url }}
-          required-libraries: ${{ env.REQUIRED_LIBRARIES }}
-          extra-arduino-cli-args: ${{ matrix.cli-args }}
-          build-properties: ${{ matrix.unit == 'UnitFinger' && '-DUSING_UNIT_FINGER' || (matrix.unit == 'HatFinger' && '-DUSING_HAT_FINGER' || '') }}
-          sketch-names: ${{ matrix.sketch }}.ino
-          #sketch-names-find-start: ${{ env.SKETCH_NAMES_FIND_START }}/${{ matrix.unit }}
-          sketch-names-find-start: ${{ env.SKETCH_NAMES_FIND_START }}/${{ (matrix.unit == 'HatFinger') && 'UnitFinger' || matrix.unit }}
-          #sketches-exclude: ${{ matrix.sketches-exclude }}
+          fqbn: ${{ matrix.platform }}:${{ matrix.archi }}:${{ matrix.board }}
+          platforms: |
+            - name: ${{ matrix.platform }}:${{ matrix.archi }}
+              source-url: ${{ matrix.platform-url }}
+              version: ${{ matrix.platform-version }}
+          libraries: ${{ steps.libs.outputs.yaml }}
+          sketch-paths: |
+            - ${{ env.SKETCH_NAMES_FIND_START }}/${{ (matrix.unit == 'HatFinger') && 'UnitFinger' || matrix.unit }}/${{ matrix.sketch }}
+          cli-compile-flags: |
+            - --build-property
+            - build.extra_flags=${{ matrix.unit == 'HatFinger' && '-DUSING_HAT_FINGER' || (matrix.unit == 'UnitFinger' && '-DUSING_UNIT_FINGER' || '') }}
