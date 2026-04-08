@@ -172,6 +172,22 @@ jobs:
             platform-version: 3.2.5
             board: m5stack_stickc_plus2
 
+          # FacesFinger (M-Bus, Core/Fire only)
+          - sketch: PlotToSerial
+            unit: FacesFinger
+            platform-url: https://m5stack.oss-cn-shenzhen.aliyuncs.com/resource/arduino/package_m5stack_index.json
+            platform: m5stack
+            archi: esp32
+            platform-version: 3.2.5
+            board: m5stack_core
+          - sketch: PlotToSerial
+            unit: FacesFinger
+            platform-url: https://m5stack.oss-cn-shenzhen.aliyuncs.com/resource/arduino/package_m5stack_index.json
+            platform: m5stack
+            archi: esp32
+            platform-version: 3.2.5
+            board: m5stack_fire
+
           # UnitFinger2 extra sketches
           - sketch: Capture
             unit: UnitFinger2
@@ -221,7 +237,7 @@ jobs:
               version: ${{ matrix.platform-version }}
           libraries: ${{ steps.libs.outputs.yaml }}
           sketch-paths: |
-            - ${{ env.SKETCH_NAMES_FIND_START }}/${{ (matrix.unit == 'HatFinger') && 'UnitFinger' || matrix.unit }}/${{ matrix.sketch }}
+            - ${{ env.SKETCH_NAMES_FIND_START }}/${{ (matrix.unit == 'HatFinger' || matrix.unit == 'FacesFinger') && 'UnitFinger' || matrix.unit }}/${{ matrix.sketch }}
           cli-compile-flags: |
             - --build-property
-            - build.extra_flags=${{ matrix.unit == 'HatFinger' && '-DUSING_HAT_FINGER' || (matrix.unit == 'UnitFinger' && '-DUSING_UNIT_FINGER' || '') }}
+            - build.extra_flags=${{ matrix.unit == 'HatFinger' && '-DUSING_HAT_FINGER' || (matrix.unit == 'FacesFinger' && '-DUSING_FACES_FINGER' || (matrix.unit == 'UnitFinger' && '-DUSING_UNIT_FINGER' || '')) }}

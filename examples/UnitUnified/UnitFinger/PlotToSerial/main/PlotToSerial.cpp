@@ -14,11 +14,13 @@
 // *************************************************************
 // Choose one define symbol to match the unit you are using
 // *************************************************************
-#if !defined(USING_UNIT_FINGER) && !defined(USING_HAT_FINGER)
+#if !defined(USING_UNIT_FINGER) && !defined(USING_HAT_FINGER) && !defined(USING_FACES_FINGER)
 // For UnitFinger (U008)
 // #define USING_UNIT_FINGER
 // For HatFinger (U074)
 // #define USING_HAT_FINGER
+// For FacesFinger (Faces Finger Module)
+// #define USING_FACES_FINGER
 #endif
 // *************************************************************
 
@@ -33,6 +35,8 @@ m5::unit::UnitUnified Units;
 m5::unit::UnitFinger unit;
 #elif defined(USING_HAT_FINGER)
 m5::unit::HatFinger unit;
+#elif defined(USING_FACES_FINGER)
+m5::unit::UnitFacesFinger unit;
 #else
 #error Please choose unit!
 #endif
@@ -59,6 +63,26 @@ UartPins get_hat_uart_pins(const m5::board_t board)
         default:
             return {-1, -1};
     }
+}
+#endif
+
+#if defined(USING_FACES_FINGER)
+// M-Bus pins for Faces Finger (GPIO varies by board)
+struct FacesPins {
+    int rx;           // UART RX (mbus_pin15)
+    int tx;           // UART TX (mbus_pin16)
+    int panel_power;  // Panel power (mbus_pin10)
+    int touch_power;  // Touch IC power (mbus_pin20)
+};
+
+FacesPins get_faces_pins()
+{
+    return {
+        M5.getPin(m5::pin_name_t::mbus_pin15),  // RX
+        M5.getPin(m5::pin_name_t::mbus_pin16),  // TX
+        M5.getPin(m5::pin_name_t::mbus_pin10),  // Panel power (GPIO26 on Core)
+        M5.getPin(m5::pin_name_t::mbus_pin20),  // Touch IC power (GPIO5 on Core)
+    };
 }
 #endif
 
@@ -104,6 +128,27 @@ void setup()
     }
     auto pin_num_in  = pins.rx;
     auto pin_num_out = pins.tx;
+#elif defined(USING_FACES_FINGER)
+    const auto fp = get_faces_pins();
+    M5_LOGI("getFacesPin: RX:%d TX:%d PWR:%d TCH:%d", fp.rx, fp.tx, fp.panel_power, fp.touch_power);
+    if (fp.rx < 0 || fp.tx < 0) {
+        M5_LOGE("No M-Bus on this board");
+        lcd.fillScreen(TFT_RED);
+        while (true) {
+            m5::utility::delay(10000);
+        }
+    }
+    auto pin_num_in  = fp.rx;
+    auto pin_num_out = fp.tx;
+
+    // Set Faces config from M-Bus pins
+    {
+        auto cfg            = unit.config();
+        cfg.panel_power_pin = fp.panel_power;
+        cfg.touch_power_pin = fp.touch_power;
+        unit.config(cfg);
+    }
+
 #else
     auto pin_num_in  = M5.getPin(m5::pin_name_t::port_c_rxd);
     auto pin_num_out = M5.getPin(m5::pin_name_t::port_c_txd);
