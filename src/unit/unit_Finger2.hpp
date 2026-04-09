@@ -98,9 +98,11 @@ constexpr auto_enroll_flag_t DONT_RETURN_INTERMEDIATE_RESULTS{1U << 2};  //!< Do
 constexpr auto_enroll_flag_t ALLOW_OVERWRITE_PAGE{1U << 3};              //!< Allow overwriting of page_id
 constexpr auto_enroll_flag_t PROHIBIT_DUPLICATE_TEMPLATE{1U << 4};       //!< Template Duplication prohibited
 constexpr auto_enroll_flag_t NO_NEED_RELEASE_FINGER{1U << 5};            //!< No need to release finger
-//! @deprecated Use NO_NEED_RELEASE_FINGER
-[[deprecated("use NO_NEED_RELEASE_FINGER")]]
-constexpr auto_enroll_flag_t NO_NEED_RELAESE_FINGER = NO_NEED_RELEASE_FINGER;
+
+/*! @deprecated Use NO_NEED_RELEASE_FINGER */
+[[deprecated("use NO_NEED_RELEASE_FINGER")]] constexpr auto_enroll_flag_t NO_NEED_RELAESE_FINGER =
+    NO_NEED_RELEASE_FINGER;
+
 }  // namespace auto_enroll_flag
 
 /*!
