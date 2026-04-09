@@ -25,6 +25,7 @@
 var NAVTREE =
 [
   [ "M5Unit-FINGER", "index.html", [
+    [ "Deprecated List", "deprecated.html", null ],
     [ "Namespaces", "namespaces.html", [
       [ "Namespace List", "namespaces.html", "namespaces_dup" ]
     ] ],
@@ -47,7 +48,7 @@ var NAVTREE =
 var NAVTREEINDEX =
 [
 "_m5_unit_unified_f_i_n_g_e_r_8hpp.html",
-"unit___finger2_8hpp.html#ad9a809694e7081f91b26d1da8bb0f20baaeb818dae11b6e94b9b69afd654382a9"
+"unit___finger2_8hpp.html#ac20e5e8c5cf97d7823f685150bc21f95"
 ];
 
 var SYNCONMSG = 'click to disable panel synchronisation';

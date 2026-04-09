@@ -43,6 +43,7 @@ var unit___finger2_8hpp =
       [ "ClearFailed", "unit___finger2_8hpp.html#a61296099c4dc3e43e13761d01976ee43a27e9c4d9241f40c867f08a7002765a91", null ],
       [ "LowPowerFailed", "unit___finger2_8hpp.html#a61296099c4dc3e43e13761d01976ee43ae4377505854820bcf6f0fdfb9bec0e01", null ],
       [ "PasswordIncorrect", "unit___finger2_8hpp.html#a61296099c4dc3e43e13761d01976ee43a6761e4fd00ffd18ba1883f248b718190", null ],
+      [ "ResetFailed", "unit___finger2_8hpp.html#a61296099c4dc3e43e13761d01976ee43a1146ac1333f9770279495caf794dd75a", null ],
       [ "ResettFailed", "unit___finger2_8hpp.html#a61296099c4dc3e43e13761d01976ee43af49ae8fe8248723951485ee429a017db", null ],
       [ "NoValidImage", "unit___finger2_8hpp.html#a61296099c4dc3e43e13761d01976ee43abbc6fbaf4e96a46ed525bfabfb1b6c29", null ],
       [ "UpgradeFailed", "unit___finger2_8hpp.html#a61296099c4dc3e43e13761d01976ee43acb8992c2192fb2bdc4f5f8bfbd392ae8", null ],
@@ -64,6 +65,7 @@ var unit___finger2_8hpp =
       [ "Timeout", "unit___finger2_8hpp.html#a61296099c4dc3e43e13761d01976ee43ac85a251cc457840f1e032f1b733e9398", null ],
       [ "AlreadyExists", "unit___finger2_8hpp.html#a61296099c4dc3e43e13761d01976ee43a89b69484680b18e9179e826c6e023805", null ],
       [ "FeatureAssociated", "unit___finger2_8hpp.html#a61296099c4dc3e43e13761d01976ee43afe5f5cf61a809d0dd4f355b34caaf648", null ],
+      [ "InitializeFailed", "unit___finger2_8hpp.html#a61296099c4dc3e43e13761d01976ee43a6c38620d8dfc4596db149f65151d2582", null ],
       [ "initializeFailed", "unit___finger2_8hpp.html#a61296099c4dc3e43e13761d01976ee43a44e88b15b351e7b43a74fe65c5468336", null ],
       [ "InformationNotEmpty", "unit___finger2_8hpp.html#a61296099c4dc3e43e13761d01976ee43a3cd2ea98f70f19a1973f09d0dd740aa5", null ],
       [ "InformationEmpty", "unit___finger2_8hpp.html#a61296099c4dc3e43e13761d01976ee43ae3293c9dc28f533e13252a85c986cc28", null ],
@@ -97,13 +99,14 @@ var unit___finger2_8hpp =
     ] ],
     [ "LEDMode", "unit___finger2_8hpp.html#a7d12c9dad2f1174965a737e05727ce9d", [
       [ "None", "unit___finger2_8hpp.html#a7d12c9dad2f1174965a737e05727ce9da6adf97f83acf6453d4a6a4b1070f3754", null ],
-      [ "Bleath", "unit___finger2_8hpp.html#a7d12c9dad2f1174965a737e05727ce9dabd400f6e14b1e4c36872fdbc21d1aade", null ],
+      [ "Breath", "unit___finger2_8hpp.html#a7d12c9dad2f1174965a737e05727ce9da382f1d7e8d99f3ee29d872432b560c16", null ],
       [ "Blink", "unit___finger2_8hpp.html#a7d12c9dad2f1174965a737e05727ce9dacfad0a7419f44ea0c64db24197abbf70", null ],
       [ "On", "unit___finger2_8hpp.html#a7d12c9dad2f1174965a737e05727ce9da521c36a31c2762741cf0f8890cbe05e3", null ],
       [ "Off", "unit___finger2_8hpp.html#a7d12c9dad2f1174965a737e05727ce9dad15305d7a4e34e02489c74a5ef542f36", null ],
       [ "Fadein", "unit___finger2_8hpp.html#a7d12c9dad2f1174965a737e05727ce9da5c47e9858ab884ceca52e8d9959368ed", null ],
       [ "Fadeout", "unit___finger2_8hpp.html#a7d12c9dad2f1174965a737e05727ce9da93b5e2eadc7b94177fa6c6e9b5b76224", null ],
-      [ "Rainbow", "unit___finger2_8hpp.html#a7d12c9dad2f1174965a737e05727ce9da4aca5ee9a087fb9218bfb662fe92605c", null ]
+      [ "Rainbow", "unit___finger2_8hpp.html#a7d12c9dad2f1174965a737e05727ce9da4aca5ee9a087fb9218bfb662fe92605c", null ],
+      [ "Bleath", "unit___finger2_8hpp.html#a7d12c9dad2f1174965a737e05727ce9dabd400f6e14b1e4c36872fdbc21d1aade", null ]
     ] ],
     [ "RegisterID", "unit___finger2_8hpp.html#ae378c867c6de3829e71399995973fcc2", [
       [ "PacketSize", "unit___finger2_8hpp.html#ae378c867c6de3829e71399995973fcc2a1eb898097fbbaceb1322d33022f1908c", null ]
@@ -116,5 +119,6 @@ var unit___finger2_8hpp =
     [ "DONT_RETURN_INTERMEDIATE_RESULTS", "unit___finger2_8hpp.html#aef0011fa5d29d6506c953c5793331dd0", null ],
     [ "DONT_RETURN_INTERMEDIATE_RESULTS", "unit___finger2_8hpp.html#a4b9338fdaf620d8327d7d5a843b9baaf", null ],
     [ "NO_NEED_RELAESE_FINGER", "unit___finger2_8hpp.html#ae1ba4ac72a4594b7f982397632a8e5c3", null ],
+    [ "NO_NEED_RELEASE_FINGER", "unit___finger2_8hpp.html#aeced9d214b0046b26f3128da3105ba2a", null ],
     [ "PROHIBIT_DUPLICATE_TEMPLATE", "unit___finger2_8hpp.html#a8df757b95c98ae73bdc33c734601557e", null ]
 ];

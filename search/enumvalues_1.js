@@ -8,5 +8,6 @@ var searchData=
   ['black_5',['Black',['../unit___finger2_8hpp.html#a17a64e7478304d0d4eb456b9ceab4d42ae90dfb84e30edf611e326eeb04d680de',1,'m5::unit::finger2']]],
   ['bleath_6',['Bleath',['../unit___finger2_8hpp.html#a7d12c9dad2f1174965a737e05727ce9dabd400f6e14b1e4c36872fdbc21d1aade',1,'m5::unit::finger2']]],
   ['blink_7',['Blink',['../unit___finger2_8hpp.html#a7d12c9dad2f1174965a737e05727ce9dacfad0a7419f44ea0c64db24197abbf70',1,'m5::unit::finger2']]],
-  ['blue_8',['Blue',['../unit___finger2_8hpp.html#a17a64e7478304d0d4eb456b9ceab4d42a9594eec95be70e7b1710f730fdda33d9',1,'m5::unit::finger2']]]
+  ['blue_8',['Blue',['../unit___finger2_8hpp.html#a17a64e7478304d0d4eb456b9ceab4d42a9594eec95be70e7b1710f730fdda33d9',1,'m5::unit::finger2']]],
+  ['breath_9',['Breath',['../unit___finger2_8hpp.html#a7d12c9dad2f1174965a737e05727ce9da382f1d7e8d99f3ee29d872432b560c16',1,'m5::unit::finger2']]]
 ];

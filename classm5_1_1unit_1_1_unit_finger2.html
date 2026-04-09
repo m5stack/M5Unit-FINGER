@@ -27,7 +27,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">M5Unit-FINGER<span id="projectnumber">&#160;0.0.1 git rev:46fe0d9</span>
+   <div id="projectname">M5Unit-FINGER<span id="projectnumber">&#160;0.0.2 git rev:9f22200</span>
    </div>
   </td>
  </tr>
@@ -134,6 +134,7 @@ using&#160;</td><td class="memItemRight" valign="bottom"><b>Packet</b> = std::ve
 Public Member Functions</h2></td></tr>
 <tr class="memitem:afb56c39e6b76bd5ebfe0956b31bc9afb" id="r_afb56c39e6b76bd5ebfe0956b31bc9afb"><td class="memItemLeft" align="right" valign="top"><a id="afb56c39e6b76bd5ebfe0956b31bc9afb" name="afb56c39e6b76bd5ebfe0956b31bc9afb"></a>
 virtual bool&#160;</td><td class="memItemRight" valign="bottom"><b>begin</b> () override</td></tr>
+<tr class="memdesc:afb56c39e6b76bd5ebfe0956b31bc9afb"><td class="mdescLeft">&#160;</td><td class="mdescRight">Begin communication with the unit. <br /></td></tr>
 <tr class="separator:afb56c39e6b76bd5ebfe0956b31bc9afb"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a6afa72c97425c2647edd5588ead9796e" id="r_a6afa72c97425c2647edd5588ead9796e"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a6afa72c97425c2647edd5588ead9796e">readModuleStatus</a> (bool &amp;awake)</td></tr>
 <tr class="memdesc:a6afa72c97425c2647edd5588ead9796e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Read the module status.  <br /></td></tr>
@@ -162,11 +163,11 @@ virtual bool&#160;</td><td class="memItemRight" valign="bottom"><b>begin</b> () 
 <tr><td colspan="2"><div class="groupHeader">Settings for begin</div></td></tr>
 <tr class="memitem:a670e103aa4e3954ab55e05d8f16842ea" id="r_a670e103aa4e3954ab55e05d8f16842ea"><td class="memItemLeft" align="right" valign="top"><a id="a670e103aa4e3954ab55e05d8f16842ea" name="a670e103aa4e3954ab55e05d8f16842ea"></a>
 <a class="el" href="structm5_1_1unit_1_1_unit_finger2_1_1config__t.html">config_t</a>&#160;</td><td class="memItemRight" valign="bottom"><b>config</b> ()</td></tr>
-<tr class="memdesc:a670e103aa4e3954ab55e05d8f16842ea"><td class="mdescLeft">&#160;</td><td class="mdescRight">Gets the configration. <br /></td></tr>
+<tr class="memdesc:a670e103aa4e3954ab55e05d8f16842ea"><td class="mdescLeft">&#160;</td><td class="mdescRight">Gets the configuration. <br /></td></tr>
 <tr class="separator:a670e103aa4e3954ab55e05d8f16842ea"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a31d35a3c2af95e2ebbb6a714c5ba3383" id="r_a31d35a3c2af95e2ebbb6a714c5ba3383"><td class="memItemLeft" align="right" valign="top"><a id="a31d35a3c2af95e2ebbb6a714c5ba3383" name="a31d35a3c2af95e2ebbb6a714c5ba3383"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>config</b> (const <a class="el" href="structm5_1_1unit_1_1_unit_finger2_1_1config__t.html">config_t</a> &amp;cfg)</td></tr>
-<tr class="memdesc:a31d35a3c2af95e2ebbb6a714c5ba3383"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set the configration. <br /></td></tr>
+<tr class="memdesc:a31d35a3c2af95e2ebbb6a714c5ba3383"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set the configuration. <br /></td></tr>
 <tr class="separator:a31d35a3c2af95e2ebbb6a714c5ba3383"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr><td colspan="2"><div class="groupHeader">Properties</div></td></tr>
 <tr class="memitem:a17c10dc580d47b1f7ac1939721bac615" id="r_a17c10dc580d47b1f7ac1939721bac615"><td class="memItemLeft" align="right" valign="top">uint32_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a17c10dc580d47b1f7ac1939721bac615">deviceAddress</a> () const</td></tr>
@@ -220,9 +221,9 @@ constexpr uint16_t&#160;</td><td class="memItemRight" valign="bottom"><b>imageHe
 <tr class="memitem:a7dbd0016396bf57346ce43a0b551c3d2" id="r_a7dbd0016396bf57346ce43a0b551c3d2"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a7dbd0016396bf57346ce43a0b551c3d2">capture</a> (bool &amp;detected, const bool enroll=false)</td></tr>
 <tr class="memdesc:a7dbd0016396bf57346ce43a0b551c3d2"><td class="mdescLeft">&#160;</td><td class="mdescRight">Capture the fingerprint image.  <br /></td></tr>
 <tr class="separator:a7dbd0016396bf57346ce43a0b551c3d2"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a0ad8738f8e471dcc0bf12383e50c2ce1" id="r_a0ad8738f8e471dcc0bf12383e50c2ce1"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a0ad8738f8e471dcc0bf12383e50c2ce1">readImageInformation</a> (uint8_t &amp;percentage, bool &amp;quarity)</td></tr>
-<tr class="memdesc:a0ad8738f8e471dcc0bf12383e50c2ce1"><td class="mdescLeft">&#160;</td><td class="mdescRight">Capture the fingerprint and read image information.  <br /></td></tr>
-<tr class="separator:a0ad8738f8e471dcc0bf12383e50c2ce1"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9492e10a5cd489632f40e49b89be95f2" id="r_a9492e10a5cd489632f40e49b89be95f2"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a9492e10a5cd489632f40e49b89be95f2">readImageInformation</a> (uint8_t &amp;percentage, bool &amp;quality)</td></tr>
+<tr class="memdesc:a9492e10a5cd489632f40e49b89be95f2"><td class="mdescLeft">&#160;</td><td class="mdescRight">Capture the fingerprint and read image information.  <br /></td></tr>
+<tr class="separator:a9492e10a5cd489632f40e49b89be95f2"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:acd6cf20e49738cb61c107fa301eab3d2" id="r_acd6cf20e49738cb61c107fa301eab3d2"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#acd6cf20e49738cb61c107fa301eab3d2">readImage</a> (std::vector&lt; uint8_t &gt; &amp;img)</td></tr>
 <tr class="memdesc:acd6cf20e49738cb61c107fa301eab3d2"><td class="mdescLeft">&#160;</td><td class="mdescRight">Read the finger image.  <br /></td></tr>
 <tr class="separator:acd6cf20e49738cb61c107fa301eab3d2"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -287,7 +288,7 @@ constexpr uint16_t&#160;</td><td class="memItemRight" valign="bottom"><b>imageHe
 <tr><td colspan="2"><div class="groupText"><dl class="section warning"><dt>Warning</dt><dd>Returns an error when device is sleeping </dd></dl>
 </div></td></tr>
 <tr class="memitem:aa1ed2780f6226ab8827b339bb1724c70" id="r_aa1ed2780f6226ab8827b339bb1724c70"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#aa1ed2780f6226ab8827b339bb1724c70">autoEnroll</a> (<a class="el" href="unit___finger2_8hpp.html#a61296099c4dc3e43e13761d01976ee43">finger2::ConfirmCode</a> &amp;confirm, const uint16_t page_id, const uint8_t capture_times=5, const <a class="el" href="unit___finger2_8hpp.html#aaa4d455237126dce0e9e47f4aa854d3f">finger2::auto_enroll_flag_t</a> flags=0, <a class="el" href="unit___finger2_8hpp.html#a2a8752fbc6f204322a1838d28c3e4fc2">finger2::auto_enroll_callback_t</a> callback=nullptr)</td></tr>
-<tr class="memdesc:aa1ed2780f6226ab8827b339bb1724c70"><td class="mdescLeft">&#160;</td><td class="mdescRight">Automatic registeration.  <br /></td></tr>
+<tr class="memdesc:aa1ed2780f6226ab8827b339bb1724c70"><td class="mdescLeft">&#160;</td><td class="mdescRight">Automatic registration.  <br /></td></tr>
 <tr class="separator:aa1ed2780f6226ab8827b339bb1724c70"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a3ab8ab8fe092e8418533e3f120f6afa4" id="r_a3ab8ab8fe092e8418533e3f120f6afa4"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a3ab8ab8fe092e8418533e3f120f6afa4">autoIdentify</a> (bool &amp;matched, uint16_t &amp;matching_page_id, uint16_t &amp;score, const uint16_t page_id=0xFFFF, const uint8_t security_level=0, <a class="el" href="unit___finger2_8hpp.html#a0ac4d20b114942e2b2ca258e8e2c3b88">finger2::auto_identify_flag_t</a> flags=0, const <a class="el" href="unit___finger2_8hpp.html#a00f3e5cdc06d9cdbf0ac53c5a065ff74">finger2::auto_identify_callback_t</a> callback=nullptr)</td></tr>
 <tr class="memdesc:a3ab8ab8fe092e8418533e3f120f6afa4"><td class="mdescLeft">&#160;</td><td class="mdescRight">Automatic identify (1:1, 1:N)  <br /></td></tr>
@@ -315,7 +316,7 @@ static constexpr uint16_t&#160;</td><td class="memItemRight" valign="bottom"><b>
 <tr class="separator:accf855ed789e91a349b49c5c729114db"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a460a0077bb12f66cef8210edebe378a5" id="r_a460a0077bb12f66cef8210edebe378a5"><td class="memItemLeft" align="right" valign="top"><a id="a460a0077bb12f66cef8210edebe378a5" name="a460a0077bb12f66cef8210edebe378a5"></a>
 static constexpr uint16_t&#160;</td><td class="memItemRight" valign="bottom"><b>IMAGE_HEIGHT</b> {208}</td></tr>
-<tr class="memdesc:a460a0077bb12f66cef8210edebe378a5"><td class="mdescLeft">&#160;</td><td class="mdescRight">Captued image height. <br /></td></tr>
+<tr class="memdesc:a460a0077bb12f66cef8210edebe378a5"><td class="mdescLeft">&#160;</td><td class="mdescRight">Captured image height. <br /></td></tr>
 <tr class="separator:a460a0077bb12f66cef8210edebe378a5"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a69a308e878ba8646307a368dc513f278" id="r_a69a308e878ba8646307a368dc513f278"><td class="memItemLeft" align="right" valign="top"><a id="a69a308e878ba8646307a368dc513f278" name="a69a308e878ba8646307a368dc513f278"></a>
 static constexpr uint16_t&#160;</td><td class="memItemRight" valign="bottom"><b>TEMPLATE_SIZE</b> {7262}</td></tr>
@@ -380,12 +381,15 @@ uint8_t&#160;</td><td class="memItemRight" valign="bottom"><b>read_data</b> (Pac
       </table>
 </div><div class="memdoc">
 
-<p>Automatic registeration. </p>
-<p>PS_AutoEnroll @detals Perform capture and generate characteristic operations for the specified number of times, merge them, and store template to the specified page_id </p><dl class="params"><dt>Parameters</dt><dd>
+<p>Automatic registration. </p>
+<p>PS_AutoEnroll</p>
+<p>Perform capture and generate characteristic operations for the specified number of times, merge them, and store template to the specified page_id </p><dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramdir">[out]</td><td class="paramname">confirm</td><td>ConfirmCode </td></tr>
     <tr><td class="paramdir"></td><td class="paramname">page_id</td><td>Page number </td></tr>
-    <tr><td class="paramdir"></td><td class="paramname">capture_times</td><td>Number of finger captures for registration @params flags Operation Control Flag @params callback Callback function that receives and processes intermediate results </td></tr>
+    <tr><td class="paramdir"></td><td class="paramname">capture_times</td><td>Number of finger captures for registration </td></tr>
+    <tr><td class="paramdir"></td><td class="paramname">flags</td><td>Operation Control Flag </td></tr>
+    <tr><td class="paramdir"></td><td class="paramname">callback</td><td>Callback function that receives and processes intermediate results </td></tr>
   </table>
   </dd>
 </dl>
@@ -444,7 +448,10 @@ uint8_t&#160;</td><td class="memItemRight" valign="bottom"><b>read_data</b> (Pac
     <tr><td class="paramdir">[out]</td><td class="paramname">matched</td><td>true if matched </td></tr>
     <tr><td class="paramdir">[out]</td><td class="paramname">matching_page_id</td><td>Matching page number </td></tr>
     <tr><td class="paramdir">[out]</td><td class="paramname">score</td><td>Matching score (lowest: 0) </td></tr>
-    <tr><td class="paramdir"></td><td class="paramname">page_id</td><td>Verification target page number(1:1), All page if page_id is 0xFFFF (1:N) @patams security_level Security level (0 -1) @params flags Operation Control Flag @params callback Callback function that receives and processes intermediate results </td></tr>
+    <tr><td class="paramdir"></td><td class="paramname">page_id</td><td>Verification target page number(1:1), All page if page_id is 0xFFFF (1:N) </td></tr>
+    <tr><td class="paramdir"></td><td class="paramname">security_level</td><td>Security level (0 -1) </td></tr>
+    <tr><td class="paramdir"></td><td class="paramname">flags</td><td>Operation Control Flag </td></tr>
+    <tr><td class="paramdir"></td><td class="paramname">callback</td><td>Callback function that receives and processes intermediate results </td></tr>
   </table>
   </dd>
 </dl>
@@ -469,6 +476,7 @@ uint8_t&#160;</td><td class="memItemRight" valign="bottom"><b>read_data</b> (Pac
 </div><div class="memdoc">
 
 <p>Abort automatic functions. </p>
+<dl class="section return"><dt>Returns</dt><dd>True if successful </dd></dl>
 <dl class="section warning"><dt>Warning</dt><dd>This feature is supported when the security level is 0 or 1 </dd></dl>
 
 </div>
@@ -497,7 +505,7 @@ uint8_t&#160;</td><td class="memItemRight" valign="bottom"><b>read_data</b> (Pac
 </div><div class="memdoc">
 
 <p>Get the capacity of templates. </p>
-<dl class="section warning"><dt>Warning</dt><dd>Returns the correct value after begin() succeeds </dd></dl>
+<dl class="section warning"><dt>Warning</dt><dd>Returns the correct value after <a class="el" href="#afb56c39e6b76bd5ebfe0956b31bc9afb" title="Begin communication with the unit.">begin()</a> succeeds </dd></dl>
 
 </div>
 </div>
@@ -523,8 +531,8 @@ uint8_t&#160;</td><td class="memItemRight" valign="bottom"><b>read_data</b> (Pac
 <p>Capture the fingerprint image. </p>
 <p>PS_GetImage or PS_GetEnrollImage </p><dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">deteced</td><td>true if finger detected </td></tr>
-    <tr><td class="paramname">enroll</td><td>true for register(PS_GetEnrollImage), false for detection(PS_GetImage) </td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">detected</td><td>true if finger detected </td></tr>
+    <tr><td class="paramdir"></td><td class="paramname">enroll</td><td>true for register(PS_GetEnrollImage), false for detection(PS_GetImage) </td></tr>
   </table>
   </dd>
 </dl>
@@ -774,7 +782,7 @@ it is better to call readIndexTable once and verify table yourself </dd></dl>
 <p>Generate template from merged characteristics. </p>
 <p>PS_RegModel</p>
 <p>After merging the characteristics, generate a template. </p><dl class="section return"><dt>Returns</dt><dd>True if successful </dd></dl>
-<dl class="section pre"><dt>Precondition</dt><dd>generatCharacteristic() succeeded </dd></dl>
+<dl class="section pre"><dt>Precondition</dt><dd><a class="el" href="#a21bde6f13991f089ee71424dbf148a98" title="Generate characteristic from captured image.">generateCharacteristic()</a> succeeded </dd></dl>
 
 </div>
 </div>
@@ -825,7 +833,8 @@ it is better to call readIndexTable once and verify table yourself </dd></dl>
 </div><div class="memdoc">
 
 <p>Load template to buffer. </p>
-<p>PS_LoadChar @detals Readin the fingerprint templates which appointed page_id in flash database to template buffer </p><dl class="params"><dt>Parameters</dt><dd>
+<p>PS_LoadChar</p>
+<p>Reading the fingerprint templates which appointed page_id in flash database to template buffer </p><dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">buffer_id</td><td>Target buffer number (1 - 5) </td></tr>
     <tr><td class="paramname">page_id</td><td>Source page number </td></tr>
@@ -922,8 +931,8 @@ it is better to call readIndexTable once and verify table yourself </dd></dl>
 
 </div>
 </div>
-<a id="a0ad8738f8e471dcc0bf12383e50c2ce1" name="a0ad8738f8e471dcc0bf12383e50c2ce1"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a0ad8738f8e471dcc0bf12383e50c2ce1">&#9670;&#160;</a></span>readImageInformation()</h2>
+<a id="a9492e10a5cd489632f40e49b89be95f2" name="a9492e10a5cd489632f40e49b89be95f2"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a9492e10a5cd489632f40e49b89be95f2">&#9670;&#160;</a></span>readImageInformation()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -936,7 +945,7 @@ it is better to call readIndexTable once and verify table yourself </dd></dl>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">bool &amp;</td>          <td class="paramname"><span class="paramname"><em>quarity</em></span>&#160;)</td>
+          <td class="paramtype">bool &amp;</td>          <td class="paramname"><span class="paramname"><em>quality</em></span>&#160;)</td>
         </tr>
       </table>
 </div><div class="memdoc">
@@ -945,7 +954,7 @@ it is better to call readIndexTable once and verify table yourself </dd></dl>
 <p>PS_GetImageInfo </p><dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramdir">[out]</td><td class="paramname">percentage</td><td>Image area </td></tr>
-    <tr><td class="paramdir">[out]</td><td class="paramname">quarity</td><td>Image quarity (true : pass, false: fail) </td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">quality</td><td>Image quality (true : pass, false: fail) </td></tr>
   </table>
   </dd>
 </dl>
@@ -1023,7 +1032,13 @@ it is better to call readIndexTable once and verify table yourself </dd></dl>
 </div><div class="memdoc">
 
 <p>Read the module status. </p>
-<p>PS_GetFingerprintModuleStatus @patam[out] awake true if awake </p><dl class="section return"><dt>Returns</dt><dd>True if successful </dd></dl>
+<p>PS_GetFingerprintModuleStatus </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[out]</td><td class="paramname">awake</td><td>true if awake </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>True if successful </dd></dl>
 
 </div>
 </div>
@@ -1131,7 +1146,7 @@ it is better to call readIndexTable once and verify table yourself </dd></dl>
 </div><div class="memdoc">
 
 <p>Read the time to go to sleep (second) </p>
-<p>PS_GeSleepTime </p><dl class="params"><dt>Parameters</dt><dd>
+<p>PS_GetSleepTime </p><dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramdir">[out]</td><td class="paramname">sec</td><td>Time (second) </td></tr>
   </table>
@@ -1304,7 +1319,13 @@ it is better to call readIndexTable once and verify table yourself </dd></dl>
 </div><div class="memdoc">
 
 <p>Read the work mode. </p>
-<p>PS_GetWorkMode @patam[out] wm WorkMode </p><dl class="section return"><dt>Returns</dt><dd>True if successful </dd></dl>
+<p>PS_GetWorkMode </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[out]</td><td class="paramname">wm</td><td>WorkMode </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>True if successful </dd></dl>
 
 </div>
 </div>
@@ -1325,7 +1346,7 @@ it is better to call readIndexTable once and verify table yourself </dd></dl>
 
 <p>Write the current sleep time to internal flash. </p>
 <p>PS_SaveConfigurationToFlash </p><dl class="section return"><dt>Returns</dt><dd>True if successful </dd></dl>
-<dl class="section note"><dt>Note</dt><dd>It will be the default time at startup </dd></dl>
+<dl class="section note"><dt>Note</dt><dd>It will be the default sleep time at startup </dd></dl>
 <dl class="section warning"><dt>Warning</dt><dd>This API will affect the life of the device. Do not use it frequently. </dd></dl>
 
 </div>
@@ -1346,7 +1367,8 @@ it is better to call readIndexTable once and verify table yourself </dd></dl>
 </div><div class="memdoc">
 
 <p>Write the current work mode to internal flash. </p>
-<p>PS_SaveConfigurationToFlash </p><dl class="section note"><dt>Note</dt><dd>It will be the default work mode at startup </dd></dl>
+<p>PS_SaveConfigurationToFlash </p><dl class="section return"><dt>Returns</dt><dd>True if successful </dd></dl>
+<dl class="section note"><dt>Note</dt><dd>It will be the default work mode at startup </dd></dl>
 <dl class="section warning"><dt>Warning</dt><dd>This API will affect the life of the device. Do not use it frequently. </dd></dl>
 
 </div>
@@ -1488,7 +1510,7 @@ it is better to call readIndexTable once and verify table yourself </dd></dl>
   </dd>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>True if successful </dd></dl>
-<dl class="section pre"><dt>Precondition</dt><dd>registerModel() succeeded </dd></dl>
+<dl class="section pre"><dt>Precondition</dt><dd><a class="el" href="#a7cffde2a17f7e34689c441dfb6c64086" title="Generate template from merged characteristics.">generateTemplate()</a> succeeded </dd></dl>
 <dl class="section warning"><dt>Warning</dt><dd>This feature is supported when the security level is 0 or 1 </dd></dl>
 
 </div>
@@ -1548,7 +1570,7 @@ it is better to call readIndexTable once and verify table yourself </dd></dl>
   <table class="params">
     <tr><td class="paramname">mode</td><td>LEDMode (Ignore LEDMode::Rainbow) </td></tr>
     <tr><td class="paramname">clr</td><td>Start LEDColor </td></tr>
-    <tr><td class="paramname">cycle</td><td>Cycle count, ininity if zero. Valid for LEDMode::Breath, LEDMode::Blink </td></tr>
+    <tr><td class="paramname">cycle</td><td>Cycle count, infinity if zero. Valid for LEDMode::Breath, LEDMode::Blink </td></tr>
     <tr><td class="paramname">eclr</td><td>End LEDColor (Valid for LEDMode::Breath) </td></tr>
   </table>
   </dd>
@@ -1593,7 +1615,7 @@ it is better to call readIndexTable once and verify table yourself </dd></dl>
     <tr><td class="paramname">tm</td><td>Color change time (decisecond) </td></tr>
     <tr><td class="paramname">colors</td><td>LEDColor array (maximum 10) </td></tr>
     <tr><td class="paramname">colors_num</td><td>Number of the colors (maximum 10) </td></tr>
-    <tr><td class="paramname">cycle</td><td>Cycle count, ininity if zero. Valid for LEDMode::Breath, LEDMode::Blink </td></tr>
+    <tr><td class="paramname">cycle</td><td>Cycle count, infinity if zero. Valid for LEDMode::Breath, LEDMode::Blink </td></tr>
   </table>
   </dd>
 </dl>
@@ -1659,9 +1681,9 @@ When less than 32 bytes are written, the missing bytes are filled with zeros </d
 </div><div class="memdoc">
 
 <p>Write the time to go to sleep (second) </p>
-<p>PS_SeSleepTime </p><dl class="params"><dt>Parameters</dt><dd>
+<p>PS_SetSleepTime </p><dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramdir">[out]</td><td class="paramname">sec</td><td>Time that valid range 10-254 (second) </td></tr>
+    <tr><td class="paramname">sec</td><td>Time that valid range 10-254 (second) </td></tr>
   </table>
   </dd>
 </dl>
@@ -1797,7 +1819,13 @@ When less than 32 bytes are written, the missing bytes are filled with zeros </d
 </div><div class="memdoc">
 
 <p>Write the work mode. </p>
-<p>PS_SetWorkMode @patam wm WorkMode </p><dl class="section return"><dt>Returns</dt><dd>True if successful </dd></dl>
+<p>PS_SetWorkMode </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">wm</td><td>WorkMode </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>True if successful </dd></dl>
 
 </div>
 </div>
