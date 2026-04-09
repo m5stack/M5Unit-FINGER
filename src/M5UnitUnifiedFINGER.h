@@ -5,7 +5,7 @@
  */
 /*!
   @file M5UnitUnifiedFINGER.h
-  @brief Main header of M5Unit-FINGER using M5UnitUnfied
+  @brief Main header of M5Unit-FINGER using M5UnitUnified
 */
 #ifndef M5_UNIT_UNIFIED_FINGER_H
 #define M5_UNIT_UNIFIED_FINGER_H

@@ -37,6 +37,7 @@ void make_sprite4(LGFX_Sprite& s, const std::vector<uint8_t>& v, const uint16_t 
 void setup()
 {
     M5.begin();
+    M5.setTouchButtonHeightByRatio(100);
 
     // The screen shall be in landscape mode
     if (lcd.height() > lcd.width()) {
@@ -47,6 +48,11 @@ void setup()
     auto pin_num_out = M5.getPin(m5::pin_name_t::port_c_txd);
     if (pin_num_in < 0 || pin_num_out < 0) {
         M5_LOGW("PortC is not available");
+        // NanoC6: Ex_I2C.setPort() registers m5gfx::i2c on GROVE pins;
+        // Wire.end() alone won't release it, causing dual-driver conflict on uart_driver_install
+        if (M5.getBoard() == m5::board_t::board_M5NanoC6) {
+            M5.Ex_I2C.release();
+        }
         Wire.end();
         pin_num_in  = M5.getPin(m5::pin_name_t::port_a_pin1);
         pin_num_out = M5.getPin(m5::pin_name_t::port_a_pin2);
@@ -68,13 +74,13 @@ void setup()
 
     if (!Units.add(unit, s) || !Units.begin()) {
         M5_LOGE("Failed to begin");
-        lcd.clear(TFT_RED);
+        lcd.fillScreen(TFT_RED);
         while (true) {
             m5::utility::delay(10000);
         }
     }
 
-    M5_LOGI("M5UnitUnified has been begun");
+    M5_LOGI("M5UnitUnified initialized");
     M5_LOGI("%s", Units.debugInfo().c_str());
     lcd.fillScreen(TFT_DARKGREEN);
     lcd.setFont(&fonts::AsciiFont8x16);
@@ -90,10 +96,9 @@ void setup()
 void loop()
 {
     M5.update();
-    auto touch = M5.Touch.getDetail();
     Units.update();
 
-    if (M5.BtnA.wasClicked() || touch.wasClicked()) {
+    if (M5.BtnA.wasClicked()) {
         lcd.fillScreen(TFT_DARKGREEN);
         M5.Speaker.tone(2500, 20);
         lcd.setCursor(0, 0);

@@ -37,14 +37,15 @@ enum class WorkMode : uint8_t {
   @brief LED operation mode
  */
 enum class LEDMode : uint8_t {
-    None,     //!< None
-    Bleath,   //!< Roundtrip between light up and out gradually (as default)
-    Blink,    //!< Blinking
-    On,       //!< Light up
-    Off,      //!< Light out
-    Fadein,   //!< Light up gradually
-    Fadeout,  //!< Light out gradually
-    Rainbow,  //!< Roundtrip rainbow color
+    None,             //!< None
+    Breath,           //!< Roundtrip between light up and out gradually (as default)
+    Blink,            //!< Blinking
+    On,               //!< Light up
+    Off,              //!< Light out
+    Fadein,           //!< Light up gradually
+    Fadeout,          //!< Light out gradually
+    Rainbow,          //!< Roundtrip rainbow color
+    Bleath = Breath,  //!< @deprecated Use Breath
 };
 
 /*!
@@ -72,7 +73,7 @@ enum class RegisterID : uint8_t {
 
 /*!
  @struct SystemBasicParams
- @brief The module’s basic parametrs
+ @brief The module’s basic parameters
 */
 struct SystemBasicParams {
     uint16_t status{};             //!< System operational status
@@ -96,7 +97,12 @@ namespace auto_enroll_flag {
 constexpr auto_enroll_flag_t DONT_RETURN_INTERMEDIATE_RESULTS{1U << 2};  //!< Do not return intermediate results
 constexpr auto_enroll_flag_t ALLOW_OVERWRITE_PAGE{1U << 3};              //!< Allow overwriting of page_id
 constexpr auto_enroll_flag_t PROHIBIT_DUPLICATE_TEMPLATE{1U << 4};       //!< Template Duplication prohibited
-constexpr auto_enroll_flag_t NO_NEED_RELAESE_FINGER{1U << 5};            //!< No need to take your finger off
+constexpr auto_enroll_flag_t NO_NEED_RELEASE_FINGER{1U << 5};            //!< No need to release finger
+
+/*! @deprecated Use NO_NEED_RELEASE_FINGER */
+[[deprecated("use NO_NEED_RELEASE_FINGER")]] constexpr auto_enroll_flag_t NO_NEED_RELAESE_FINGER =
+    NO_NEED_RELEASE_FINGER;
+
 }  // namespace auto_enroll_flag
 
 /*!
@@ -109,7 +115,7 @@ constexpr auto_identify_flag_t DONT_RETURN_INTERMEDIATE_RESULTS{1U << 2};  //!< 
 
 /*!
   @enum AutoEnrollStage
-  @brief Interim stage of AutoEnrool
+  @brief Interim stage of AutoEnroll
  */
 enum class AutoEnrollStage : uint8_t {
     VerifyCommand,           //!< Command verification
@@ -136,30 +142,31 @@ enum class AutoIdentifyStage : uint8_t {
   @brief Confirmation code
  */
 enum class ConfirmCode : uint8_t {
-    OK,                    //!< 0x00:Instruction implementing end or OK
-    PacketError,           //!< 0x01:Data packet receiving error
-    NoFinger,              //!< 0x02:No finger on the sensor
-    ImageFailed,           //!< 0x03:Getting fingerprint image failed
-    ImageTooDry,           //!< 0x04:The fingerprint image is too dry or too light to generate feature
-    ImageTooHumid,         //!< 0x05:The fingerprint image is too humid or too blurry to generate feature
-    ImageTooAmorphous,     //!< 0x06:The fingerprint image is too amorphous to generate feature
-    ImageTooFew,           //!< 0x07:The fingerprint image is in order, but with too little minutiaes（or too small
-                           //!< area）to generatefeature
-    Unmatched,             //!< 0x08:The fingerprint unmatched
-    NotFound,              //!< 0x09:No fingerprint searched
-    MergeFailed,           //!< 0x0A:The feature merging failed
-    AddressOverflow,       //!< 0x0B:The address SN exceeding the range of fingerprint database when accessing to it
-    ReadTemplateFailed,    //!< 0x0C:Template reading error or invalid from the fingerprint database
-    UploadFailed,          //!< 0x0D:Feature uploading failed
-    ReceiveFailed,         //!< 0x0E:The module cannot receive continue data packet
-    UploadImageFailed,     //!< 0x0F:Image uploading failed
-    DeleteFailed,          //!< 0x10:Module deleting failed
-    ClearFailed,           //!< 0x11:The fingerprint database clearing failed
-    LowPowerFailed,        //!< 0x12:Cannot be in low power consumption
-    PasswordIncorrect,     //!< 0x13:The password incorrect
-    ResettFailed,          //!< 0x14:The system reset failed
-    NoValidImage,          //!< 0x15:There is no valid original image in buffer to generate image
-    UpgradeFailed,         //!< 0x16:On-line upgrading failed;
+    OK,                  //!< 0x00:Instruction implementing end or OK
+    PacketError,         //!< 0x01:Data packet receiving error
+    NoFinger,            //!< 0x02:No finger on the sensor
+    ImageFailed,         //!< 0x03:Getting fingerprint image failed
+    ImageTooDry,         //!< 0x04:The fingerprint image is too dry or too light to generate feature
+    ImageTooHumid,       //!< 0x05:The fingerprint image is too humid or too blurry to generate feature
+    ImageTooAmorphous,   //!< 0x06:The fingerprint image is too amorphous to generate feature
+    ImageTooFew,         //!< 0x07:The fingerprint image is in order, but with too little minutiaes（or too small
+                         //!< area）to generatefeature
+    Unmatched,           //!< 0x08:The fingerprint unmatched
+    NotFound,            //!< 0x09:No fingerprint searched
+    MergeFailed,         //!< 0x0A:The feature merging failed
+    AddressOverflow,     //!< 0x0B:The address SN exceeding the range of fingerprint database when accessing to it
+    ReadTemplateFailed,  //!< 0x0C:Template reading error or invalid from the fingerprint database
+    UploadFailed,        //!< 0x0D:Feature uploading failed
+    ReceiveFailed,       //!< 0x0E:The module cannot receive continue data packet
+    UploadImageFailed,   //!< 0x0F:Image uploading failed
+    DeleteFailed,        //!< 0x10:Module deleting failed
+    ClearFailed,         //!< 0x11:The fingerprint database clearing failed
+    LowPowerFailed,      //!< 0x12:Cannot be in low power consumption
+    PasswordIncorrect,   //!< 0x13:The password incorrect
+    ResetFailed,         //!< 0x14:The system reset failed
+    ResettFailed = ResetFailed,  //!< @deprecated Use ResetFailed
+    NoValidImage,                //!< 0x15:There is no valid original image in buffer to generate image
+    UpgradeFailed,               //!< 0x16:On-line upgrading failed;
     IncompleteFinger,      //!< 0x17:There are incomplete fingerprint or finger stay still between twice image capturing
     FlashError,            //!< 0x18:Read-write FLASH error
     RandomError,           //!< 0x19:Random number generation failed
@@ -178,31 +185,32 @@ enum class ConfirmCode : uint8_t {
     Timeout,               //!< 0x26:Timeout
     AlreadyExists,         //!< 0x27:Fingerprint already exists
     FeatureAssociated,     //!< 0x28:Fingerprint features are associated
-    initializeFailed,      //!< 0x29:Sensor initialization failed
-    InformationNotEmpty,   //!< 0x2A:Module information is NOT empty
-    InformationEmpty,      //!< 0x2B:Module information is empty
-    OTPFailed,             //!< 0x2C:OTP operation failed
-    KeyGenerateFailed,     //!< 0x2D:Key generation failed
-    KeyNotExist,           //!< 0x2E:The key does not exist
-    AlgorithmFailed,       //!< 0x2F:Security algorithm execution failed
-    IncorrectResult,       //!< 0x30:The encryption/decryption results of the security algorithm are incorrect
-    MismatchFunction,      //!< 0x31:Functionality does not match the encryption level
-    KeyLocked,             //!< 0x32:The key has been locked
-    SmallImage,            //!< 0x33:Image too small
-    StaticObjectInImage,   //!< 0x34:Static foreign object in the image (Orange)
-    IllegalData,           //!< 0x35:The data is illegal
-    PacketTimeout = 0xF9,  //!< 0xF9:Receive packet timeout
-    PacketBad,             //!< 0xFA:Error Packet (e.g., data not fully received, other packet received)
-    PacketOverflow,        //!< 0xFB:Packet overflow (e.g., when a packet exceeds the maximum length)
-    OperationBlocked,      //!< 0xFC:This operation has been blocked
-    ParameterError,        //!< 0xFD:Parameter error
-    NotActive,             //!< 0xFE:The fingerprint module is not activated
+    InitializeFailed,      //!< 0x29:Sensor initialization failed
+    initializeFailed = InitializeFailed,  //!< @deprecated Use InitializeFailed
+    InformationNotEmpty,                  //!< 0x2A:Module information is NOT empty
+    InformationEmpty,                     //!< 0x2B:Module information is empty
+    OTPFailed,                            //!< 0x2C:OTP operation failed
+    KeyGenerateFailed,                    //!< 0x2D:Key generation failed
+    KeyNotExist,                          //!< 0x2E:The key does not exist
+    AlgorithmFailed,                      //!< 0x2F:Security algorithm execution failed
+    IncorrectResult,           //!< 0x30:The encryption/decryption results of the security algorithm are incorrect
+    MismatchFunction,          //!< 0x31:Functionality does not match the encryption level
+    KeyLocked,                 //!< 0x32:The key has been locked
+    SmallImage,                //!< 0x33:Image too small
+    StaticObjectInImage,       //!< 0x34:Static foreign object in the image (Orange)
+    IllegalData,               //!< 0x35:The data is illegal
+    PacketTimeout = 0xF9,      //!< 0xF9:Receive packet timeout
+    PacketBad,                 //!< 0xFA:Error Packet (e.g., data not fully received, other packet received)
+    PacketOverflow,            //!< 0xFB:Packet overflow (e.g., when a packet exceeds the maximum length)
+    OperationBlocked,          //!< 0xFC:This operation has been blocked
+    ParameterError,            //!< 0xFD:Parameter error
+    NotActive,                 //!< 0xFE:The fingerprint module is not activated
     PassiveActivation = 0xFF,  //!< 0xFF:Passive activation
 };
 
 /*!
   @brief Callback function for autoEnroll
-  @brief call_times Number of callback invocations (zero origin)
+  @param call_times Number of callback invocations (zero origin)
   @param page_id page_id being attempted to register
   @param confirm ConfirmCode
   @param stage AutoEnrollStage
@@ -214,7 +222,7 @@ using auto_enroll_callback_t = bool (*)(const uint16_t call_times, const uint16_
                                         const AutoEnrollStage stage, const uint8_t state);
 /*!
   @brief Callback function for autoIdentify
-  @brief call_times Number of callback invocations (zero origin)
+  @param call_times Number of callback invocations (zero origin)
   @param confirm ConfirmCode
   @param stage AutoIdentifyStage
   @retval true: Continue process
@@ -225,12 +233,12 @@ using auto_identify_callback_t = bool (*)(const uint16_t call_times, const Confi
 
 /*!
   @brief Callback for batch read/write
-  @brief call_times Number of callback invocations (zero origin)
-  @brief actual_size Size processed in a single batch operation
-  @brief batch_size Processing size per batch
-  @brief total_size Total processed size
-  @brief planned_size Planned size
-  @brief completed Is this the final step?
+  @param call_times Number of callback invocations (zero origin)
+  @param actual_size Size processed in a single batch operation
+  @param batch_size Processing size per batch
+  @param total_size Total processed size
+  @param planned_size Planned size
+  @param completed Is this the final step?
   @retval true: Continue process
   @retval false: Abort process (If completed == true, ignore)
  */
@@ -251,7 +259,7 @@ public:
     using Packet = std::vector<uint8_t>;
 
     static constexpr uint16_t IMAGE_WIDTH{80};      //!< Capture image width
-    static constexpr uint16_t IMAGE_HEIGHT{208};    //!< Captued image height
+    static constexpr uint16_t IMAGE_HEIGHT{208};    //!< Captured image height
     static constexpr uint16_t TEMPLATE_SIZE{7262};  //!< Template size
 
 protected:
@@ -266,6 +274,7 @@ public:
 
     virtual ~UnitFinger2() = default;
 
+    //! @brief Begin communication with the unit
     virtual bool begin() override;
 
     /*!
@@ -280,12 +289,12 @@ public:
 
     ///@name Settings for begin
     ///@{
-    /*! @brief Gets the configration */
+    /*! @brief Gets the configuration */
     inline config_t config()
     {
         return _cfg;
     }
-    //! @brief Set the configration
+    //! @brief Set the configuration
     inline void config(const config_t& cfg)
     {
         _cfg = cfg;
@@ -325,7 +334,7 @@ public:
     /*!
       @brief Read the module status
       @details PS_GetFingerprintModuleStatus
-      @patam[out] awake true if awake
+      @param[out] awake true if awake
       @return True if successful
      */
     bool readModuleStatus(bool& awake);
@@ -343,20 +352,21 @@ public:
     /*!
       @brief Read the work mode
       @details PS_GetWorkMode
-      @patam[out] wm WorkMode
+      @param[out] wm WorkMode
       @return True if successful
      */
     bool readWorkMode(finger2::WorkMode& wm);
     /*!
       @brief Write the work mode
       @details PS_SetWorkMode
-      @patam wm WorkMode
+      @param wm WorkMode
       @return True if successful
      */
     bool writeWorkMode(const finger2::WorkMode wm);
     /*!
       @brief Write the current work mode to internal flash
       @details PS_SaveConfigurationToFlash
+      @return True if successful
       @note It will be the default work mode at startup
       @warning This API will affect the life of the device. Do not use it frequently.
      */
@@ -364,15 +374,15 @@ public:
 
     /*!
       @brief Read the time to go to sleep (second)
-      @details PS_GeSleepTime
+      @details PS_GetSleepTime
       @param[out] sec Time (second)
       @return True if successful
      */
     bool readSleepTime(uint8_t& sec);
     /*!
       @brief Write the time to go to sleep (second)
-      @details PS_SeSleepTime
-      @param[out] sec Time that valid range 10-254 (second)
+      @details PS_SetSleepTime
+      @param sec Time that valid range 10-254 (second)
       @return True if successful
      */
     bool writeSleepTime(const uint8_t sec);
@@ -380,7 +390,7 @@ public:
       @brief Write the current sleep time to internal flash
       @details PS_SaveConfigurationToFlash
       @return True if successful
-      @note It will be the default time at startup
+      @note It will be the default sleep time at startup
       @warning This API will affect the life of the device. Do not use it frequently.
      */
     bool saveSleepTime();
@@ -409,7 +419,7 @@ public:
       @details PS_ControlBLN
       @param mode LEDMode (Ignore LEDMode::Rainbow)
       @param clr Start LEDColor
-      @param cycle Cycle count, ininity if zero. Valid for LEDMode::Breath, LEDMode::Blink
+      @param cycle Cycle count, infinity if zero. Valid for LEDMode::Breath, LEDMode::Blink
       @param eclr End LEDColor (Valid for LEDMode::Breath)
       @return True if successful
       @warning Returns an error when device is sleeping
@@ -423,7 +433,7 @@ public:
       @param tm Color change time (decisecond)
       @param colors LEDColor array (maximum 10)
       @param colors_num Number of the colors (maximum 10)
-      @param cycle Cycle count, ininity if zero. Valid for LEDMode::Breath, LEDMode::Blink
+      @param cycle Cycle count, infinity if zero. Valid for LEDMode::Breath, LEDMode::Blink
       @return True if successful
       @warning Returns an error when device is sleeping
      */
@@ -437,7 +447,7 @@ public:
     /*!
       @brief Capture the fingerprint image
       @details PS_GetImage or PS_GetEnrollImage
-      @param deteced true if finger detected
+      @param[out] detected true if finger detected
       @param enroll true for register(PS_GetEnrollImage), false for detection(PS_GetImage)
       @return True if successful
      */
@@ -447,11 +457,11 @@ public:
       @brief Capture the fingerprint and read image information
       @details PS_GetImageInfo
       @param[out] percentage Image area
-      @param[out] quarity Image quarity (true : pass, false: fail)
+      @param[out] quality Image quality (true : pass, false: fail)
       @return True if successful
       @pre capture() succeeded
      */
-    bool readImageInformation(uint8_t& percentage, bool& quarity);
+    bool readImageInformation(uint8_t& percentage, bool& quality);
 
     /*!
       @brief Read the finger image
@@ -477,7 +487,7 @@ public:
       @details PS_RegModel
       @details After merging the characteristics, generate a template.
       @return True if successful
-      @pre generatCharacteristic() succeeded
+      @pre generateCharacteristic() succeeded
      */
     bool generateTemplate();
 
@@ -488,7 +498,7 @@ public:
       @param page_id Page number
       @param buffer_id Buffer number (1 - 5)
       @return True if successful
-      @pre registerModel() succeeded
+      @pre generateTemplate() succeeded
       @warning This feature is supported when the security level is 0 or 1
     */
     bool storeTemplate(const uint16_t page_id, const uint8_t buffer_id = 1);
@@ -543,7 +553,7 @@ public:
     /*!
       @brief Load template to buffer
       @details PS_LoadChar
-      @detals Readin the fingerprint templates which appointed page_id in flash database to template buffer
+      @details Reading the fingerprint templates which appointed page_id in flash database to template buffer
       @param buffer_id Target buffer number (1 - 5)
       @param page_id Source page number
       @return True if successful
@@ -657,15 +667,15 @@ public:
     ///@name Automatic function
     ///@{
     /*!
-      @brief Automatic registeration
+      @brief Automatic registration
       @details PS_AutoEnroll
-      @detals Perform capture and generate characteristic operations for the specified number of times, merge them,
+      @details Perform capture and generate characteristic operations for the specified number of times, merge them,
       and store template to the specified page_id
       @param[out] confirm ConfirmCode
       @param page_id Page number
       @param capture_times Number of finger captures for registration
-      @params flags Operation Control Flag
-      @params callback Callback function that receives and processes intermediate results
+      @param flags Operation Control Flag
+      @param callback Callback function that receives and processes intermediate results
       @return True if successful
       @warning This feature is supported when the security level is 0 or 1
     */
@@ -679,9 +689,9 @@ public:
       @param[out] matching_page_id Matching page number
       @param[out] score Matching score (lowest: 0)
       @param page_id Verification target page number(1:1), All page if page_id is 0xFFFF (1:N)
-      @patams security_level Security level (0 -1)
-      @params flags Operation Control Flag
-      @params callback Callback function that receives and processes intermediate results
+      @param security_level Security level (0 -1)
+      @param flags Operation Control Flag
+      @param callback Callback function that receives and processes intermediate results
       @return True if successful
       @warning This feature is supported when the security level is 0 or 1
      */
@@ -691,6 +701,7 @@ public:
 
     /*!
       @brief Abort automatic functions
+      @return True if successful
       @warning This feature is supported when the security level is 0 or 1
      */
     bool cancel();
@@ -836,7 +847,7 @@ constexpr uint8_t CMD_GET_WORK_MODE{0xD3};
 constexpr uint8_t CMD_ACTIVATE_MODULE{0xD4};
 constexpr uint8_t CMD_GET_MODULE_STATUS{0xD5};
 constexpr uint8_t CMD_SAVE_CONFIGURATION{0xD6};
-constexpr uint8_t CMD_GET_FIRMWRE_VERSION{0xD7};
+constexpr uint8_t CMD_GET_FIRMWARE_VERSION{0xD7};
 ///@endcond
 }  // namespace command
 }  // namespace finger2

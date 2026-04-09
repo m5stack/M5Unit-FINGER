@@ -104,6 +104,7 @@ public:
 
     virtual ~UnitFPC1XXX() = default;
 
+    //! @brief Begin communication with the unit
     virtual bool begin() override;
 
     /*!
@@ -116,12 +117,12 @@ public:
 
     ///@name Settings for begin
     ///@{
-    /*! @brief Gets the configration */
+    /*! @brief Gets the configuration */
     inline config_t config()
     {
         return _cfg;
     }
-    //! @brief Set the configration
+    //! @brief Set the configuration
     inline void config(const config_t& cfg)
     {
         _cfg = cfg;
@@ -130,12 +131,12 @@ public:
 
     ///@name Properties
     ///@{
-    //! @brief  Gets the width of resolutuin
+    //! @brief  Gets the width of resolution
     inline virtual uint16_t resolutionWidth() const
     {
         return 0;
     }
-    //! @brief  Gets the height of resolutuin
+    //! @brief  Gets the height of resolution
     inline virtual uint16_t resolutionHeight() const
     {
         return 0;
@@ -218,7 +219,7 @@ public:
     ///@{
     /*!
       @brief Read the number of registered users
-      @param[out] users Number of registered users
+      @param[out] count Number of registered users
       @return True if successful
     */
     bool readRegisteredUserCount(uint16_t& count);
@@ -243,7 +244,7 @@ public:
      */
     bool readUserCharacteristic(uint8_t characteristic[193], const uint16_t user_id);
     /*!
-      @brief Find the unregisted user id in specific range
+      @brief Find the unregistered user id in specific range
       @param[out] user_id User ID
       @param low Lowest user ID (Minimum user ID if zero)
       @param high Highest user ID (Maximum user ID if zero)
@@ -298,7 +299,7 @@ public:
       @param[out] img Image vector (4 or 8 bits grayscale)
       @param raw Capture raw image(8bits) if true, Capture compressed image(4bits) if false
       @return True if successful
-      @note Read 8 bits grayscale width x heigh byte pixel array if raw image
+      @note Read 8 bits grayscale width x height byte pixel array if raw image
       @note Read 4 bits grayscale width/2 x height/2 nibble pixel array if NOT raw image
       @warning Some chips do not support capturing raw image
      */
@@ -309,7 +310,7 @@ public:
     /*!
       @brief Register characteristic
       @param user_id UserID
-      @parampermission Permission(1,2,3)
+      @param permission Permission(1,2,3)
       @param characteristic Characteristic data
       @return True if successful
     */
@@ -346,7 +347,7 @@ public:
     bool readSerialNumber(uint32_t& no);
     /*!
       @brief Read the version string
-      @param[out] str Output strig buffer (At least 9 bytes)
+      @param[out] str Output string buffer (At least 9 bytes)
       @return True if successful
      */
     bool readVersion(char str[9]);
@@ -393,6 +394,7 @@ public:
     }
     virtual ~UnitFPC1020A() = default;
 
+    //! @brief Begin communication with the unit
     virtual bool begin() override;
 
     inline virtual uint16_t resolutionWidth() const override
@@ -450,6 +452,21 @@ constexpr uint8_t CMD_COMPARE_CHARACTERISTIC{0x44};
 
 }  // namespace command
 ///@endcond
+///@cond
+namespace detail {
+using Frame = UnitFPC1XXX::Frame;
+
+constexpr uint8_t MARKER{0xF5};  //!< Frame marker for head and tail
+
+//! @brief XOR checksum
+uint8_t xorSum(const uint8_t* data, const uint16_t len);
+//! @brief Validate frame checksum (and optionally markers)
+bool is_valid_sum(const Frame response, const bool check_marker = true);
+//! @brief Validate variable-length payload checksum and markers
+bool is_valid_payload(const uint8_t* data, const uint16_t len);
+}  // namespace detail
+///@endcond
+
 }  // namespace fpc1xxx
 
 }  // namespace unit

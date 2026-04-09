@@ -15,7 +15,9 @@
 // Choose one define symbol to match the unit you are using
 // *************************************************************
 #if !defined(USING_UNIT_FINGER) && !defined(USING_HAT_FINGER)
+// For UnitFinger (U008)
 // #define USING_UNIT_FINGER
+// For HatFinger (U074)
 // #define USING_HAT_FINGER
 #endif
 // *************************************************************
@@ -37,6 +39,29 @@ m5::unit::HatFinger unit;
 
 uint16_t target_user_id{};
 
+#if defined(USING_HAT_FINGER)
+struct UartPins {
+    int rx;  // SCL pin of Hat connector
+    int tx;  // SDA pin of Hat connector
+};
+
+UartPins get_hat_uart_pins(const m5::board_t board)
+{
+    switch (board) {
+        case m5::board_t::board_M5StickC:
+        case m5::board_t::board_M5StickCPlus:
+        case m5::board_t::board_M5StickCPlus2:
+            return {26, 0};
+        case m5::board_t::board_M5StickS3:
+            return {0, 8};
+        case m5::board_t::board_M5StackCoreInk:
+            return {26, 25};
+        default:
+            return {-1, -1};
+    }
+}
+#endif
+
 void print_all_users()
 {
     std::vector<User> v{};
@@ -53,7 +78,14 @@ void print_all_users()
 
 void setup()
 {
-    M5.begin();
+    auto m5cfg = M5.config();
+#if defined(USING_HAT_FINGER)
+    m5cfg.pmic_button  = false;  // Disable BtnPWR
+    m5cfg.internal_imu = false;  // Disable internal IMU
+    m5cfg.internal_rtc = false;  // Disable internal RTC
+#endif
+    M5.begin(m5cfg);
+    M5.setTouchButtonHeightByRatio(100);
 
     // The screen shall be in landscape mode
     if (lcd.height() > lcd.width()) {
@@ -61,18 +93,32 @@ void setup()
     }
 
 #if defined(USING_HAT_FINGER)
-    auto pin_num_in  = 26;
-    auto pin_num_out = 0;
+    const auto pins = get_hat_uart_pins(M5.getBoard());
+    M5_LOGI("getHatPin: RX:%d TX:%d", pins.rx, pins.tx);
+    if (pins.rx < 0 || pins.tx < 0) {
+        M5_LOGE("No Hat port on this board");
+        lcd.fillScreen(TFT_RED);
+        while (true) {
+            m5::utility::delay(10000);
+        }
+    }
+    auto pin_num_in  = pins.rx;
+    auto pin_num_out = pins.tx;
 #else
     auto pin_num_in  = M5.getPin(m5::pin_name_t::port_c_rxd);
     auto pin_num_out = M5.getPin(m5::pin_name_t::port_c_txd);
-#endif
     if (pin_num_in < 0 || pin_num_out < 0) {
         M5_LOGW("PortC is not available");
+        // NanoC6: Ex_I2C.setPort() registers m5gfx::i2c on GROVE pins;
+        // Wire.end() alone won't release it, causing dual-driver conflict on uart_driver_install
+        if (M5.getBoard() == m5::board_t::board_M5NanoC6) {
+            M5.Ex_I2C.release();
+        }
         Wire.end();
         pin_num_in  = M5.getPin(m5::pin_name_t::port_a_pin1);
         pin_num_out = M5.getPin(m5::pin_name_t::port_a_pin2);
     }
+#endif
     M5_LOGI("getPin: %d,%d", pin_num_in, pin_num_out);
 
     // clang-format off
@@ -97,13 +143,13 @@ void setup()
 
     if (!Units.add(unit, s) || !Units.begin()) {
         M5_LOGE("Failed to begin");
-        lcd.clear(TFT_RED);
+        lcd.fillScreen(TFT_RED);
         while (true) {
             m5::utility::delay(10000);
         }
     }
 
-    M5_LOGI("M5UnitUnified has been begun");
+    M5_LOGI("M5UnitUnified initialized");
     M5_LOGI("%s", Units.debugInfo().c_str());
 
     {
@@ -138,11 +184,10 @@ void setup()
 void loop()
 {
     M5.update();
-    auto touch = M5.Touch.getDetail();
     Units.update();
 
     // Register finger
-    if (M5.BtnA.wasHold() || touch.wasHold()) {
+    if (M5.BtnA.wasHold()) {
         lcd.fillScreen(TFT_DARKGREEN);
         M5.Speaker.tone(2500, 20);
         lcd.drawString("Try register", 0, 0);
@@ -162,7 +207,7 @@ void loop()
     }
 
     // Identify and verify finger
-    if (M5.BtnA.wasClicked() || touch.wasClicked()) {
+    if (M5.BtnA.wasClicked()) {
         uint16_t id{};
         uint8_t per{};
         M5.Speaker.tone(1500, 20);

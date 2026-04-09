@@ -16,7 +16,7 @@
 #include <chrono>
 #include <thread>
 #include <iostream>
-#include <random>
+#include <esp_random.h>
 #include <algorithm>
 
 using namespace m5::unit::googletest;
@@ -25,9 +25,33 @@ using namespace m5::unit::fpc1xxx;
 using namespace m5::unit::fpc1xxx::command;
 using m5::unit::types::elapsed_time_t;
 
-const ::testing::Environment* global_fixture = ::testing::AddGlobalTestEnvironment(new GlobalFixture<400000U>());
+// Hat port UART pins (RX=SCL, TX=SDA of Hat connector)
+#if defined(USING_HAT_FINGER)
+namespace hat {
+struct UartPins {
+    int rx;
+    int tx;
+};
 
-class TestFPC1020A : public UARTComponentTestBase<UnitFPC1020A, bool> {
+UartPins get_hat_uart_pins(const m5::board_t board)
+{
+    switch (board) {
+        case m5::board_t::board_M5StickC:
+        case m5::board_t::board_M5StickCPlus:
+        case m5::board_t::board_M5StickCPlus2:
+            return {26, 0};
+        case m5::board_t::board_M5StickS3:
+            return {0, 8};
+        case m5::board_t::board_M5StackCoreInk:
+            return {26, 25};
+        default:
+            return {-1, -1};
+    }
+}
+}  // namespace hat
+#endif
+
+class TestFPC1020A : public UARTComponentTestBase<UnitFPC1020A> {
 protected:
     virtual UnitFPC1020A* get_instance() override
     {
@@ -35,52 +59,58 @@ protected:
         return ptr;
     }
 
-    virtual bool is_using_hal() const override
+    void get_serial_pins(int& pin_num_in, int& pin_num_out)
     {
-        return GetParam();
-    };
-    virtual HardwareSerial* init_serial() override
-    {
-        auto pin_num_in  = M5.getPin(m5::pin_name_t::port_c_rxd);
-        auto pin_num_out = M5.getPin(m5::pin_name_t::port_c_txd);
+#if defined(USING_HAT_FINGER)
+        auto board      = M5.getBoard();
+        const auto pins = hat::get_hat_uart_pins(board);
+        pin_num_in      = pins.rx;
+        pin_num_out     = pins.tx;
+#else
+        pin_num_in  = M5.getPin(m5::pin_name_t::port_c_rxd);
+        pin_num_out = M5.getPin(m5::pin_name_t::port_c_txd);
         if (pin_num_in < 0 || pin_num_out < 0) {
-            // M5_LOGW("PortC is not available");
+            // NanoC6: Ex_I2C.setPort() registers m5gfx::i2c on GPIO 1/2;
+            // Wire.end() alone won't release it, causing dual-driver conflict on uart_driver_install
+            if (M5.getBoard() == m5::board_t::board_M5NanoC6) {
+                M5.Ex_I2C.release();
+            }
             Wire.end();
             pin_num_in  = M5.getPin(m5::pin_name_t::port_a_pin1);
             pin_num_out = M5.getPin(m5::pin_name_t::port_a_pin2);
         }
+#endif
+    }
 
-#if SOC_UART_NUM > 2
-        auto& s = Serial2;
+    virtual HardwareSerial* init_serial() override
+    {
+        int pin_num_in{-1}, pin_num_out{-1};
+        get_serial_pins(pin_num_in, pin_num_out);
+
+        // clang-format off
+#if defined(CONFIG_IDF_TARGET_ESP32C6)
+    auto& s = Serial1;
+#elif SOC_UART_NUM > 2
+    auto& s = Serial2;
 #elif SOC_UART_NUM > 1
-        auto& s = Serial1;
+    auto& s = Serial1;
 #else
 #error "Not enough Serial"
 #endif
+        // clang-format on
 
-        // M5_LOGI("getPin: %d,%d", pin_num_in, pin_num_out);
+        M5_LOGI("getPin: %d,%d", pin_num_in, pin_num_out);
         s.end();
-        // s.setRxBufferSize(1024);
-        // s.begin(9600, SERIAL_8N1, pin_num_in, pin_num_out);
         s.begin(19200, SERIAL_8N1, pin_num_in, pin_num_out);
-        // s.begin(38400, SERIAL_8N1, pin_num_in, pin_num_out);
-        // s.begin(57600, SERIAL_8N1, pin_num_in, pin_num_out);
-        // s.begin(115200, SERIAL_8N1, pin_num_in, pin_num_out);
         return &s;
     }
 
     void reset_serial(const uint32_t baud = 19200)
     {
-        auto pin_num_in  = M5.getPin(m5::pin_name_t::port_c_rxd);
-        auto pin_num_out = M5.getPin(m5::pin_name_t::port_c_txd);
-        if (pin_num_in < 0 || pin_num_out < 0) {
-            // M5_LOGW("PortC is not available");
-            Wire.end();
-            pin_num_in  = M5.getPin(m5::pin_name_t::port_a_pin1);
-            pin_num_out = M5.getPin(m5::pin_name_t::port_a_pin2);
-        }
-        // M5_LOGI("%u getPin: %d,%d", baud, pin_num_in, pin_num_out);
+        int pin_num_in{-1}, pin_num_out{-1};
+        get_serial_pins(pin_num_in, pin_num_out);
         serial->end();
+        m5::utility::delay(100);
         serial->begin(baud, SERIAL_8N1, pin_num_in, pin_num_out);
         while (serial->available()) {
             serial->read();
@@ -88,13 +118,7 @@ protected:
     }
 };
 
-// INSTANTIATE_TEST_SUITE_P(ParamValues, TestFPC1020A, ::testing::Values(false, true));
-// INSTANTIATE_TEST_SUITE_P(ParamValues, TestFPC1020A, ::testing::Values(true));
-INSTANTIATE_TEST_SUITE_P(ParamValues, TestFPC1020A, ::testing::Values(false));
-
 namespace {
-
-auto rng = std::default_random_engine{};
 
 void print_all_users(UnitFPC1020A* unit)
 {
@@ -129,7 +153,7 @@ constexpr uint8_t ch_data[193] = {
 
 }  // namespace
 
-TEST_P(TestFPC1020A, Baud)
+TEST_F(TestFPC1020A, Baud)
 {
     uint32_t idx{};
     for (auto&& br : br_table) {
@@ -151,7 +175,7 @@ TEST_P(TestFPC1020A, Baud)
     EXPECT_NE(sno, 0xdeadbeef);
 }
 
-TEST_P(TestFPC1020A, Basic)
+TEST_F(TestFPC1020A, Basic)
 {
     SCOPED_TRACE(ustr);
 
@@ -163,7 +187,7 @@ TEST_P(TestFPC1020A, Basic)
     EXPECT_EQ(strlen(ver), 8);
 }
 
-TEST_P(TestFPC1020A, Settings)
+TEST_F(TestFPC1020A, Settings)
 {
     SCOPED_TRACE(ustr);
 
@@ -181,10 +205,10 @@ TEST_P(TestFPC1020A, Settings)
         EXPECT_TRUE(unit->readRegistrationMode(m));
         EXPECT_EQ(m, Mode::AllowDuplicate);
 
-        uint8_t perm = rng() % 3 + 1;
+        uint8_t perm = esp_random() % 3 + 1;
         std::array<uint8_t, 193> characteristic{};
         std::generate(characteristic.begin(), characteristic.end(),
-                      []() { return static_cast<uint8_t>(rng() & 0xFF); });
+                      []() { return static_cast<uint8_t>(esp_random() & 0xFF); });
 
         EXPECT_TRUE(unit->registerCharacteristic(unit->maximumUserID(), perm, characteristic.data()));
         EXPECT_TRUE(unit->registerCharacteristic(unit->maximumUserID() - 1, perm, characteristic.data()));
@@ -216,7 +240,7 @@ TEST_P(TestFPC1020A, Settings)
     {
         uint32_t count{8};
         while (count--) {
-            uint8_t to = rng() & 0xFF;
+            uint8_t to = esp_random() & 0xFF;
             EXPECT_TRUE(unit->writeTimeout(to));
             uint8_t to2{};
             EXPECT_TRUE(unit->readTimeout(to2));
@@ -229,7 +253,7 @@ TEST_P(TestFPC1020A, Settings)
     }
 }
 
-TEST_P(TestFPC1020A, User)
+TEST_F(TestFPC1020A, User)
 {
     uint16_t users{};
     EXPECT_TRUE(unit->deleteAllUsers());
@@ -253,10 +277,10 @@ TEST_P(TestFPC1020A, User)
     // Make random users
     //    for (uint_fast8_t i = unit->minimumUserID(); i <= unit->maximumUserID(); ++i) {
     for (uint_fast8_t i = 1; i <= 10; ++i) {
-        uint8_t perm = rng() % 3 + 1;
+        uint8_t perm = esp_random() % 3 + 1;
         std::array<uint8_t, 193> characteristic{};
         std::generate(characteristic.begin(), characteristic.end(),
-                      []() { return static_cast<uint8_t>(rng() & 0xFF); });
+                      []() { return static_cast<uint8_t>(esp_random() & 0xFF); });
         EXPECT_TRUE(unit->registerCharacteristic(i, perm, characteristic.data()));
     }
 
@@ -299,7 +323,7 @@ TEST_P(TestFPC1020A, User)
     EXPECT_EQ(users2, 0);
 }
 
-TEST_P(TestFPC1020A, Finger)
+TEST_F(TestFPC1020A, Finger)
 {
     SCOPED_TRACE(ustr);
 
@@ -336,7 +360,7 @@ TEST_P(TestFPC1020A, Finger)
     EXPECT_FALSE(match);
 }
 
-TEST_P(TestFPC1020A, Sleep)
+TEST_F(TestFPC1020A, Sleep)
 {
     SCOPED_TRACE(ustr);
 
@@ -346,4 +370,105 @@ TEST_P(TestFPC1020A, Sleep)
     EXPECT_TRUE(unit->sleep());
     EXPECT_FALSE(unit->readSerialNumber(sno));
     EXPECT_FALSE(unit->readVersion(ver));
+}
+
+// --- detail functions (no hardware required) ---
+class TestFPC1020A_Detail : public ::testing::Test {
+};
+
+using Frame = m5::unit::UnitFPC1XXX::Frame;
+using namespace m5::unit::fpc1xxx::detail;
+
+TEST_F(TestFPC1020A_Detail, XorSum)
+{
+    {
+        uint8_t data[] = {0};
+        EXPECT_EQ(xorSum(data, 0), 0);
+    }
+    {
+        uint8_t data[] = {0xAB};
+        EXPECT_EQ(xorSum(data, 1), 0xAB);
+    }
+    {
+        uint8_t data[] = {0x01, 0x02, 0x03, 0x04, 0x05};
+        EXPECT_EQ(xorSum(data, 5), 0x01);
+    }
+    {
+        uint8_t data[] = {0xFF, 0xFF, 0xFF, 0xFF};
+        EXPECT_EQ(xorSum(data, 4), 0x00);
+    }
+}
+
+TEST_F(TestFPC1020A_Detail, IsValidSum)
+{
+    // Valid frame
+    {
+        Frame f{};
+        f[0] = MARKER;
+        f[1] = 0x01;
+        f[2] = 0x02;
+        f[3] = 0x03;
+        f[4] = 0x04;
+        f[5] = 0x00;
+        f[6] = xorSum(f.data() + 1, 5);
+        f[7] = MARKER;
+        EXPECT_TRUE(is_valid_sum(f, true));
+        EXPECT_TRUE(is_valid_sum(f, false));
+    }
+    // Bad checksum — must return false (was the original bug)
+    {
+        Frame f{};
+        f[0] = MARKER;
+        f[1] = 0x01;
+        f[2] = 0x02;
+        f[3] = 0x03;
+        f[4] = 0x04;
+        f[5] = 0x00;
+        f[6] = xorSum(f.data() + 1, 5) ^ 0xFF;
+        f[7] = MARKER;
+        EXPECT_FALSE(is_valid_sum(f, true));
+        EXPECT_FALSE(is_valid_sum(f, false));
+    }
+    // Valid checksum, bad marker
+    {
+        Frame f{};
+        f[0] = 0x00;
+        f[1] = 0x01;
+        f[2] = 0x02;
+        f[3] = 0x03;
+        f[4] = 0x04;
+        f[5] = 0x00;
+        f[6] = xorSum(f.data() + 1, 5);
+        f[7] = MARKER;
+        EXPECT_FALSE(is_valid_sum(f, true));
+        EXPECT_TRUE(is_valid_sum(f, false));
+    }
+}
+
+TEST_F(TestFPC1020A_Detail, IsValidPayload)
+{
+    // Valid: MARKER DATA CHK MARKER
+    {
+        uint8_t d[] = {MARKER, 0x11, 0x22, 0x00, MARKER};
+        d[3]        = xorSum(d + 1, 2);
+        EXPECT_TRUE(is_valid_payload(d, sizeof(d)));
+    }
+    // Bad checksum
+    {
+        uint8_t d[] = {MARKER, 0x11, 0x22, 0xFF, MARKER};
+        EXPECT_FALSE(is_valid_payload(d, sizeof(d)));
+    }
+    // Bad head marker
+    {
+        uint8_t d[] = {0x00, 0x11, 0x00, MARKER};
+        d[2]        = xorSum(d + 1, 1);
+        EXPECT_FALSE(is_valid_payload(d, sizeof(d)));
+    }
+    // Too short
+    {
+        uint8_t d[] = {MARKER, 0x11, MARKER};
+        EXPECT_FALSE(is_valid_payload(d, sizeof(d)));
+    }
+    // Null
+    EXPECT_FALSE(is_valid_payload(nullptr, 10));
 }

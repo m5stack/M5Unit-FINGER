@@ -109,9 +109,19 @@ bool UnitFinger2::begin()
     ad->setTimeout(_cfg.timeout_ms ? _cfg.timeout_ms : TIMEOUT_MS);
     ad->flushRX();
 
+    // Retry for NessoN1 first-transaction failure (Flash instruction cache timing)
     uint8_t ver{};
-    if (!wakeup() || !readFirmwareVersion(ver) || ver == 0x00) {
-        M5_LIB_LOGE("UnitFinger2 was not deteced %02X", ver);
+    for (int retry = 0; retry < 3; ++retry) {
+        if (wakeup() && readFirmwareVersion(ver) && ver != 0x00) {
+            break;
+        }
+        M5_LIB_LOGW("Retry wakeup (%d)", retry);
+        m5::utility::delay(100);
+        ad->flushRX();
+        ver = 0;
+    }
+    if (ver == 0x00) {
+        M5_LIB_LOGE("UnitFinger2 was not detected %02X", ver);
         return false;
     }
     M5_LIB_LOGI("Firmware version: %02X", ver);
@@ -189,13 +199,14 @@ bool UnitFinger2::readSystemParams(finger2::SystemBasicParams& params)
 
     Packet pkt{};
     if (transceive_command(pkt, CMD_READ_SYSTEM_PARAMETER, _address) && pkt.size() == 28) {
-        params.status            = ((uint16_t)pkt[10] << 8) | pkt[11];
-        params.sensor_type       = ((uint16_t)pkt[12] << 8) | pkt[13];
-        params.database_capacity = ((uint16_t)pkt[14] << 8) | pkt[15];
-        params.score_level       = ((uint16_t)pkt[16] << 8) | pkt[17];
-        params.address     = ((uint16_t)pkt[18] << 24) | ((uint16_t)pkt[19] << 16) | ((uint16_t)pkt[20] << 8) | pkt[21];
-        params.packet_size = ((uint16_t)pkt[22] << 8) | pkt[23];
-        params.baud_rate   = ((uint16_t)pkt[24] << 8) | pkt[25];
+        params.status            = (static_cast<uint16_t>(pkt[10]) << 8) | pkt[11];
+        params.sensor_type       = (static_cast<uint16_t>(pkt[12]) << 8) | pkt[13];
+        params.database_capacity = (static_cast<uint16_t>(pkt[14]) << 8) | pkt[15];
+        params.score_level       = (static_cast<uint16_t>(pkt[16]) << 8) | pkt[17];
+        params.address           = (static_cast<uint32_t>(pkt[18]) << 24) | (static_cast<uint32_t>(pkt[19]) << 16) |
+                         (static_cast<uint16_t>(pkt[20]) << 8) | pkt[21];
+        params.packet_size = (static_cast<uint16_t>(pkt[22]) << 8) | pkt[23];
+        params.baud_rate   = (static_cast<uint16_t>(pkt[24]) << 8) | pkt[25];
         return true;
     }
     return false;
@@ -245,15 +256,15 @@ bool UnitFinger2::capture(bool& detected, const bool enroll)
     return false;
 }
 
-bool UnitFinger2::readImageInformation(uint8_t& percentage, bool& quarity)
+bool UnitFinger2::readImageInformation(uint8_t& percentage, bool& quality)
 {
     percentage = 0;
-    quarity    = false;
+    quality    = false;
 
     Packet pkt{};
     if (transceive_command(pkt, CMD_GET_IMAGE_INFORMATION, _address) && pkt.size() == 14) {
         percentage = pkt[10];
-        quarity    = (pkt[11] == 0);
+        quality    = (pkt[11] == 0);
         return true;
     }
     return false;
@@ -276,7 +287,7 @@ bool UnitFinger2::readImage(std::vector<uint8_t>& img)
         if (!(confirm == PID_DATA || confirm == PID_TERMINATE_DATA)) {
             break;
         }
-        uint16_t sz = (((uint16_t)rbuf[7]) << 8) | (uint16_t)rbuf[8];
+        uint16_t sz = ((static_cast<uint16_t>(rbuf[7])) << 8) | static_cast<uint16_t>(rbuf[8]);
         img.insert(img.end(), rbuf.begin() + 9, rbuf.begin() + 9 + sz - 2);
 
         if (confirm == PID_TERMINATE_DATA) {
@@ -351,7 +362,7 @@ bool UnitFinger2::match(bool& matched, uint16_t& score)
         auto confirm = read_response(pkt);
         if (pkt.size() == 14 && (confirm == ConfirmCode::OK || confirm == ConfirmCode::Unmatched)) {
             matched = (confirm == ConfirmCode::OK);
-            score   = (((uint16_t)pkt[10]) << 8) | ((uint16_t)pkt[11]);
+            score   = ((static_cast<uint16_t>(pkt[10])) << 8) | (static_cast<uint16_t>(pkt[11]));
             return true;
         }
     }
@@ -370,7 +381,7 @@ bool UnitFinger2::search(bool& matched, uint16_t& matching_page_id, uint16_t& sc
         return false;
     }
 
-    uint8_t pages = (page_num > 0) ? page_num : capacity() - start_page - 1;
+    uint16_t pages = (page_num > 0) ? page_num : capacity() - start_page - 1;
     if (!capacity() || pages > capacity() - 1) {
         M5_LIB_LOGE("Illegal pages %u %u/%u/%u", pages, start_page, page_num, capacity());
         return false;
@@ -388,8 +399,8 @@ bool UnitFinger2::search(bool& matched, uint16_t& matching_page_id, uint16_t& sc
         auto confirm = read_response(pkt);
         if (pkt.size() == 16 && (confirm == ConfirmCode::OK || confirm == ConfirmCode::NotFound)) {
             matched          = (confirm == ConfirmCode::OK);
-            matching_page_id = (((uint16_t)pkt[10]) << 8) | ((uint16_t)pkt[11]);
-            score            = (((uint16_t)pkt[12]) << 8) | ((uint16_t)pkt[13]);
+            matching_page_id = ((static_cast<uint16_t>(pkt[10])) << 8) | (static_cast<uint16_t>(pkt[11]));
+            score            = ((static_cast<uint16_t>(pkt[12])) << 8) | (static_cast<uint16_t>(pkt[13]));
             return true;
         }
     }
@@ -403,7 +414,7 @@ bool UnitFinger2::searchNow(bool& matched, uint16_t& matching_page_id, uint16_t&
     matching_page_id = 0xFFFF;
     score            = 0;
 
-    uint8_t pages = (page_num > 0) ? page_num : capacity() - start_page - 1;
+    uint16_t pages = (page_num > 0) ? page_num : capacity() - start_page - 1;
     if (!capacity() || pages > capacity() - 1) {
         M5_LIB_LOGE("Illegal pages %u %u/%u/%u", pages, start_page, page_num, capacity());
         return false;
@@ -420,8 +431,8 @@ bool UnitFinger2::searchNow(bool& matched, uint16_t& matching_page_id, uint16_t&
         auto confirm = read_response(pkt);
         if (pkt.size() == 16 && (confirm == ConfirmCode::OK || confirm == ConfirmCode::NotFound)) {
             matched          = (confirm == ConfirmCode::OK);
-            matching_page_id = (((uint16_t)pkt[10]) << 8) | ((uint16_t)pkt[11]);
-            score            = (((uint16_t)pkt[12]) << 8) | ((uint16_t)pkt[13]);
+            matching_page_id = ((static_cast<uint16_t>(pkt[10])) << 8) | (static_cast<uint16_t>(pkt[11]));
+            score            = ((static_cast<uint16_t>(pkt[12])) << 8) | (static_cast<uint16_t>(pkt[13]));
             return true;
         }
     }
@@ -447,7 +458,7 @@ bool UnitFinger2::readTemplate(uint16_t& actual_size, uint8_t* buf, const uint16
     params[2] = buf_size >> 8;
     params[3] = buf_size & 0xFF;
     if (transceive_command(pkt, CMD_UPLOAD_TEMPLATE, _address, params, sizeof(params)) && pkt.size() >= 13) {
-        actual_size = ((uint16_t)pkt[10] << 8) | pkt[11];
+        actual_size = (static_cast<uint16_t>(pkt[10]) << 8) | pkt[11];
         if (actual_size > buf_size) {
             actual_size = buf_size;
         }
@@ -460,6 +471,7 @@ bool UnitFinger2::readTemplate(uint16_t& actual_size, uint8_t* buf, const uint16
 bool UnitFinger2::readTemplateAllBatches(uint16_t& actual_size, uint8_t* buf, const uint16_t buf_size,
                                          const uint16_t batch_size, batch_callback_t callback)
 {
+    actual_size = 0;
     if (!buf || !buf_size || !batch_size) {
         return false;
     }
@@ -602,12 +614,12 @@ bool UnitFinger2::readInformationPage(uint8_t info[512])
         if (!(confirm == PID_DATA || confirm == PID_TERMINATE_DATA)) {
             break;
         }
-        uint16_t sz = (((uint16_t)rbuf[7]) << 8) | (uint16_t)rbuf[8];
+        uint16_t sz = ((static_cast<uint16_t>(rbuf[7])) << 8) | static_cast<uint16_t>(rbuf[8]);
         if (sz <= 2) {
             break;
         }
         sz -= 2;
-        if (pos + sz < 512) {
+        if (pos + sz <= 512) {
             memcpy(info + pos, rbuf.data() + 9, sz);
         }
         pos += sz;
@@ -624,7 +636,7 @@ bool UnitFinger2::readValidTemplates(uint16_t& num)
 
     Packet pkt{};
     if (transceive_command(pkt, CMD_READ_VALID_TEMPLATE_NUMBER, _address) && pkt.size() == 14) {
-        num = (((uint16_t)pkt[10]) << 8) | ((uint16_t)pkt[11]);
+        num = ((static_cast<uint16_t>(pkt[10])) << 8) | (static_cast<uint16_t>(pkt[11]));
         return true;
     }
     return false;
@@ -636,7 +648,9 @@ bool UnitFinger2::readIndexTable(uint8_t table[32])
 
     if (table && cap / 8 <= 32) {
         Packet pkt{};
-        if (transceive_command8(pkt, CMD_READ_INDEX_TABLE, _address, 0 /* only zero */) && pkt.size() == 44) {
+        // NOTE: Only page 0 (entries 0-255) is read. Sufficient for current hardware (max 200 templates).
+        // Multi-page support requires API change (table size > 32 bytes) if capacity > 256.
+        if (transceive_command8(pkt, CMD_READ_INDEX_TABLE, _address, 0) && pkt.size() == 44) {
             // Copy table and clear exceeding the capacity
             uint32_t copy_len = cap / 8;
             uint8_t remain    = cap & 0x07;
@@ -691,8 +705,8 @@ bool UnitFinger2::checkSensor(bool& status)
 bool UnitFinger2::writeControlLED(const finger2::LEDMode mode, const finger2::LEDColor clr, const uint8_t cycle,
                                   const finger2::LEDColor eclr)
 {
-    if (mode < LEDMode::Bleath || mode > LEDMode::Fadeout) {
-        M5_LIB_LOGE("mode must be between Bleath and Fadeout %u", mode);
+    if (mode < LEDMode::Breath || mode > LEDMode::Fadeout) {
+        M5_LIB_LOGE("mode must be between Breath and Fadeout %u", mode);
         return false;
     }
 
@@ -700,7 +714,7 @@ bool UnitFinger2::writeControlLED(const finger2::LEDMode mode, const finger2::LE
     uint8_t params[4]{};
     params[0] = m5::stl::to_underlying(mode);
     params[1] = m5::stl::to_underlying(clr);
-    params[2] = m5::stl::to_underlying(mode == LEDMode::Bleath ? eclr : clr);
+    params[2] = m5::stl::to_underlying(mode == LEDMode::Breath ? eclr : clr);
     params[3] = cycle;
     return transceive_command(pkt, CMD_CONTROL_BLN, _address, params, sizeof(params));
 }
@@ -852,8 +866,8 @@ bool UnitFinger2::autoIdentify(bool& matched, uint16_t& matching_page_id, uint16
         if ((stage == AutoIdentifyStage::Result) &&
             (confirm == ConfirmCode::OK || confirm == ConfirmCode::NotFound || confirm == ConfirmCode::Unmatched)) {
             matched          = (confirm == ConfirmCode::OK);
-            matching_page_id = ((uint16_t)pkt[11] << 8) | pkt[12];
-            score            = ((uint16_t)pkt[13] << 8) | pkt[14];
+            matching_page_id = (static_cast<uint16_t>(pkt[11]) << 8) | pkt[12];
+            score            = (static_cast<uint16_t>(pkt[13]) << 8) | pkt[14];
             return true;
         }
     }
@@ -906,8 +920,8 @@ bool UnitFinger2::readRandomNumber(uint32_t& value)
 
     Packet pkt{};
     if (transceive_command(pkt, CMD_GET_RANDOM, _address) && pkt.size() == 16) {
-        value = (((uint32_t)pkt[10]) << 24) | (((uint32_t)pkt[11]) << 16) | (((uint32_t)pkt[12]) << 8) |
-                ((uint32_t)pkt[13]);
+        value = ((static_cast<uint32_t>(pkt[10])) << 24) | ((static_cast<uint32_t>(pkt[11])) << 16) |
+                ((static_cast<uint32_t>(pkt[12])) << 8) | (static_cast<uint32_t>(pkt[13]));
         return true;
     }
     return false;
@@ -933,7 +947,7 @@ bool UnitFinger2::readFirmwareVersion(uint8_t& ver)
 {
     ver = 0x00;
     Packet pkt{};
-    if (transceive_command(pkt, CMD_GET_FIRMWRE_VERSION, _address)) {
+    if (transceive_command(pkt, CMD_GET_FIRMWARE_VERSION, _address)) {
         ver = pkt[10];
         return true;
     }
@@ -985,8 +999,8 @@ bool UnitFinger2::findHighestAvailablePage(uint16_t& page)
     uint8_t remain   = (cap & 0x07);
     int_fast8_t sidx = (cap >> 3) - (remain == 0);
 
-    if (!cap || !sidx) {
-        M5_LIB_LOGE("Illegal status %u:%u", cap, sidx);
+    if (!cap || sidx < 0) {
+        M5_LIB_LOGE("Illegal status %u:%d", cap, sidx);
         return false;
     }
     if (readIndexTable(table)) {
@@ -1008,7 +1022,7 @@ bool UnitFinger2::findHighestAvailablePage(uint16_t& page)
             if (table[i] == 0xFF) {
                 continue;
             }
-            uint8_t inv = ~table[i];
+            uint8_t inv = ~table[i];  // Always non-zero since 0xFF is skipped above
             if (inv) {
                 auto pos = 7 - (__builtin_clz(inv) - (sizeof(unsigned int) * 8 - 8));
                 no       = 8 * i + pos;
@@ -1041,7 +1055,7 @@ uint8_t UnitFinger2::read_data(Packet& rbuf)
     rbuf.reserve(256);
     rbuf.resize(9);
     if (readWithTransaction(rbuf.data(), rbuf.size()) == m5::hal::error::error_t::OK && is_valid_ack(rbuf)) {
-        uint16_t sz = (((uint16_t)rbuf[7]) << 8) | (uint16_t)rbuf[8];
+        uint16_t sz = ((static_cast<uint16_t>(rbuf[7])) << 8) | static_cast<uint16_t>(rbuf[8]);
         rbuf.resize(rbuf.size() + sz);
         if (readWithTransaction(rbuf.data() + 9, sz) == m5::hal::error::error_t::OK) {
             auto sum      = sum16(rbuf.data() + 6, rbuf.size() - 8);
@@ -1059,7 +1073,7 @@ ConfirmCode UnitFinger2::read_response(Packet& rbuf)
     rbuf.reserve(128);
     rbuf.resize(9);
     if (readWithTransaction(rbuf.data(), rbuf.size()) == m5::hal::error::error_t::OK && is_valid_ack(rbuf)) {
-        uint16_t sz = (((uint16_t)rbuf[7]) << 8) | (uint16_t)rbuf[8];
+        uint16_t sz = ((static_cast<uint16_t>(rbuf[7])) << 8) | static_cast<uint16_t>(rbuf[8]);
         rbuf.resize(rbuf.size() + sz);
         if (readWithTransaction(rbuf.data() + 9, sz) == m5::hal::error::error_t::OK) {
             auto sum      = sum16(rbuf.data() + 6, rbuf.size() - 8);
