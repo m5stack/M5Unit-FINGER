@@ -15,11 +15,11 @@
 // Choose one define symbol to match the unit you are using
 // *************************************************************
 #if !defined(USING_UNIT_FINGER) && !defined(USING_HAT_FINGER) && !defined(USING_FACES_FINGER)
-// For UnitFinger (U008)
+// For UnitFinger (SKU:U008)
 // #define USING_UNIT_FINGER
-// For HatFinger (U074)
+// For HatFinger (SKU:U074)
 // #define USING_HAT_FINGER
-// For FacesFinger (Faces Finger Module)
+// For FacesFinger (SKU:A066)
 // #define USING_FACES_FINGER
 #endif
 // *************************************************************
@@ -77,12 +77,12 @@ struct FacesPins {
 
 FacesPins get_faces_pins()
 {
-    return {
-        M5.getPin(m5::pin_name_t::mbus_pin15),  // RX
-        M5.getPin(m5::pin_name_t::mbus_pin16),  // TX
-        M5.getPin(m5::pin_name_t::mbus_pin10),  // Panel power (GPIO26 on Core)
-        M5.getPin(m5::pin_name_t::mbus_pin20),  // Touch IC power (GPIO5 on Core)
-    };
+    switch (M5.getBoard()) {
+        case m5::board_t::board_M5Stack:  // Core/Gray/Fire
+            return {16, 17, 26, 5};
+        default:
+            return {-1, -1, -1, -1};
+    }
 }
 #endif
 
@@ -141,7 +141,6 @@ void setup()
     auto pin_num_in  = fp.rx;
     auto pin_num_out = fp.tx;
 
-    // Set Faces config from M-Bus pins
     {
         auto cfg            = unit.config();
         cfg.panel_power_pin = fp.panel_power;
@@ -183,8 +182,8 @@ void setup()
     // s.begin(9600, SERIAL_8N1, pin_num_in, pin_num_out);
     s.begin(19200, SERIAL_8N1, pin_num_in, pin_num_out);  // as default
     // s.begin(38400, SERIAL_8N1, pin_num_in, pin_num_out);
-    // s.begin(57600, SERIAL_8N1, pin_num_in, pin_num_out);
-    // s.begin(115200, SERIAL_8N1, pin_num_in, pin_num_out);
+    //  s.begin(57600, SERIAL_8N1, pin_num_in, pin_num_out);
+    //  s.begin(115200, SERIAL_8N1, pin_num_in, pin_num_out);
 
     if (!Units.add(unit, s) || !Units.begin()) {
         M5_LOGE("Failed to begin");

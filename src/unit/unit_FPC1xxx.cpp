@@ -157,7 +157,7 @@ bool UnitFPC1XXX::begin()
 
     uint32_t sno{0xdeadbeef};
 
-#if 0    
+#if 0
     for (int retry = 0; retry < 3; ++retry) {
         if (readSerialNumber(sno) && sno != 0xdeadbeef) {
             break;

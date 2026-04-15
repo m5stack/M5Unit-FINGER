@@ -16,11 +16,11 @@
 using namespace m5::unit::fpc1xxx;
 
 #if !defined(USING_UNIT_FINGER) && !defined(USING_HAT_FINGER) && !defined(USING_FACES_FINGER)
-// For UnitFinger (U008)
+// For UnitFinger (SKU:U008)
 // #define USING_UNIT_FINGER
-// For HatFinger (U074)
+// For HatFinger (SKU:U074)
 // #define USING_HAT_FINGER
-// For FacesFinger (Faces Finger Module)
+// For FacesFinger (SKU:A066)
 // #define USING_FACES_FINGER
 #endif
 
@@ -146,20 +146,20 @@ UartPins get_hat_uart_pins(const m5::board_t board)
 #if defined(USING_FACES_FINGER)
 // M-Bus pins for Faces Finger (GPIO varies by board)
 struct FacesPins {
-    int rx;             // UART RX (mbus_pin15)
-    int tx;             // UART TX (mbus_pin16)
-    int panel_power;    // Panel power (mbus_pin10)
-    int touch_power;    // Touch IC power (mbus_pin20)
+    int rx;           // UART RX (mbus_pin15)
+    int tx;           // UART TX (mbus_pin16)
+    int panel_power;  // Panel power (mbus_pin10)
+    int touch_power;  // Touch IC power (mbus_pin20)
 };
 
 FacesPins get_faces_pins()
 {
-    return {
-        M5.getPin(m5::pin_name_t::mbus_pin15),   // RX
-        M5.getPin(m5::pin_name_t::mbus_pin16),   // TX
-        M5.getPin(m5::pin_name_t::mbus_pin10),   // Panel power (GPIO26 on Core)
-        M5.getPin(m5::pin_name_t::mbus_pin20),   // Touch IC power (GPIO5 on Core)
-    };
+    switch (M5.getBoard()) {
+        case m5::board_t::board_M5Stack:  // Core/Gray/Fire
+            return {16, 17, 26, 5};
+        default:
+            return {-1, -1, -1, -1};
+    }
 }
 #endif
 
@@ -206,7 +206,6 @@ void setup()
     auto pin_num_in  = fp.rx;
     auto pin_num_out = fp.tx;
 
-    // Set Faces config from M-Bus pins
     {
         auto cfg            = unit.config();
         cfg.panel_power_pin = fp.panel_power;
