@@ -79,8 +79,8 @@ class TestFPC1020A : public UARTComponentTestBase<UnitFacesFinger> {
 protected:
     virtual UnitFacesFinger* get_instance() override
     {
-        auto ptr    = new m5::unit::UnitFacesFinger();
-        const auto fp = faces::get_faces_pins();
+        auto ptr            = new m5::unit::UnitFacesFinger();
+        const auto fp       = faces::get_faces_pins();
         auto cfg            = ptr->config();
         cfg.panel_power_pin = fp.panel_power;
         cfg.touch_power_pin = fp.touch_power;
