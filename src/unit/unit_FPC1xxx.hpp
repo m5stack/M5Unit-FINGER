@@ -452,6 +452,7 @@ constexpr uint8_t CMD_COMPARE_CHARACTERISTIC{0x44};
 
 }  // namespace command
 ///@endcond
+
 ///@cond
 namespace detail {
 using Frame = UnitFPC1XXX::Frame;

@@ -13,6 +13,9 @@ Unit Finger is a fingerprint recognition sensor. It integrates the FPC1020A capa
 Hat Finger is a fingerprint recognition sensor. It integrates the FPC1020SC capacitive fingerprint recognition module, featuring multi-fingerprint entry, image processing, feature extraction, fingerprint matching, and search functions. 
 
 
+### SKU:A066
+Faces Finger is a fingerprint recognition panel compatible with the FACE kit. It integrates the FPC1020A capacitive fingerprint recognition module internally, featuring functions such as multi-fingerprint enrollment, image processing, feature extraction, fingerprint comparison, and search. It supports setting different security levels, providing a stable and reliable mechanism for fingerprint addition, verification, and management for your projects.
+
 ### SKU:U203
 The Unit Fingerprint2 is a high-performance fingerprint recognition sensor unit, internally integrating an STM32 core controller and an A-K323CP all-in-one fingerprint recognition module. It uses a semiconductor capacitive sensor with functions such as fingerprint acquisition, feature extraction, registration, comparison, storage, and retrieval. 
 
@@ -21,6 +24,7 @@ See also examples using conventional methods here.
 
 - [Unit Finger Document & Datasheet](https://docs.m5stack.com/en/unit/finger)
 - [Hat Finger Document & Datasheet](https://docs.m5stack.com/en/hat/hat-finger)
+- [Faces Finger Document & Datasheet](https://docs.m5stack.com/en/module/faces_finger)
 - [Unit Fingerprint2 Document & Datasheet](https://docs.m5stack.com/en/unit/Unit_Fingerprint2)
 
 
@@ -42,16 +46,18 @@ See also [examples/UnitUnified](examples/UnitUnified)
 You must choose a define symbol for the unit you will use.
 (Rewrite source or specify with compile options)
 
-- UnitFinger / HatFinger examples (PlotToSerial / Capture / Characteristic / User)
+- UnitFinger / HatFinger / FacesFinger examples (PlotToSerial / Capture / Characteristic / User)
 ```cpp
 // *************************************************************
 // Choose one define symbol to match the unit you are using
 // *************************************************************
-#if !defined(USING_UNIT_FINGER) && !defined(USING_HAT_FINGER)
-// For UnitFinger (U008)
+#if !defined(USING_UNIT_FINGER) && !defined(USING_HAT_FINGER) && !defined(USING_FACES_FINGER)
+// For UnitFinger (SKU:U008)
 // #define USING_UNIT_FINGER
-// For HatFinger (U074)
+// For HatFinger (SKU:U074)
 // #define USING_HAT_FINGER
+// For FacesFinger (SKU:A066)
+// #define USING_FACES_FINGER
 #endif
 ```
 

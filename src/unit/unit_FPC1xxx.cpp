@@ -156,6 +156,23 @@ bool UnitFPC1XXX::begin()
     ad->flushRX();
 
     uint32_t sno{0xdeadbeef};
+
+#if 0
+    for (int retry = 0; retry < 3; ++retry) {
+        if (readSerialNumber(sno) && sno != 0xdeadbeef) {
+            break;
+        }
+        M5_LIB_LOGW("Retry wakeup (%d)", retry);
+        m5::utility::delay(100);
+        ad->flushRX();
+        sno = 0xdeadbeef;
+    }
+    if (sno == 0xdeadbeef) {
+        M5_LIB_LOGE("Failed to readSerialNumber");
+        return false;
+    }
+#endif
+
     if (!readSerialNumber(sno)) {
         M5_LIB_LOGE("Failed to readSerialNumber %x", sno);
         return false;
@@ -641,15 +658,11 @@ bool UnitFPC1XXX::transceive_command(Frame& res, const uint8_t cmd, const uint8_
 {
     Frame frame = make_frame(cmd, p1, p2, p3);
 
-    // m5::utility::log::dump(frame.data(), frame.size());
-
     if (writeWithTransaction(frame.data(), frame.size()) == m5::hal::error::error_t::OK &&
         readWithTransaction(res.data(), res.size()) == m5::hal::error::error_t::OK && res[OFFSET_CMD] == cmd &&
         is_valid_sum(res)) {
         return true;
     }
-
-    // m5::utility::log::dump(res.data(), res.size());
 
     return false;
 }

@@ -14,11 +14,13 @@
 // *************************************************************
 // Choose one define symbol to match the unit you are using
 // *************************************************************
-#if !defined(USING_UNIT_FINGER) && !defined(USING_HAT_FINGER)
-// For UnitFinger (U008)
+#if !defined(USING_UNIT_FINGER) && !defined(USING_HAT_FINGER) && !defined(USING_FACES_FINGER)
+// For UnitFinger (SKU:U008)
 // #define USING_UNIT_FINGER
-// For HatFinger (U074)
+// For HatFinger (SKU:U074)
 // #define USING_HAT_FINGER
+// For FacesFinger (SKU:A066)
+// #define USING_FACES_FINGER
 #endif
 // *************************************************************
 
@@ -33,6 +35,8 @@ m5::unit::UnitUnified Units;
 m5::unit::UnitFinger unit;
 #elif defined(USING_HAT_FINGER)
 m5::unit::HatFinger unit;
+#elif defined(USING_FACES_FINGER)
+m5::unit::UnitFacesFinger unit;
 #else
 #error Please choose unit!
 #endif
@@ -58,6 +62,26 @@ UartPins get_hat_uart_pins(const m5::board_t board)
             return {26, 25};
         default:
             return {-1, -1};
+    }
+}
+#endif
+
+#if defined(USING_FACES_FINGER)
+// M-Bus pins for Faces Finger (GPIO varies by board)
+struct FacesPins {
+    int rx;           // UART RX (mbus_pin15)
+    int tx;           // UART TX (mbus_pin16)
+    int panel_power;  // Panel power (mbus_pin10)
+    int touch_power;  // Touch IC power (mbus_pin20)
+};
+
+FacesPins get_faces_pins()
+{
+    switch (M5.getBoard()) {
+        case m5::board_t::board_M5Stack:  // Core/Gray/Fire
+            return {16, 17, 26, 5};
+        default:
+            return {-1, -1, -1, -1};
     }
 }
 #endif
@@ -104,6 +128,26 @@ void setup()
     }
     auto pin_num_in  = pins.rx;
     auto pin_num_out = pins.tx;
+#elif defined(USING_FACES_FINGER)
+    const auto fp = get_faces_pins();
+    M5_LOGI("getFacesPin: RX:%d TX:%d PWR:%d TCH:%d", fp.rx, fp.tx, fp.panel_power, fp.touch_power);
+    if (fp.rx < 0 || fp.tx < 0) {
+        M5_LOGE("No M-Bus on this board");
+        lcd.fillScreen(TFT_RED);
+        while (true) {
+            m5::utility::delay(10000);
+        }
+    }
+    auto pin_num_in  = fp.rx;
+    auto pin_num_out = fp.tx;
+
+    {
+        auto cfg            = unit.config();
+        cfg.panel_power_pin = fp.panel_power;
+        cfg.touch_power_pin = fp.touch_power;
+        unit.config(cfg);
+    }
+
 #else
     auto pin_num_in  = M5.getPin(m5::pin_name_t::port_c_rxd);
     auto pin_num_out = M5.getPin(m5::pin_name_t::port_c_txd);
@@ -138,8 +182,8 @@ void setup()
     // s.begin(9600, SERIAL_8N1, pin_num_in, pin_num_out);
     s.begin(19200, SERIAL_8N1, pin_num_in, pin_num_out);  // as default
     // s.begin(38400, SERIAL_8N1, pin_num_in, pin_num_out);
-    // s.begin(57600, SERIAL_8N1, pin_num_in, pin_num_out);
-    // s.begin(115200, SERIAL_8N1, pin_num_in, pin_num_out);
+    //  s.begin(57600, SERIAL_8N1, pin_num_in, pin_num_out);
+    //  s.begin(115200, SERIAL_8N1, pin_num_in, pin_num_out);
 
     if (!Units.add(unit, s) || !Units.begin()) {
         M5_LOGE("Failed to begin");

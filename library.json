@@ -1,7 +1,7 @@
 {
     "name": "M5Unit-FINGER",
     "description": "Library for M5Stack UNIT FINGER using M5UnitUnified",
-    "keywords": "m5stack, m5unitunified, finger, finger2, fingerprint, fpc1020a, uart",
+    "keywords": "m5stack, m5unitunified, finger, finger2, fingerprint, fpc1020a, faces, uart",
     "authors": {
         "name": "M5Stack",
         "url": "https://www.m5stack.com"
