@@ -153,6 +153,21 @@ jobs:
             board: Fire
             framework: Arduino
             espressif32: latest
+          - example: Capture
+            unit: FacesFinger
+            board: Core
+            framework: Arduino
+            espressif32: latest
+          - example: Characteristic
+            unit: FacesFinger
+            board: Core
+            framework: Arduino
+            espressif32: latest
+          - example: User
+            unit: FacesFinger
+            board: Core
+            framework: Arduino
+            espressif32: latest
 
           - example: Capture
             unit: UnitFinger2

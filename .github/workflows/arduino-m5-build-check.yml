@@ -187,6 +187,27 @@ jobs:
             archi: esp32
             platform-version: 3.2.5
             board: m5stack_fire
+          - sketch: Capture
+            unit: FacesFinger
+            platform-url: https://m5stack.oss-cn-shenzhen.aliyuncs.com/resource/arduino/package_m5stack_index.json
+            platform: m5stack
+            archi: esp32
+            platform-version: 3.2.5
+            board: m5stack_core
+          - sketch: Characteristic
+            unit: FacesFinger
+            platform-url: https://m5stack.oss-cn-shenzhen.aliyuncs.com/resource/arduino/package_m5stack_index.json
+            platform: m5stack
+            archi: esp32
+            platform-version: 3.2.5
+            board: m5stack_core
+          - sketch: User
+            unit: FacesFinger
+            platform-url: https://m5stack.oss-cn-shenzhen.aliyuncs.com/resource/arduino/package_m5stack_index.json
+            platform: m5stack
+            archi: esp32
+            platform-version: 3.2.5
+            board: m5stack_core
 
           # UnitFinger2 extra sketches
           - sketch: Capture

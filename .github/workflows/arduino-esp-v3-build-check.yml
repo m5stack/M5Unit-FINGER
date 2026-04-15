@@ -146,6 +146,20 @@ jobs:
             archi: esp32
             platform-version: 3.3.6
             board: m5stack_stickc_plus2
+          - sketch: Characteristic
+            unit: HatFinger
+            platform-url: https://espressif.github.io/arduino-esp32/package_esp32_index.json
+            platform: esp32
+            archi: esp32
+            platform-version: 3.3.6
+            board: m5stack_stickc_plus2
+          - sketch: User
+            unit: HatFinger
+            platform-url: https://espressif.github.io/arduino-esp32/package_esp32_index.json
+            platform: esp32
+            archi: esp32
+            platform-version: 3.3.6
+            board: m5stack_stickc_plus2
 
           # FacesFinger (M-Bus, Core/Fire only)
           - sketch: PlotToSerial
@@ -162,6 +176,27 @@ jobs:
             archi: esp32
             platform-version: 3.3.6
             board: m5stack_fire
+          - sketch: Capture
+            unit: FacesFinger
+            platform-url: https://espressif.github.io/arduino-esp32/package_esp32_index.json
+            platform: esp32
+            archi: esp32
+            platform-version: 3.3.6
+            board: m5stack_core
+          - sketch: Characteristic
+            unit: FacesFinger
+            platform-url: https://espressif.github.io/arduino-esp32/package_esp32_index.json
+            platform: esp32
+            archi: esp32
+            platform-version: 3.3.6
+            board: m5stack_core
+          - sketch: User
+            unit: FacesFinger
+            platform-url: https://espressif.github.io/arduino-esp32/package_esp32_index.json
+            platform: esp32
+            archi: esp32
+            platform-version: 3.3.6
+            board: m5stack_core
 
           # UnitFinger2 extra sketches
           - sketch: Capture
