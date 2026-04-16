@@ -13,6 +13,7 @@
 #include <googletest/test_template.hpp>
 #include <googletest/test_helper.hpp>
 #include <unit/unit_FPC1xxx.hpp>
+#include <unit/unit_FacesFinger.hpp>
 #include <chrono>
 #include <thread>
 #include <iostream>
@@ -51,6 +52,85 @@ UartPins get_hat_uart_pins(const m5::board_t board)
 }  // namespace hat
 #endif
 
+// Faces Finger Module pins (M-Bus: RX=mbus_pin15, TX=mbus_pin16, PWR=mbus_pin10, TCH=mbus_pin20)
+#if defined(USING_FACES_FINGER)
+namespace faces {
+struct FacesPins {
+    int rx;
+    int tx;
+    int panel_power;
+    int touch_power;
+};
+
+FacesPins get_faces_pins()
+{
+    return {
+        M5.getPin(m5::pin_name_t::mbus_pin15),
+        M5.getPin(m5::pin_name_t::mbus_pin16),
+        M5.getPin(m5::pin_name_t::mbus_pin10),
+        M5.getPin(m5::pin_name_t::mbus_pin20),
+    };
+}
+}  // namespace faces
+#endif
+
+#if defined(USING_FACES_FINGER)
+class TestFPC1020A : public UARTComponentTestBase<UnitFacesFinger> {
+protected:
+    virtual UnitFacesFinger* get_instance() override
+    {
+        auto ptr            = new m5::unit::UnitFacesFinger();
+        const auto fp       = faces::get_faces_pins();
+        auto cfg            = ptr->config();
+        cfg.panel_power_pin = fp.panel_power;
+        cfg.touch_power_pin = fp.touch_power;
+        ptr->config(cfg);
+        return ptr;
+    }
+
+    void get_serial_pins(int& pin_num_in, int& pin_num_out)
+    {
+        const auto fp = faces::get_faces_pins();
+        pin_num_in    = fp.rx;
+        pin_num_out   = fp.tx;
+    }
+
+    virtual HardwareSerial* init_serial() override
+    {
+        int pin_num_in{-1}, pin_num_out{-1};
+        get_serial_pins(pin_num_in, pin_num_out);
+
+        // clang-format off
+#if defined(CONFIG_IDF_TARGET_ESP32C6)
+    auto& s = Serial1;
+#elif SOC_UART_NUM > 2
+    auto& s = Serial2;
+#elif SOC_UART_NUM > 1
+    auto& s = Serial1;
+#else
+#error "Not enough Serial"
+#endif
+        // clang-format on
+
+        M5_LOGI("getPin: %d,%d", pin_num_in, pin_num_out);
+        s.end();
+        s.begin(19200, SERIAL_8N1, pin_num_in, pin_num_out);
+        return &s;
+    }
+
+    void reset_serial(const uint32_t baud = 19200)
+    {
+        int pin_num_in{-1}, pin_num_out{-1};
+        get_serial_pins(pin_num_in, pin_num_out);
+        serial->end();
+        m5::utility::delay(100);
+        serial->begin(baud, SERIAL_8N1, pin_num_in, pin_num_out);
+        while (serial->available()) {
+            serial->read();
+        }
+    }
+};
+#else
 class TestFPC1020A : public UARTComponentTestBase<UnitFPC1020A> {
 protected:
     virtual UnitFPC1020A* get_instance() override
@@ -117,6 +197,7 @@ protected:
         }
     }
 };
+#endif  // USING_FACES_FINGER
 
 namespace {
 

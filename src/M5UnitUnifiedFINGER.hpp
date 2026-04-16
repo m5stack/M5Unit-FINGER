@@ -14,6 +14,7 @@
 #define M5_UNIT_UNIFIED_FINGER_HPP
 
 #include "unit/unit_FPC1xxx.hpp"
+#include "unit/unit_FacesFinger.hpp"
 #include "unit/unit_Finger2.hpp"
 
 /*!

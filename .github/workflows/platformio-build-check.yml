@@ -142,6 +142,33 @@ jobs:
             espressif32: latest
 
 
+          # FacesFinger (M-Bus, Core/Fire only)
+          - example: PlotToSerial
+            unit: FacesFinger
+            board: Core
+            framework: Arduino
+            espressif32: latest
+          - example: PlotToSerial
+            unit: FacesFinger
+            board: Fire
+            framework: Arduino
+            espressif32: latest
+          - example: Capture
+            unit: FacesFinger
+            board: Core
+            framework: Arduino
+            espressif32: latest
+          - example: Characteristic
+            unit: FacesFinger
+            board: Core
+            framework: Arduino
+            espressif32: latest
+          - example: User
+            unit: FacesFinger
+            board: Core
+            framework: Arduino
+            espressif32: latest
+
           - example: Capture
             unit: UnitFinger2
             board: Core
