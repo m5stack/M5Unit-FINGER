@@ -10,6 +10,7 @@
 #include <M5UnitUnified.h>
 #include <M5UnitUnifiedFINGER.h>
 #include <M5Utility.hpp>
+#include <wiring/m5_unit_unified_wiring.hpp>
 
 using namespace m5::unit::finger2;
 
@@ -65,7 +66,7 @@ bool callback_enroll(const uint16_t call_times, const uint16_t page_id, const Co
     }
     lcd.setCursor(0, 0);
     lcd.printf("ENROLL:%02u %02u [%02X] (%02X)", call_times, (uint8_t)stage, (uint8_t)confirm, state);
-    M5.Log.printf("  Enroll[%02u]:%02u [%02X] (%02X)\n", call_times, (uint8_t)stage, (uint8_t)confirm, stage);
+    M5.Log.printf("  Enroll[%02u]:%02u [%02X] (%02X)\n", call_times, (uint8_t)stage, (uint8_t)confirm, state);
     lcd.endWrite();
 
     return true;  // Abort if false
@@ -160,40 +161,10 @@ void setup()
         lcd.setRotation(1);
     }
 
-    auto pin_num_in  = M5.getPin(m5::pin_name_t::port_c_rxd);
-    auto pin_num_out = M5.getPin(m5::pin_name_t::port_c_txd);
-    if (pin_num_in < 0 || pin_num_out < 0) {
-        M5_LOGW("PortC is not available");
-        // NanoC6: Ex_I2C.setPort() registers m5gfx::i2c on GROVE pins;
-        // Wire.end() alone won't release it, causing dual-driver conflict on uart_driver_install
-        if (M5.getBoard() == m5::board_t::board_M5NanoC6) {
-            M5.Ex_I2C.release();
-        }
-        Wire.end();
-        pin_num_in  = M5.getPin(m5::pin_name_t::port_a_pin1);
-        pin_num_out = M5.getPin(m5::pin_name_t::port_a_pin2);
-    }
-    M5_LOGI("getPin: %d,%d", pin_num_in, pin_num_out);
-
-    // clang-format off
-#if defined(CONFIG_IDF_TARGET_ESP32C6)
-    auto& s = Serial1;
-#elif SOC_UART_NUM > 2
-    auto& s = Serial2;
-#elif SOC_UART_NUM > 1
-    auto& s = Serial1;
-#else
-#error "Not enough Serial"
-#endif
-    // clang-format on
-    s.begin(115200, SERIAL_8N1, pin_num_in, pin_num_out);
-
-    if (!Units.add(unit, s) || !Units.begin()) {
+    // UnitFinger2 (GROVE PortC): wiring helper handles PortA fallback + NanoC6/NanoH2 Ex_I2C release.
+    if (!m5::unit::wiring::addUART(Units, unit, 115200) || !Units.begin()) {
         M5_LOGE("Failed to begin");
-        lcd.fillScreen(TFT_RED);
-        while (true) {
-            m5::utility::delay(10000);
-        }
+        m5::unit::wiring::failStop();
     }
 
     M5_LOGI("M5UnitUnified initialized");
@@ -222,3 +193,34 @@ void loop()
         auto_enroll();
     }
 }
+
+#if !defined(ARDUINO)
+#include <freertos/FreeRTOS.h>
+#include <freertos/task.h>
+#include <esp_timer.h>
+
+#if CONFIG_FREERTOS_UNICORE
+static inline void feedIdleTaskPeriodically(void)
+{
+    constexpr uint32_t FEED_INTERVAL_MS   = 2000;
+    constexpr TickType_t FEED_SLEEP_TICKS = pdMS_TO_TICKS(5);
+    static uint32_t s_next_feed_ms        = 0;
+    const uint32_t now_ms                 = static_cast<uint32_t>(esp_timer_get_time() / 1000);
+    if (now_ms >= s_next_feed_ms) {
+        s_next_feed_ms = now_ms + FEED_INTERVAL_MS;
+        vTaskDelay(FEED_SLEEP_TICKS);
+    }
+}
+#endif
+
+extern "C" void app_main(void)
+{
+    setup();
+    for (;;) {
+#if CONFIG_FREERTOS_UNICORE
+        feedIdleTaskPeriodically();
+#endif
+        loop();
+    }
+}
+#endif
