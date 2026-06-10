@@ -10,6 +10,8 @@
 #include <Wire.h>
 #include <M5Unified.h>
 #include <M5UnitUnified.hpp>
+#include <wiring/m5_unit_unified_wiring.hpp>
+#include <wiring/m5_unit_finger_wiring.hpp>
 #include <googletest/test_template.hpp>
 #include <googletest/test_helper.hpp>
 #include <unit/unit_FPC1xxx.hpp>
@@ -52,70 +54,38 @@ UartPins get_hat_uart_pins(const m5::board_t board)
 }  // namespace hat
 #endif
 
-// Faces Finger Module pins (M-Bus: RX=mbus_pin15, TX=mbus_pin16, PWR=mbus_pin10, TCH=mbus_pin20)
-#if defined(USING_FACES_FINGER)
-namespace faces {
-struct FacesPins {
-    int rx;
-    int tx;
-    int panel_power;
-    int touch_power;
-};
-
-FacesPins get_faces_pins()
-{
-    return {
-        M5.getPin(m5::pin_name_t::mbus_pin15),
-        M5.getPin(m5::pin_name_t::mbus_pin16),
-        M5.getPin(m5::pin_name_t::mbus_pin10),
-        M5.getPin(m5::pin_name_t::mbus_pin20),
-    };
-}
-}  // namespace faces
-#endif
-
 #if defined(USING_FACES_FINGER)
 class TestFPC1020A : public UARTComponentTestBase<UnitFacesFinger> {
 protected:
     virtual UnitFacesFinger* get_instance() override
     {
-        auto ptr            = new m5::unit::UnitFacesFinger();
-        const auto fp       = faces::get_faces_pins();
-        auto cfg            = ptr->config();
-        cfg.panel_power_pin = fp.panel_power;
-        cfg.touch_power_pin = fp.touch_power;
-        ptr->config(cfg);
-        return ptr;
+        // Pins (panel_power / touch_power) are applied to unit.config() by addFacesUART (in begin() below).
+        return new m5::unit::UnitFacesFinger();
     }
 
     void get_serial_pins(int& pin_num_in, int& pin_num_out)
     {
-        const auto fp = faces::get_faces_pins();
+        const auto fp = m5::unit::fpc1xxx::faces::wiring::getFacesPins();
         pin_num_in    = fp.rx;
         pin_num_out   = fp.tx;
     }
 
     virtual HardwareSerial* init_serial() override
     {
-        int pin_num_in{-1}, pin_num_out{-1};
-        get_serial_pins(pin_num_in, pin_num_out);
-
-        // clang-format off
-#if defined(CONFIG_IDF_TARGET_ESP32C6)
-    auto& s = Serial1;
-#elif SOC_UART_NUM > 2
-    auto& s = Serial2;
-#elif SOC_UART_NUM > 1
-    auto& s = Serial1;
-#else
-#error "Not enough Serial"
-#endif
-        // clang-format on
-
-        M5_LOGI("getPin: %d,%d", pin_num_in, pin_num_out);
+        // begin() (override below) drives the actual setup via the wiring helper. Release any
+        // previously installed UART driver here so the wiring helper's serial.begin() starts clean.
+        auto& s = m5::unit::wiring::defaultUartSerial();
         s.end();
-        s.begin(19200, SERIAL_8N1, pin_num_in, pin_num_out);
         return &s;
+    }
+
+    virtual bool begin() override
+    {
+        serial = init_serial();
+        if (!serial) {
+            return false;
+        }
+        return m5::unit::fpc1xxx::faces::wiring::addFacesUART(Units, *unit, 19200) && Units.begin();
     }
 
     void reset_serial(const uint32_t baud = 19200)
@@ -150,9 +120,10 @@ protected:
         pin_num_in  = M5.getPin(m5::pin_name_t::port_c_rxd);
         pin_num_out = M5.getPin(m5::pin_name_t::port_c_txd);
         if (pin_num_in < 0 || pin_num_out < 0) {
-            // NanoC6: Ex_I2C.setPort() registers m5gfx::i2c on GPIO 1/2;
+            // NanoC6 / NanoH2: Ex_I2C.setPort() registers m5gfx::i2c on GPIO 1/2;
             // Wire.end() alone won't release it, causing dual-driver conflict on uart_driver_install
-            if (M5.getBoard() == m5::board_t::board_M5NanoC6) {
+            const auto b = M5.getBoard();
+            if (b == m5::board_t::board_M5NanoC6 || b == m5::board_t::board_M5NanoH2) {
                 M5.Ex_I2C.release();
             }
             Wire.end();
@@ -164,25 +135,24 @@ protected:
 
     virtual HardwareSerial* init_serial() override
     {
-        int pin_num_in{-1}, pin_num_out{-1};
-        get_serial_pins(pin_num_in, pin_num_out);
-
-        // clang-format off
-#if defined(CONFIG_IDF_TARGET_ESP32C6)
-    auto& s = Serial1;
-#elif SOC_UART_NUM > 2
-    auto& s = Serial2;
-#elif SOC_UART_NUM > 1
-    auto& s = Serial1;
-#else
-#error "Not enough Serial"
-#endif
-        // clang-format on
-
-        M5_LOGI("getPin: %d,%d", pin_num_in, pin_num_out);
+        // begin() (override below) drives the actual setup via the wiring helper. Release any
+        // previously installed UART driver here so the wiring helper's serial.begin() starts clean.
+        auto& s = m5::unit::wiring::defaultUartSerial();
         s.end();
-        s.begin(19200, SERIAL_8N1, pin_num_in, pin_num_out);
         return &s;
+    }
+
+    virtual bool begin() override
+    {
+        serial = init_serial();
+        if (!serial) {
+            return false;
+        }
+#if defined(USING_HAT_FINGER)
+        return m5::unit::wiring::addHatUART(Units, *unit, 19200) && Units.begin();
+#else  // USING_UNIT_FINGER
+        return m5::unit::wiring::addUART(Units, *unit, 19200) && Units.begin();
+#endif
     }
 
     void reset_serial(const uint32_t baud = 19200)
@@ -454,8 +424,7 @@ TEST_F(TestFPC1020A, Sleep)
 }
 
 // --- detail functions (no hardware required) ---
-class TestFPC1020A_Detail : public ::testing::Test {
-};
+class TestFPC1020A_Detail : public ::testing::Test {};
 
 using Frame = m5::unit::UnitFPC1XXX::Frame;
 using namespace m5::unit::fpc1xxx::detail;
