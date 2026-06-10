@@ -424,7 +424,8 @@ TEST_F(TestFPC1020A, Sleep)
 }
 
 // --- detail functions (no hardware required) ---
-class TestFPC1020A_Detail : public ::testing::Test {};
+class TestFPC1020A_Detail : public ::testing::Test {
+};
 
 using Frame = m5::unit::UnitFPC1XXX::Frame;
 using namespace m5::unit::fpc1xxx::detail;
