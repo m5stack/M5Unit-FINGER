@@ -27,7 +27,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">M5Unit-FINGER<span id="projectnumber">&#160;0.0.2 git rev:9f22200</span>
+   <div id="projectname">M5Unit-FINGER<span id="projectnumber">&#160;0.2.0 git rev:ee2afce</span>
    </div>
   </td>
  </tr>
@@ -129,7 +129,7 @@ Classes</h2></td></tr>
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="namespaces" name="namespaces"></a>
 Namespaces</h2></td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">namespace &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacem5.html">m5</a></td></tr>
-<tr class="memdesc:namespacem5"><td class="mdescLeft">&#160;</td><td class="mdescRight">Top level namespace of M5stack. <br /></td></tr>
+<tr class="memdesc:namespacem5"><td class="mdescLeft">&#160;</td><td class="mdescRight">Top level namespace of M5Stack. <br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">namespace &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacefinger2.html">finger2</a></td></tr>
 <tr class="memdesc:namespacefinger2"><td class="mdescLeft">&#160;</td><td class="mdescRight">For UnitFinger2. <br /></td></tr>
@@ -198,7 +198,8 @@ Enumerations</h2></td></tr>
  }</td></tr>
 <tr class="memdesc:a17a64e7478304d0d4eb456b9ceab4d42"><td class="mdescLeft">&#160;</td><td class="mdescRight">Color for LED.  <a href="#a17a64e7478304d0d4eb456b9ceab4d42">More...</a><br /></td></tr>
 <tr class="separator:a17a64e7478304d0d4eb456b9ceab4d42"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ae378c867c6de3829e71399995973fcc2" id="r_ae378c867c6de3829e71399995973fcc2"><td class="memItemLeft" align="right" valign="top">enum class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ae378c867c6de3829e71399995973fcc2">m5::unit::finger2::RegisterID</a> : uint8_t { <a class="el" href="#ae378c867c6de3829e71399995973fcc2a1eb898097fbbaceb1322d33022f1908c">PacketSize</a> = 6
+<tr class="memitem:ae378c867c6de3829e71399995973fcc2" id="r_ae378c867c6de3829e71399995973fcc2"><td class="memItemLeft" align="right" valign="top">enum class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ae378c867c6de3829e71399995973fcc2">m5::unit::finger2::RegisterID</a> : uint8_t { <a class="el" href="#ae378c867c6de3829e71399995973fcc2a48c9b8d052c8b810a6ec7cbcf7078049">ScoreLevel</a> = 5
+, <a class="el" href="#ae378c867c6de3829e71399995973fcc2a1eb898097fbbaceb1322d33022f1908c">PacketSize</a> = 6
  }</td></tr>
 <tr class="memdesc:ae378c867c6de3829e71399995973fcc2"><td class="mdescLeft">&#160;</td><td class="mdescRight">PS_WriteReg target register.  <a href="#ae378c867c6de3829e71399995973fcc2">More...</a><br /></td></tr>
 <tr class="separator:ae378c867c6de3829e71399995973fcc2"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -346,8 +347,8 @@ constexpr <a class="el" href="#a0ac4d20b114942e2b2ca258e8e2c3b88">auto_identify_
 </div><div class="memdoc">
 <b>Initial value:</b><div class="fragment"><div class="line"> bool (*)(<span class="keyword">const</span> uint16_t call_times, <span class="keyword">const</span> uint16_t page_id, <span class="keyword">const</span> <a class="code hl_enumeration" href="#a61296099c4dc3e43e13761d01976ee43">ConfirmCode</a> confirm,</div>
 <div class="line">                                        <span class="keyword">const</span> <a class="code hl_enumeration" href="#ad9a809694e7081f91b26d1da8bb0f20b">AutoEnrollStage</a> stage, <span class="keyword">const</span> uint8_t state)</div>
-<div class="ttc" id="aunit___finger2_8hpp_html_a61296099c4dc3e43e13761d01976ee43"><div class="ttname"><a href="#a61296099c4dc3e43e13761d01976ee43">m5::unit::finger2::ConfirmCode</a></div><div class="ttdeci">ConfirmCode</div><div class="ttdoc">Confirmation code.</div><div class="ttdef"><b>Definition</b> unit_Finger2.hpp:144</div></div>
-<div class="ttc" id="aunit___finger2_8hpp_html_ad9a809694e7081f91b26d1da8bb0f20b"><div class="ttname"><a href="#ad9a809694e7081f91b26d1da8bb0f20b">m5::unit::finger2::AutoEnrollStage</a></div><div class="ttdeci">AutoEnrollStage</div><div class="ttdoc">Interim stage of AutoEnroll.</div><div class="ttdef"><b>Definition</b> unit_Finger2.hpp:120</div></div>
+<div class="ttc" id="aunit___finger2_8hpp_html_a61296099c4dc3e43e13761d01976ee43"><div class="ttname"><a href="#a61296099c4dc3e43e13761d01976ee43">m5::unit::finger2::ConfirmCode</a></div><div class="ttdeci">ConfirmCode</div><div class="ttdoc">Confirmation code.</div><div class="ttdef"><b>Definition</b> unit_Finger2.hpp:145</div></div>
+<div class="ttc" id="aunit___finger2_8hpp_html_ad9a809694e7081f91b26d1da8bb0f20b"><div class="ttname"><a href="#ad9a809694e7081f91b26d1da8bb0f20b">m5::unit::finger2::AutoEnrollStage</a></div><div class="ttdeci">AutoEnrollStage</div><div class="ttdoc">Interim stage of AutoEnroll.</div><div class="ttdef"><b>Definition</b> unit_Finger2.hpp:121</div></div>
 </div><!-- fragment -->
 <p>Callback function for autoEnroll. </p>
 <dl class="params"><dt>Parameters</dt><dd>
@@ -383,7 +384,7 @@ constexpr <a class="el" href="#a0ac4d20b114942e2b2ca258e8e2c3b88">auto_identify_
 </div><div class="memdoc">
 <b>Initial value:</b><div class="fragment"><div class="line"> bool (*)(<span class="keyword">const</span> uint16_t call_times, <span class="keyword">const</span> <a class="code hl_enumeration" href="#a61296099c4dc3e43e13761d01976ee43">ConfirmCode</a> confirm,</div>
 <div class="line">                                          <span class="keyword">const</span> <a class="code hl_enumeration" href="#a46784bb5ac5c7d7eadaf4bff2b4e74fc">AutoIdentifyStage</a> stage)</div>
-<div class="ttc" id="aunit___finger2_8hpp_html_a46784bb5ac5c7d7eadaf4bff2b4e74fc"><div class="ttname"><a href="#a46784bb5ac5c7d7eadaf4bff2b4e74fc">m5::unit::finger2::AutoIdentifyStage</a></div><div class="ttdeci">AutoIdentifyStage</div><div class="ttdoc">Interim stage of AutoIdentify.</div><div class="ttdef"><b>Definition</b> unit_Finger2.hpp:134</div></div>
+<div class="ttc" id="aunit___finger2_8hpp_html_a46784bb5ac5c7d7eadaf4bff2b4e74fc"><div class="ttname"><a href="#a46784bb5ac5c7d7eadaf4bff2b4e74fc">m5::unit::finger2::AutoIdentifyStage</a></div><div class="ttdeci">AutoIdentifyStage</div><div class="ttdoc">Interim stage of AutoIdentify.</div><div class="ttdef"><b>Definition</b> unit_Finger2.hpp:135</div></div>
 </div><!-- fragment -->
 <p>Callback function for autoIdentify. </p>
 <dl class="params"><dt>Parameters</dt><dd>
@@ -549,7 +550,7 @@ constexpr <a class="el" href="#a0ac4d20b114942e2b2ca258e8e2c3b88">auto_identify_
 </td></tr>
 <tr><td class="fieldname"><a id="a61296099c4dc3e43e13761d01976ee43a7de3043521c77e94fd69b089e26a1376" name="a61296099c4dc3e43e13761d01976ee43a7de3043521c77e94fd69b089e26a1376"></a>ImageTooAmorphous&#160;</td><td class="fielddoc"><p>0x06:The fingerprint image is too amorphous to generate feature </p>
 </td></tr>
-<tr><td class="fieldname"><a id="a61296099c4dc3e43e13761d01976ee43a050225c3bef104008920a17351d0657a" name="a61296099c4dc3e43e13761d01976ee43a050225c3bef104008920a17351d0657a"></a>ImageTooFew&#160;</td><td class="fielddoc"><p>0x07:The fingerprint image is in order, but with too little minutiaes（or too small area）to generatefeature </p>
+<tr><td class="fieldname"><a id="a61296099c4dc3e43e13761d01976ee43a050225c3bef104008920a17351d0657a" name="a61296099c4dc3e43e13761d01976ee43a050225c3bef104008920a17351d0657a"></a>ImageTooFew&#160;</td><td class="fielddoc"><p>0x07:The fingerprint image is in order, but with too few minutiae (or too small area) to generate feature </p>
 </td></tr>
 <tr><td class="fieldname"><a id="a61296099c4dc3e43e13761d01976ee43a164fe50bf145ff772a4229487cba0b50" name="a61296099c4dc3e43e13761d01976ee43a164fe50bf145ff772a4229487cba0b50"></a>Unmatched&#160;</td><td class="fielddoc"><p>0x08:The fingerprint unmatched </p>
 </td></tr>
@@ -773,7 +774,9 @@ constexpr <a class="el" href="#a0ac4d20b114942e2b2ca258e8e2c3b88">auto_identify_
 
 <p>PS_WriteReg target register. </p>
 <table class="fieldtable">
-<tr><th colspan="2">Enumerator</th></tr><tr><td class="fieldname"><a id="ae378c867c6de3829e71399995973fcc2a1eb898097fbbaceb1322d33022f1908c" name="ae378c867c6de3829e71399995973fcc2a1eb898097fbbaceb1322d33022f1908c"></a>PacketSize&#160;</td><td class="fielddoc"><p>0x06:Data packet size (0:32,1:64,2:128,3:256) (1 as default) </p>
+<tr><th colspan="2">Enumerator</th></tr><tr><td class="fieldname"><a id="ae378c867c6de3829e71399995973fcc2a48c9b8d052c8b810a6ec7cbcf7078049" name="ae378c867c6de3829e71399995973fcc2a48c9b8d052c8b810a6ec7cbcf7078049"></a>ScoreLevel&#160;</td><td class="fielddoc"><p>0x05:Score level for matching (1-5, 3 as default) </p>
+</td></tr>
+<tr><td class="fieldname"><a id="ae378c867c6de3829e71399995973fcc2a1eb898097fbbaceb1322d33022f1908c" name="ae378c867c6de3829e71399995973fcc2a1eb898097fbbaceb1322d33022f1908c"></a>PacketSize&#160;</td><td class="fielddoc"><p>0x06:Data packet size (0:32,1:64,2:128,3:256) (1 as default) </p>
 </td></tr>
 </table>
 
@@ -831,7 +834,7 @@ constexpr <a class="el" href="#a0ac4d20b114942e2b2ca258e8e2c3b88">auto_identify_
 </div><div class="memdoc">
 <b>Initial value:</b><div class="fragment"><div class="line">=</div>
 <div class="line">    <a class="code hl_variable" href="#aeced9d214b0046b26f3128da3105ba2a">NO_NEED_RELEASE_FINGER</a></div>
-<div class="ttc" id="aunit___finger2_8hpp_html_aeced9d214b0046b26f3128da3105ba2a"><div class="ttname"><a href="#aeced9d214b0046b26f3128da3105ba2a">m5::unit::finger2::auto_enroll_flag::NO_NEED_RELEASE_FINGER</a></div><div class="ttdeci">constexpr auto_enroll_flag_t NO_NEED_RELEASE_FINGER</div><div class="ttdoc">No need to release finger.</div><div class="ttdef"><b>Definition</b> unit_Finger2.hpp:100</div></div>
+<div class="ttc" id="aunit___finger2_8hpp_html_aeced9d214b0046b26f3128da3105ba2a"><div class="ttname"><a href="#aeced9d214b0046b26f3128da3105ba2a">m5::unit::finger2::auto_enroll_flag::NO_NEED_RELEASE_FINGER</a></div><div class="ttdeci">constexpr auto_enroll_flag_t NO_NEED_RELEASE_FINGER</div><div class="ttdoc">No need to release finger.</div><div class="ttdef"><b>Definition</b> unit_Finger2.hpp:101</div></div>
 </div><!-- fragment --><dl class="deprecated"><dt><b><a class="el" href="deprecated.html#_deprecated000002">Deprecated</a></b></dt><dd>Use NO_NEED_RELEASE_FINGER </dd></dl>
 
 </div>

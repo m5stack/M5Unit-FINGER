@@ -1,6 +1,7 @@
 var classm5_1_1unit_1_1_unit_finger2 =
 [
     [ "config_t", "structm5_1_1unit_1_1_unit_finger2_1_1config__t.html", "structm5_1_1unit_1_1_unit_finger2_1_1config__t" ],
+    [ "Packet", "classm5_1_1unit_1_1_unit_finger2.html#aece3cdc297f84115bc4a4acc43941d59", null ],
     [ "autoEnroll", "classm5_1_1unit_1_1_unit_finger2.html#aa1ed2780f6226ab8827b339bb1724c70", null ],
     [ "autoIdentify", "classm5_1_1unit_1_1_unit_finger2.html#a3ab8ab8fe092e8418533e3f120f6afa4", null ],
     [ "begin", "classm5_1_1unit_1_1_unit_finger2.html#afb56c39e6b76bd5ebfe0956b31bc9afb", null ],
@@ -9,7 +10,7 @@ var classm5_1_1unit_1_1_unit_finger2 =
     [ "capture", "classm5_1_1unit_1_1_unit_finger2.html#a7dbd0016396bf57346ce43a0b551c3d2", null ],
     [ "checkSensor", "classm5_1_1unit_1_1_unit_finger2.html#ab4c2283241d9a67f9bb8e4d4cbefe31c", null ],
     [ "clear", "classm5_1_1unit_1_1_unit_finger2.html#a18b55a9f1c7095288d5c59a44fc2ec47", null ],
-    [ "config", "classm5_1_1unit_1_1_unit_finger2.html#a670e103aa4e3954ab55e05d8f16842ea", null ],
+    [ "config", "classm5_1_1unit_1_1_unit_finger2.html#a1008c9655f85d107a06eab286a7c92a6", null ],
     [ "config", "classm5_1_1unit_1_1_unit_finger2.html#a31d35a3c2af95e2ebbb6a714c5ba3383", null ],
     [ "deleteTemplate", "classm5_1_1unit_1_1_unit_finger2.html#a4675bf57fe76eadef26ecef278f2f5b7", null ],
     [ "deviceAddress", "classm5_1_1unit_1_1_unit_finger2.html#a17c10dc580d47b1f7ac1939721bac615", null ],

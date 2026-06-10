@@ -27,7 +27,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">M5Unit-FINGER<span id="projectnumber">&#160;0.0.2 git rev:9f22200</span>
+   <div id="projectname">M5Unit-FINGER<span id="projectnumber">&#160;0.2.0 git rev:ee2afce</span>
    </div>
   </td>
  </tr>
@@ -128,13 +128,13 @@ Classes</h2></td></tr>
 Public Types</h2></td></tr>
 <tr class="memitem:aece3cdc297f84115bc4a4acc43941d59" id="r_aece3cdc297f84115bc4a4acc43941d59"><td class="memItemLeft" align="right" valign="top"><a id="aece3cdc297f84115bc4a4acc43941d59" name="aece3cdc297f84115bc4a4acc43941d59"></a>
 using&#160;</td><td class="memItemRight" valign="bottom"><b>Packet</b> = std::vector&lt;uint8_t&gt;</td></tr>
+<tr class="memdesc:aece3cdc297f84115bc4a4acc43941d59"><td class="mdescLeft">&#160;</td><td class="mdescRight">Packet buffer for communication. <br /></td></tr>
 <tr class="separator:aece3cdc297f84115bc4a4acc43941d59"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-methods" name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:afb56c39e6b76bd5ebfe0956b31bc9afb" id="r_afb56c39e6b76bd5ebfe0956b31bc9afb"><td class="memItemLeft" align="right" valign="top"><a id="afb56c39e6b76bd5ebfe0956b31bc9afb" name="afb56c39e6b76bd5ebfe0956b31bc9afb"></a>
-virtual bool&#160;</td><td class="memItemRight" valign="bottom"><b>begin</b> () override</td></tr>
-<tr class="memdesc:afb56c39e6b76bd5ebfe0956b31bc9afb"><td class="mdescLeft">&#160;</td><td class="mdescRight">Begin communication with the unit. <br /></td></tr>
+<tr class="memitem:afb56c39e6b76bd5ebfe0956b31bc9afb" id="r_afb56c39e6b76bd5ebfe0956b31bc9afb"><td class="memItemLeft" align="right" valign="top">virtual bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#afb56c39e6b76bd5ebfe0956b31bc9afb">begin</a> () override</td></tr>
+<tr class="memdesc:afb56c39e6b76bd5ebfe0956b31bc9afb"><td class="mdescLeft">&#160;</td><td class="mdescRight">Begin communication with the unit.  <br /></td></tr>
 <tr class="separator:afb56c39e6b76bd5ebfe0956b31bc9afb"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a6afa72c97425c2647edd5588ead9796e" id="r_a6afa72c97425c2647edd5588ead9796e"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a6afa72c97425c2647edd5588ead9796e">readModuleStatus</a> (bool &amp;awake)</td></tr>
 <tr class="memdesc:a6afa72c97425c2647edd5588ead9796e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Read the module status.  <br /></td></tr>
@@ -143,7 +143,7 @@ virtual bool&#160;</td><td class="memItemRight" valign="bottom"><b>begin</b> () 
 <tr class="memdesc:a10046b1678181292ecaf36d57c99c53f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Wakeup.  <br /></td></tr>
 <tr class="separator:a10046b1678181292ecaf36d57c99c53f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:afda95458a18b92da806b360f9b2babbd" id="r_afda95458a18b92da806b360f9b2babbd"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#afda95458a18b92da806b360f9b2babbd">readInformationPage</a> (uint8_t info[512])</td></tr>
-<tr class="memdesc:afda95458a18b92da806b360f9b2babbd"><td class="mdescLeft">&#160;</td><td class="mdescRight">Read the the information page in FLASH( 512 bytes)  <br /></td></tr>
+<tr class="memdesc:afda95458a18b92da806b360f9b2babbd"><td class="mdescLeft">&#160;</td><td class="mdescRight">Read the information page in FLASH (512 bytes)  <br /></td></tr>
 <tr class="separator:afda95458a18b92da806b360f9b2babbd"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ac3a4ac66e5a14167a86c1d5f54cf241f" id="r_ac3a4ac66e5a14167a86c1d5f54cf241f"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ac3a4ac66e5a14167a86c1d5f54cf241f">readRandomNumber</a> (uint32_t &amp;value)</td></tr>
 <tr class="memdesc:ac3a4ac66e5a14167a86c1d5f54cf241f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Read the random number (32bits)  <br /></td></tr>
@@ -161,25 +161,21 @@ virtual bool&#160;</td><td class="memItemRight" valign="bottom"><b>begin</b> () 
 <tr class="memdesc:a9cdea35fbda77b3fab6517663951aa22"><td class="mdescLeft">&#160;</td><td class="mdescRight">Read the firmware version.  <br /></td></tr>
 <tr class="separator:a9cdea35fbda77b3fab6517663951aa22"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr><td colspan="2"><div class="groupHeader">Settings for begin</div></td></tr>
-<tr class="memitem:a670e103aa4e3954ab55e05d8f16842ea" id="r_a670e103aa4e3954ab55e05d8f16842ea"><td class="memItemLeft" align="right" valign="top"><a id="a670e103aa4e3954ab55e05d8f16842ea" name="a670e103aa4e3954ab55e05d8f16842ea"></a>
-<a class="el" href="structm5_1_1unit_1_1_unit_finger2_1_1config__t.html">config_t</a>&#160;</td><td class="memItemRight" valign="bottom"><b>config</b> ()</td></tr>
-<tr class="memdesc:a670e103aa4e3954ab55e05d8f16842ea"><td class="mdescLeft">&#160;</td><td class="mdescRight">Gets the configuration. <br /></td></tr>
-<tr class="separator:a670e103aa4e3954ab55e05d8f16842ea"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a31d35a3c2af95e2ebbb6a714c5ba3383" id="r_a31d35a3c2af95e2ebbb6a714c5ba3383"><td class="memItemLeft" align="right" valign="top"><a id="a31d35a3c2af95e2ebbb6a714c5ba3383" name="a31d35a3c2af95e2ebbb6a714c5ba3383"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>config</b> (const <a class="el" href="structm5_1_1unit_1_1_unit_finger2_1_1config__t.html">config_t</a> &amp;cfg)</td></tr>
-<tr class="memdesc:a31d35a3c2af95e2ebbb6a714c5ba3383"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set the configuration. <br /></td></tr>
+<tr class="memitem:a1008c9655f85d107a06eab286a7c92a6" id="r_a1008c9655f85d107a06eab286a7c92a6"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structm5_1_1unit_1_1_unit_finger2_1_1config__t.html">config_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a1008c9655f85d107a06eab286a7c92a6">config</a> () const</td></tr>
+<tr class="memdesc:a1008c9655f85d107a06eab286a7c92a6"><td class="mdescLeft">&#160;</td><td class="mdescRight">Gets the configuration.  <br /></td></tr>
+<tr class="separator:a1008c9655f85d107a06eab286a7c92a6"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a31d35a3c2af95e2ebbb6a714c5ba3383" id="r_a31d35a3c2af95e2ebbb6a714c5ba3383"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a31d35a3c2af95e2ebbb6a714c5ba3383">config</a> (const <a class="el" href="structm5_1_1unit_1_1_unit_finger2_1_1config__t.html">config_t</a> &amp;cfg)</td></tr>
+<tr class="memdesc:a31d35a3c2af95e2ebbb6a714c5ba3383"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set the configuration.  <br /></td></tr>
 <tr class="separator:a31d35a3c2af95e2ebbb6a714c5ba3383"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr><td colspan="2"><div class="groupHeader">Properties</div></td></tr>
 <tr class="memitem:a17c10dc580d47b1f7ac1939721bac615" id="r_a17c10dc580d47b1f7ac1939721bac615"><td class="memItemLeft" align="right" valign="top">uint32_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a17c10dc580d47b1f7ac1939721bac615">deviceAddress</a> () const</td></tr>
 <tr class="memdesc:a17c10dc580d47b1f7ac1939721bac615"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the device address.  <br /></td></tr>
 <tr class="separator:a17c10dc580d47b1f7ac1939721bac615"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a8ee0c3af954a2227c8ce962273006bdd" id="r_a8ee0c3af954a2227c8ce962273006bdd"><td class="memItemLeft" align="right" valign="top"><a id="a8ee0c3af954a2227c8ce962273006bdd" name="a8ee0c3af954a2227c8ce962273006bdd"></a>
-constexpr uint16_t&#160;</td><td class="memItemRight" valign="bottom"><b>imageWidth</b> () const</td></tr>
-<tr class="memdesc:a8ee0c3af954a2227c8ce962273006bdd"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the image width. <br /></td></tr>
+<tr class="memitem:a8ee0c3af954a2227c8ce962273006bdd" id="r_a8ee0c3af954a2227c8ce962273006bdd"><td class="memItemLeft" align="right" valign="top">constexpr uint16_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a8ee0c3af954a2227c8ce962273006bdd">imageWidth</a> () const</td></tr>
+<tr class="memdesc:a8ee0c3af954a2227c8ce962273006bdd"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the image width.  <br /></td></tr>
 <tr class="separator:a8ee0c3af954a2227c8ce962273006bdd"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a6204acd02be5940f7bf900fb7f6da2a2" id="r_a6204acd02be5940f7bf900fb7f6da2a2"><td class="memItemLeft" align="right" valign="top"><a id="a6204acd02be5940f7bf900fb7f6da2a2" name="a6204acd02be5940f7bf900fb7f6da2a2"></a>
-constexpr uint16_t&#160;</td><td class="memItemRight" valign="bottom"><b>imageHeight</b> () const</td></tr>
-<tr class="memdesc:a6204acd02be5940f7bf900fb7f6da2a2"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the image height. <br /></td></tr>
+<tr class="memitem:a6204acd02be5940f7bf900fb7f6da2a2" id="r_a6204acd02be5940f7bf900fb7f6da2a2"><td class="memItemLeft" align="right" valign="top">constexpr uint16_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a6204acd02be5940f7bf900fb7f6da2a2">imageHeight</a> () const</td></tr>
+<tr class="memdesc:a6204acd02be5940f7bf900fb7f6da2a2"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the image height.  <br /></td></tr>
 <tr class="separator:a6204acd02be5940f7bf900fb7f6da2a2"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ac09c3075a4fa240415f78dcbe6d5b8f9" id="r_ac09c3075a4fa240415f78dcbe6d5b8f9"><td class="memItemLeft" align="right" valign="top">uint16_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ac09c3075a4fa240415f78dcbe6d5b8f9">capacity</a> () const</td></tr>
 <tr class="memdesc:ac09c3075a4fa240415f78dcbe6d5b8f9"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the capacity of templates.  <br /></td></tr>
@@ -332,16 +328,16 @@ Protected Member Functions</h2></td></tr>
 bool&#160;</td><td class="memItemRight" valign="bottom"><b>write_command</b> (const uint8_t cmd, const uint32_t addr, const uint8_t *payload=nullptr, const uint16_t payload_len=0)</td></tr>
 <tr class="separator:a5133a29f37433d6bba33e7edc0a16bbd"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aeac48bbd2a538afbd59136e03b9076d9" id="r_aeac48bbd2a538afbd59136e03b9076d9"><td class="memItemLeft" align="right" valign="top"><a id="aeac48bbd2a538afbd59136e03b9076d9" name="aeac48bbd2a538afbd59136e03b9076d9"></a>
-<a class="el" href="unit___finger2_8hpp.html#a61296099c4dc3e43e13761d01976ee43">finger2::ConfirmCode</a>&#160;</td><td class="memItemRight" valign="bottom"><b>read_response</b> (Packet &amp;rbuf)</td></tr>
+<a class="el" href="unit___finger2_8hpp.html#a61296099c4dc3e43e13761d01976ee43">finger2::ConfirmCode</a>&#160;</td><td class="memItemRight" valign="bottom"><b>read_response</b> (<a class="el" href="#aece3cdc297f84115bc4a4acc43941d59">Packet</a> &amp;rbuf)</td></tr>
 <tr class="separator:aeac48bbd2a538afbd59136e03b9076d9"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aa8880f3156c63a9722c97cbd5ccb078e" id="r_aa8880f3156c63a9722c97cbd5ccb078e"><td class="memItemLeft" align="right" valign="top"><a id="aa8880f3156c63a9722c97cbd5ccb078e" name="aa8880f3156c63a9722c97cbd5ccb078e"></a>
-bool&#160;</td><td class="memItemRight" valign="bottom"><b>transceive_command</b> (Packet &amp;rbuf, const uint8_t cmd, const uint32_t addr, const uint8_t *payload=nullptr, const uint16_t payload_len=0)</td></tr>
+bool&#160;</td><td class="memItemRight" valign="bottom"><b>transceive_command</b> (<a class="el" href="#aece3cdc297f84115bc4a4acc43941d59">Packet</a> &amp;rbuf, const uint8_t cmd, const uint32_t addr, const uint8_t *payload=nullptr, const uint16_t payload_len=0)</td></tr>
 <tr class="separator:aa8880f3156c63a9722c97cbd5ccb078e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a7c1168debfaef378a99f47ae011d2a4b" id="r_a7c1168debfaef378a99f47ae011d2a4b"><td class="memItemLeft" align="right" valign="top"><a id="a7c1168debfaef378a99f47ae011d2a4b" name="a7c1168debfaef378a99f47ae011d2a4b"></a>
-bool&#160;</td><td class="memItemRight" valign="bottom"><b>transceive_command8</b> (Packet &amp;rbuf, const uint8_t cmd, const uint32_t addr, const uint8_t value)</td></tr>
+bool&#160;</td><td class="memItemRight" valign="bottom"><b>transceive_command8</b> (<a class="el" href="#aece3cdc297f84115bc4a4acc43941d59">Packet</a> &amp;rbuf, const uint8_t cmd, const uint32_t addr, const uint8_t value)</td></tr>
 <tr class="separator:a7c1168debfaef378a99f47ae011d2a4b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a0f265089049b5bd39665bbef9268e9a7" id="r_a0f265089049b5bd39665bbef9268e9a7"><td class="memItemLeft" align="right" valign="top"><a id="a0f265089049b5bd39665bbef9268e9a7" name="a0f265089049b5bd39665bbef9268e9a7"></a>
-uint8_t&#160;</td><td class="memItemRight" valign="bottom"><b>read_data</b> (Packet &amp;rbuf)</td></tr>
+uint8_t&#160;</td><td class="memItemRight" valign="bottom"><b>read_data</b> (<a class="el" href="#aece3cdc297f84115bc4a4acc43941d59">Packet</a> &amp;rbuf)</td></tr>
 <tr class="separator:a0f265089049b5bd39665bbef9268e9a7"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
@@ -460,6 +456,34 @@ uint8_t&#160;</td><td class="memItemRight" valign="bottom"><b>read_data</b> (Pac
 
 </div>
 </div>
+<a id="afb56c39e6b76bd5ebfe0956b31bc9afb" name="afb56c39e6b76bd5ebfe0956b31bc9afb"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#afb56c39e6b76bd5ebfe0956b31bc9afb">&#9670;&#160;</a></span>begin()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool m5::unit::UnitFinger2::begin </td>
+          <td>(</td>
+          <td class="paramname"><span class="paramname"><em></em></span></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">override</span><span class="mlabel">virtual</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Begin communication with the unit. </p>
+<dl class="section return"><dt>Returns</dt><dd>True if successful </dd></dl>
+
+</div>
+</div>
 <a id="a413e1fb642aed98717febae08b6dcac2" name="a413e1fb642aed98717febae08b6dcac2"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a413e1fb642aed98717febae08b6dcac2">&#9670;&#160;</a></span>cancel()</h2>
 
@@ -505,6 +529,7 @@ uint8_t&#160;</td><td class="memItemRight" valign="bottom"><b>read_data</b> (Pac
 </div><div class="memdoc">
 
 <p>Get the capacity of templates. </p>
+<dl class="section return"><dt>Returns</dt><dd>Capacity of templates </dd></dl>
 <dl class="section warning"><dt>Warning</dt><dd>Returns the correct value after <a class="el" href="#afb56c39e6b76bd5ebfe0956b31bc9afb" title="Begin communication with the unit.">begin()</a> succeeds </dd></dl>
 
 </div>
@@ -588,6 +613,67 @@ uint8_t&#160;</td><td class="memItemRight" valign="bottom"><b>read_data</b> (Pac
 
 </div>
 </div>
+<a id="a1008c9655f85d107a06eab286a7c92a6" name="a1008c9655f85d107a06eab286a7c92a6"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a1008c9655f85d107a06eab286a7c92a6">&#9670;&#160;</a></span>config() <span class="overload">[1/2]</span></h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="structm5_1_1unit_1_1_unit_finger2_1_1config__t.html">config_t</a> m5::unit::UnitFinger2::config </td>
+          <td>(</td>
+          <td class="paramname"><span class="paramname"><em></em></span></td><td>)</td>
+          <td> const</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Gets the configuration. </p>
+<dl class="section return"><dt>Returns</dt><dd>Configuration </dd></dl>
+
+</div>
+</div>
+<a id="a31d35a3c2af95e2ebbb6a714c5ba3383" name="a31d35a3c2af95e2ebbb6a714c5ba3383"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a31d35a3c2af95e2ebbb6a714c5ba3383">&#9670;&#160;</a></span>config() <span class="overload">[2/2]</span></h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">void m5::unit::UnitFinger2::config </td>
+          <td>(</td>
+          <td class="paramtype">const <a class="el" href="structm5_1_1unit_1_1_unit_finger2_1_1config__t.html">config_t</a> &amp;</td>          <td class="paramname"><span class="paramname"><em>cfg</em></span></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Set the configuration. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">cfg</td><td>Configuration </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
 <a id="a4675bf57fe76eadef26ecef278f2f5b7" name="a4675bf57fe76eadef26ecef278f2f5b7"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a4675bf57fe76eadef26ecef278f2f5b7">&#9670;&#160;</a></span>deleteTemplate()</h2>
 
@@ -643,6 +729,7 @@ uint8_t&#160;</td><td class="memItemRight" valign="bottom"><b>read_data</b> (Pac
 </div><div class="memdoc">
 
 <p>Get the device address. </p>
+<dl class="section return"><dt>Returns</dt><dd>Device address </dd></dl>
 <dl class="section note"><dt>Note</dt><dd>Changing the device address is not permitted </dd></dl>
 
 </div>
@@ -810,6 +897,62 @@ it is better to call readIndexTable once and verify table yourself </dd></dl>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>True if successful </dd></dl>
 <dl class="section warning"><dt>Warning</dt><dd>Returns an error when device is sleeping </dd></dl>
+
+</div>
+</div>
+<a id="a6204acd02be5940f7bf900fb7f6da2a2" name="a6204acd02be5940f7bf900fb7f6da2a2"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a6204acd02be5940f7bf900fb7f6da2a2">&#9670;&#160;</a></span>imageHeight()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">uint16_t m5::unit::UnitFinger2::imageHeight </td>
+          <td>(</td>
+          <td class="paramname"><span class="paramname"><em></em></span></td><td>)</td>
+          <td> const</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span><span class="mlabel">constexpr</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Get the image height. </p>
+<dl class="section return"><dt>Returns</dt><dd>Image height </dd></dl>
+
+</div>
+</div>
+<a id="a8ee0c3af954a2227c8ce962273006bdd" name="a8ee0c3af954a2227c8ce962273006bdd"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a8ee0c3af954a2227c8ce962273006bdd">&#9670;&#160;</a></span>imageWidth()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">uint16_t m5::unit::UnitFinger2::imageWidth </td>
+          <td>(</td>
+          <td class="paramname"><span class="paramname"><em></em></span></td><td>)</td>
+          <td> const</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span><span class="mlabel">constexpr</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Get the image width. </p>
+<dl class="section return"><dt>Returns</dt><dd>Image width </dd></dl>
 
 </div>
 </div>
@@ -1005,7 +1148,7 @@ it is better to call readIndexTable once and verify table yourself </dd></dl>
       </table>
 </div><div class="memdoc">
 
-<p>Read the the information page in FLASH( 512 bytes) </p>
+<p>Read the information page in FLASH (512 bytes) </p>
 <p>PS_ReadINFpage </p><dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">info</td><td>Buffer (at least 512 bytes) </td></tr>
@@ -1266,7 +1409,8 @@ it is better to call readIndexTable once and verify table yourself </dd></dl>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramdir">[out]</td><td class="paramname">actual_size</td><td>Actual size </td></tr>
-    <tr><td class="paramdir">[out]</td><td class="paramname">buf</td><td>Output buffer (at least 7262 bytes) </td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">buf</td><td>Output buffer (at least buf_size bytes) </td></tr>
+    <tr><td class="paramdir"></td><td class="paramname">buf_size</td><td>Size of buf (the full template is TEMPLATE_SIZE (7262) bytes) </td></tr>
     <tr><td class="paramdir"></td><td class="paramname">batch_size</td><td>Processing size per batch </td></tr>
     <tr><td class="paramdir"></td><td class="paramname">callback</td><td>Callback invoked for each batch processing </td></tr>
   </table>
@@ -1615,7 +1759,7 @@ it is better to call readIndexTable once and verify table yourself </dd></dl>
     <tr><td class="paramname">tm</td><td>Color change time (decisecond) </td></tr>
     <tr><td class="paramname">colors</td><td>LEDColor array (maximum 10) </td></tr>
     <tr><td class="paramname">colors_num</td><td>Number of the colors (maximum 10) </td></tr>
-    <tr><td class="paramname">cycle</td><td>Cycle count, infinity if zero. Valid for LEDMode::Breath, LEDMode::Blink </td></tr>
+    <tr><td class="paramname">cycle</td><td>Cycle count, infinity if zero </td></tr>
   </table>
   </dd>
 </dl>
@@ -1719,7 +1863,7 @@ When less than 32 bytes are written, the missing bytes are filled with zeros </d
   </dd>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>True if successful </dd></dl>
-<dl class="section note"><dt>Note</dt><dd>See also the the protocol specification document </dd></dl>
+<dl class="section note"><dt>Note</dt><dd>See also the protocol specification document </dd></dl>
 
 </div>
 </div>
