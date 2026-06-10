@@ -109,7 +109,6 @@ var unit___finger2_8hpp =
       [ "Bleath", "unit___finger2_8hpp.html#a7d12c9dad2f1174965a737e05727ce9dabd400f6e14b1e4c36872fdbc21d1aade", null ]
     ] ],
     [ "RegisterID", "unit___finger2_8hpp.html#ae378c867c6de3829e71399995973fcc2", [
-      [ "ScoreLevel", "unit___finger2_8hpp.html#ae378c867c6de3829e71399995973fcc2a48c9b8d052c8b810a6ec7cbcf7078049", null ],
       [ "PacketSize", "unit___finger2_8hpp.html#ae378c867c6de3829e71399995973fcc2a1eb898097fbbaceb1322d33022f1908c", null ]
     ] ],
     [ "WorkMode", "unit___finger2_8hpp.html#a5773711ddd7ae0f4f37a485953ec3cc3", [
