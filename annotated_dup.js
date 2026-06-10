@@ -8,7 +8,6 @@ var annotated_dup =
         [ "fpc1xxx", null, [
           [ "User", "structm5_1_1unit_1_1fpc1xxx_1_1_user.html", "structm5_1_1unit_1_1fpc1xxx_1_1_user" ]
         ] ],
-        [ "UnitFacesFinger", "classm5_1_1unit_1_1_unit_faces_finger.html", "classm5_1_1unit_1_1_unit_faces_finger" ],
         [ "UnitFinger2", "classm5_1_1unit_1_1_unit_finger2.html", "classm5_1_1unit_1_1_unit_finger2" ],
         [ "UnitFPC1020A", "classm5_1_1unit_1_1_unit_f_p_c1020_a.html", "classm5_1_1unit_1_1_unit_f_p_c1020_a" ],
         [ "UnitFPC1XXX", "classm5_1_1unit_1_1_unit_f_p_c1_x_x_x.html", "classm5_1_1unit_1_1_unit_f_p_c1_x_x_x" ]
