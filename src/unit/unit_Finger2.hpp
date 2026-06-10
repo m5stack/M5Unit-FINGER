@@ -68,6 +68,7 @@ enum class LEDColor : uint8_t {
   @brief PS_WriteReg target register
  */
 enum class RegisterID : uint8_t {
+    ScoreLevel = 5,  //!< 0x05:Score level for matching (1-5, 3 as default)
     PacketSize = 6,  //!< 0x06:Data packet size (0:32,1:64,2:128,3:256) (1 as default)
 };
 
@@ -149,8 +150,8 @@ enum class ConfirmCode : uint8_t {
     ImageTooDry,         //!< 0x04:The fingerprint image is too dry or too light to generate feature
     ImageTooHumid,       //!< 0x05:The fingerprint image is too humid or too blurry to generate feature
     ImageTooAmorphous,   //!< 0x06:The fingerprint image is too amorphous to generate feature
-    ImageTooFew,         //!< 0x07:The fingerprint image is in order, but with too little minutiaes（or too small
-                         //!< area）to generatefeature
+    ImageTooFew,         //!< 0x07:The fingerprint image is in order, but with too few minutiae (or too small
+                         //!< area) to generate feature
     Unmatched,           //!< 0x08:The fingerprint unmatched
     NotFound,            //!< 0x09:No fingerprint searched
     MergeFailed,         //!< 0x0A:The feature merging failed
@@ -256,7 +257,7 @@ class UnitFinger2 : public Component {
 
 public:
     static constexpr uint32_t DEFAULT_MODULE_ADDRESS{0xFFFFFFFF};  //!< Default device address
-    using Packet = std::vector<uint8_t>;
+    using Packet = std::vector<uint8_t>;                           //!< Packet buffer for communication
 
     static constexpr uint16_t IMAGE_WIDTH{80};      //!< Capture image width
     static constexpr uint16_t IMAGE_HEIGHT{208};    //!< Captured image height
@@ -274,7 +275,10 @@ public:
 
     virtual ~UnitFinger2() = default;
 
-    //! @brief Begin communication with the unit
+    /*!
+      @brief Begin communication with the unit
+      @return True if successful
+     */
     virtual bool begin() override;
 
     /*!
@@ -289,12 +293,18 @@ public:
 
     ///@name Settings for begin
     ///@{
-    /*! @brief Gets the configuration */
-    inline config_t config()
+    /*!
+      @brief Gets the configuration
+      @return Configuration
+     */
+    inline config_t config() const
     {
         return _cfg;
     }
-    //! @brief Set the configuration
+    /*!
+      @brief Set the configuration
+      @param cfg Configuration
+     */
     inline void config(const config_t& cfg)
     {
         _cfg = cfg;
@@ -305,24 +315,32 @@ public:
     ///@{
     /*!
       @brief Get the device address
+      @return Device address
       @note Changing the device address is not permitted
     */
     uint32_t deviceAddress() const
     {
         return _address;
     }
-    //! @brief Get the image width
+    /*!
+      @brief Get the image width
+      @return Image width
+     */
     inline constexpr uint16_t imageWidth() const
     {
         return IMAGE_WIDTH;
     }
-    //! @brief Get the image height
+    /*!
+      @brief Get the image height
+      @return Image height
+     */
     inline constexpr uint16_t imageHeight() const
     {
         return IMAGE_HEIGHT;
     }
     /*!
       @brief Get the capacity of templates
+      @return Capacity of templates
       @warning Returns the correct value after begin() succeeds
     */
     inline uint16_t capacity() const
@@ -410,7 +428,7 @@ public:
       @param reg_id Target RegisterID
       @param value Value
       @return True if successful
-      @note See also the the protocol specification document
+      @note See also the protocol specification document
      */
     bool writeSystemRegister(const finger2::RegisterID reg_id, const uint8_t value);
 
@@ -433,7 +451,7 @@ public:
       @param tm Color change time (decisecond)
       @param colors LEDColor array (maximum 10)
       @param colors_num Number of the colors (maximum 10)
-      @param cycle Cycle count, infinity if zero. Valid for LEDMode::Breath, LEDMode::Blink
+      @param cycle Cycle count, infinity if zero
       @return True if successful
       @warning Returns an error when device is sleeping
      */
@@ -575,8 +593,9 @@ public:
 
     /*!
       @brief Read the template
-      @param [out] actual_size Actual size
-      @param[out] buf Output buffer (at least 7262 bytes)
+      @param[out] actual_size Actual size
+      @param[out] buf Output buffer (at least buf_size bytes)
+      @param buf_size Size of buf (the full template is TEMPLATE_SIZE (7262) bytes)
       @param batch_size Processing size per batch
       @param callback Callback invoked for each batch processing
       @return True if successful
@@ -734,7 +753,7 @@ public:
     ///@}
 
     /*!
-      @brief Read the the information page in FLASH( 512 bytes)
+      @brief Read the information page in FLASH (512 bytes)
       @details PS_ReadINFpage
       @param info Buffer (at least 512 bytes)
       @return True if successful

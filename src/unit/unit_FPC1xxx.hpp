@@ -104,7 +104,10 @@ public:
 
     virtual ~UnitFPC1XXX() = default;
 
-    //! @brief Begin communication with the unit
+    /*!
+      @brief Begin communication with the unit
+      @return True if successful
+     */
     virtual bool begin() override;
 
     /*!
@@ -117,12 +120,18 @@ public:
 
     ///@name Settings for begin
     ///@{
-    /*! @brief Gets the configuration */
-    inline config_t config()
+    /*!
+      @brief Gets the configuration
+      @return Configuration
+     */
+    inline config_t config() const
     {
         return _cfg;
     }
-    //! @brief Set the configuration
+    /*!
+      @brief Set the configuration
+      @param cfg Configuration
+     */
     inline void config(const config_t& cfg)
     {
         _cfg = cfg;
@@ -131,32 +140,52 @@ public:
 
     ///@name Properties
     ///@{
-    //! @brief  Gets the width of resolution
+    /*!
+      @brief Gets the width of resolution
+      @return Width of resolution
+     */
     inline virtual uint16_t resolutionWidth() const
     {
         return 0;
     }
-    //! @brief  Gets the height of resolution
+    /*!
+      @brief Gets the height of resolution
+      @return Height of resolution
+     */
     inline virtual uint16_t resolutionHeight() const
     {
         return 0;
     }
-    //! @brief Get the image width
+    /*!
+      @brief Get the image width
+      @param raw Width for raw image if true, for compressed image if false
+      @return Image width
+     */
     inline uint16_t imageWidth(const bool raw) const
     {
         return resolutionWidth() >> (raw ? 0 : 1);
     }
-    //! @brief Get the resolution height
+    /*!
+      @brief Get the image height
+      @param raw Height for raw image if true, for compressed image if false
+      @return Image height
+     */
     inline uint16_t imageHeight(const bool raw) const
     {
         return resolutionHeight() >> (raw ? 0 : 1);
     }
-    //! @brief Get the minimum user ID
+    /*!
+      @brief Get the minimum user ID
+      @return Minimum user ID
+     */
     inline virtual uint16_t minimumUserID() const
     {
         return MINIMUM_USER_ID;
     }
-    //! @brief Get the maximum user ID
+    /*!
+      @brief Get the maximum user ID
+      @return Maximum user ID
+     */
     inline virtual uint16_t maximumUserID() const
     {
         return MAXIMUM_USER_ID;
@@ -292,6 +321,7 @@ public:
     /*!
       @brief Scan characteristic
       @param[out] characteristic Characteristic data (At least 193 bytes)
+      @return True if successful
      */
     bool scanCharacteristic(uint8_t characteristic[193]);
     /*!
@@ -341,7 +371,7 @@ public:
 
     /*!
       @brief Read the serial number (24 bits)
-      @param[out] sno Serial number
+      @param[out] no Serial number
       @return True if successful
      */
     bool readSerialNumber(uint32_t& no);
@@ -394,7 +424,10 @@ public:
     }
     virtual ~UnitFPC1020A() = default;
 
-    //! @brief Begin communication with the unit
+    /*!
+      @brief Begin communication with the unit
+      @return True if successful
+     */
     virtual bool begin() override;
 
     inline virtual uint16_t resolutionWidth() const override
@@ -430,7 +463,7 @@ constexpr uint8_t CMD_DELETE_ALL_USERS{0x05};
 constexpr uint8_t CMD_READ_REGISTERED_USER_COUNT{0x09};
 constexpr uint8_t CMD_READ_USER_PERMISSION{0x0A};
 constexpr uint8_t CMD_READ_ALL_USER_DATA{0x2B};
-constexpr uint8_t CMD_FIND_UNREGISTERD_USER_ID{0x47};
+constexpr uint8_t CMD_FIND_UNREGISTERED_USER_ID{0x47};
 
 constexpr uint8_t CMD_BAUD_RATE{0x21};
 constexpr uint8_t CMD_READ_VERSION{0x26};
@@ -462,7 +495,7 @@ constexpr uint8_t MARKER{0xF5};  //!< Frame marker for head and tail
 //! @brief XOR checksum
 uint8_t xorSum(const uint8_t* data, const uint16_t len);
 //! @brief Validate frame checksum (and optionally markers)
-bool is_valid_sum(const Frame response, const bool check_marker = true);
+bool is_valid_sum(const Frame& response, const bool check_marker = true);
 //! @brief Validate variable-length payload checksum and markers
 bool is_valid_payload(const uint8_t* data, const uint16_t len);
 }  // namespace detail

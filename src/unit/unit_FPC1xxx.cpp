@@ -48,7 +48,7 @@ uint8_t xorSum(const uint8_t* data, const uint16_t len)
     return sum;
 }
 
-bool is_valid_sum(const Frame response, const bool check_marker)
+bool is_valid_sum(const Frame& response, const bool check_marker)
 {
     return (xorSum(response.data() + 1, 5) == response[OFFSET_CRC]) &&
            (check_marker ? (response[OFFSET_HEAD] == MARKER && response[OFFSET_TAIL] == MARKER) : true);
@@ -194,7 +194,12 @@ bool UnitFPC1XXX::readRegistrationMode(fpc1xxx::Mode& mode)
 
     Frame res{};
     if (transceive_command(res, CMD_REGISTRATION_MODE, 0, 0, 1 /* read */) && is_valid_ACK(res)) {
-        mode = static_cast<Mode>(res[OFFSET_Q2]);
+        const uint8_t v = res[OFFSET_Q2];
+        if (v > m5::stl::to_underlying(Mode::ProhibitDuplicate)) {
+            M5_LIB_LOGE("Illegal mode %u", v);
+            return false;
+        }
+        mode = static_cast<Mode>(v);
         return true;
     }
     return false;
@@ -264,8 +269,8 @@ bool UnitFPC1XXX::readRegisteredUserCount(uint16_t& count)
 
     Frame res{};
     if (transceive_command(res, CMD_READ_REGISTERED_USER_COUNT) && is_valid_ACK(res)) {
-        count |= ((uint16_t)res[OFFSET_Q1]) << 8;
-        count |= ((uint16_t)res[OFFSET_Q2]);
+        count |= static_cast<uint16_t>(res[OFFSET_Q1]) << 8;
+        count |= static_cast<uint16_t>(res[OFFSET_Q2]);
         return true;
     }
     return false;
@@ -295,17 +300,21 @@ bool UnitFPC1XXX::readAllUser(std::vector<fpc1xxx::User>& v)
 
     Frame res{};
     if (transceive_command(res, CMD_READ_ALL_USER_DATA) && is_valid_ACK(res)) {
-        uint16_t vlen = (((uint16_t)res[OFFSET_Q1]) << 8) | res[OFFSET_Q2];
+        uint16_t vlen = (static_cast<uint16_t>(res[OFFSET_Q1]) << 8) | res[OFFSET_Q2];
         uint8_t vbuf[MAX_USER_PAYLOAD + OVERHEAD]{};
         if (vlen + OVERHEAD > sizeof(vbuf)) {
             M5_LIB_LOGE("Payload too large %u", vlen);
             return false;
         }
         if (readWithTransaction(vbuf, vlen + 3) == m5::hal::error::error_t::OK && is_valid_payload(vbuf, vlen + 3)) {
-            uint16_t user_count = ((uint16_t)vbuf[1] << 8) | vbuf[2];
+            uint16_t user_count = (static_cast<uint16_t>(vbuf[1]) << 8) | vbuf[2];
+            if (vlen < 2 || user_count * 3U > static_cast<uint32_t>(vlen) - 2) {
+                M5_LIB_LOGE("Illegal user count %u (len:%u)", user_count, vlen);
+                return false;
+            }
             const uint8_t* data = vbuf + 3;
             for (uint_fast16_t i = 0; i < user_count; ++i) {
-                uint16_t id = ((uint16_t)data[0] << 8) | data[1];
+                uint16_t id = (static_cast<uint16_t>(data[0]) << 8) | data[1];
                 uint8_t p   = data[2];
                 data += 3;
                 v.emplace_back(id, p);
@@ -318,22 +327,26 @@ bool UnitFPC1XXX::readAllUser(std::vector<fpc1xxx::User>& v)
 
 bool UnitFPC1XXX::readUserCharacteristic(uint8_t characteristic[193], const uint16_t user_id)
 {
-    memset(characteristic, 0x00, 193);
-
+    if (!characteristic) {
+        M5_LIB_LOGE("characteristic is null");
+        return false;
+    }
     if (!is_valid_user_id(user_id)) {
         M5_LIB_LOGE("Illegal user_id %u", user_id);
         return false;
     }
 
+    memset(characteristic, 0x00, 193);
+
     Frame res{};
     if (transceive_command(res, CMD_READ_USER_CHARACTERISTIC, user_id >> 8, user_id & 0xFF) && is_valid_ACK(res)) {
-        uint16_t vlen = (((uint16_t)res[OFFSET_Q1]) << 8) | res[OFFSET_Q2];
+        uint16_t vlen = (static_cast<uint16_t>(res[OFFSET_Q1]) << 8) | res[OFFSET_Q2];
         if (vlen == 196) {
             uint8_t vbuf[CHARACTERISTIC_LEN + OVERHEAD]{};
             if (readWithTransaction(vbuf, vlen + OVERHEAD) == m5::hal::error::error_t::OK &&
                 is_valid_payload(vbuf, vlen + OVERHEAD)) {
                 //                m5::utility::log::dump(vbuf, vlen + 3, false);
-                uint16_t read_user_id = (((uint16_t)vbuf[1]) << 8) | vbuf[2];
+                uint16_t read_user_id = (static_cast<uint16_t>(vbuf[1]) << 8) | vbuf[2];
                 if (user_id != read_user_id) {
                     M5_LIB_LOGE("Illegal user %u/%u", read_user_id, user_id);
                     return false;
@@ -360,13 +373,13 @@ bool UnitFPC1XXX::findAvailableUserID(uint16_t& user_id, const uint16_t low, con
     payload[1] = low_id & 0xFF;
     payload[2] = high_id >> 8;
     payload[3] = high_id & 0xFF;
-    auto frame = make_variable_frame(CMD_FIND_UNREGISTERD_USER_ID, 4, payload.data(), payload.size());
+    auto frame = make_variable_frame(CMD_FIND_UNREGISTERED_USER_ID, 4, payload.data(), payload.size());
 
     Frame res{};
     if (writeWithTransaction(frame.data(), frame.size()) == m5::hal::error::error_t::OK &&
         readWithTransaction(res.data(), res.size()) == m5::hal::error::error_t::OK &&
-        res[OFFSET_CMD] == CMD_FIND_UNREGISTERD_USER_ID && is_valid_sum(res) && is_valid_ACK(res)) {
-        user_id = (((uint16_t)res[OFFSET_Q1]) << 8) | (uint16_t)res[OFFSET_Q2];
+        res[OFFSET_CMD] == CMD_FIND_UNREGISTERED_USER_ID && is_valid_sum(res) && is_valid_ACK(res)) {
+        user_id = (static_cast<uint16_t>(res[OFFSET_Q1]) << 8) | static_cast<uint16_t>(res[OFFSET_Q2]);
         return true;
     }
     return false;
@@ -456,7 +469,7 @@ bool UnitFPC1XXX::identifyFinger(uint16_t& user_id, uint8_t& permission)
     Frame res{};
     if (transceive_command(res, CMD_IDENTIFY_FINGER)) {
         if (is_valid_permission(res[OFFSET_Q3])) {
-            user_id    = (((uint16_t)res[OFFSET_Q1]) << 8) | (uint16_t)res[OFFSET_Q2];
+            user_id    = (static_cast<uint16_t>(res[OFFSET_Q1]) << 8) | static_cast<uint16_t>(res[OFFSET_Q2]);
             permission = res[OFFSET_Q3];
             return true;
         }
@@ -474,7 +487,7 @@ bool UnitFPC1XXX::scanCharacteristic(uint8_t characteristic[193])
 
     Frame res{};
     if (transceive_command(res, CMD_SCAN_CHARACTERISTIC) && is_valid_ACK(res)) {
-        uint16_t vlen = ((uint16_t)res[OFFSET_Q1] << 8) | (uint16_t)res[OFFSET_Q2];
+        uint16_t vlen = (static_cast<uint16_t>(res[OFFSET_Q1]) << 8) | static_cast<uint16_t>(res[OFFSET_Q2]);
         if (vlen != 196) {
             M5_LIB_LOGE("Illegal size %u", vlen);
             return false;
@@ -500,7 +513,7 @@ bool UnitFPC1XXX::capture_image(std::vector<uint8_t>& img, const bool raw)
 
     Frame res{};
     if (transceive_command(res, CMD_CAPTURE_IMAGE, 0, 0, raw ? 0x20 : 0x00)) {
-        uint16_t vlen = (((uint16_t)res[OFFSET_Q1]) << 8) | res[OFFSET_Q2];
+        uint16_t vlen = (static_cast<uint16_t>(res[OFFSET_Q1]) << 8) | res[OFFSET_Q2];
         if (vlen == sz) {
             img.resize(vlen + 3);
             if (readWithTransaction(img.data(), img.size()) == m5::hal::error::error_t::OK &&
@@ -526,6 +539,10 @@ bool UnitFPC1XXX::registerCharacteristic(const uint16_t user_id, const uint8_t p
     }
     if (!is_valid_permission(permission)) {
         M5_LIB_LOGE("Illegal permission %u", permission);
+        return false;
+    }
+    if (!characteristic) {
+        M5_LIB_LOGE("characteristic is null");
         return false;
     }
 
@@ -555,6 +572,10 @@ bool UnitFPC1XXX::verifyCharacteristic(bool& match, const uint16_t user_id, cons
         M5_LIB_LOGE("Illegal user_id %u", user_id);
         return false;
     }
+    if (!characteristic) {
+        M5_LIB_LOGE("characteristic is null");
+        return false;
+    }
 
     std::array<uint8_t, 193 + 3> payload{};
     payload[0] = user_id >> 8;
@@ -577,6 +598,11 @@ bool UnitFPC1XXX::identifyCharacteristic(uint16_t& user_id, const uint8_t charac
 {
     user_id = 0;
 
+    if (!characteristic) {
+        M5_LIB_LOGE("characteristic is null");
+        return false;
+    }
+
     std::array<uint8_t, 193 + 3> payload{};
     memcpy(payload.data() + 3, characteristic, 193);  // [0...2] zero
     auto frame = make_variable_frame(CMD_IDENTIFY_CHARACTERISTIC, 196, payload.data(), payload.size());
@@ -585,7 +611,7 @@ bool UnitFPC1XXX::identifyCharacteristic(uint16_t& user_id, const uint8_t charac
     if (writeWithTransaction(frame.data(), frame.size()) == m5::hal::error::error_t::OK &&
         readWithTransaction(res.data(), res.size()) == m5::hal::error::error_t::OK &&
         res[OFFSET_CMD] == CMD_IDENTIFY_CHARACTERISTIC && is_valid_sum(res) && is_valid_ACK(res)) {
-        user_id = (((uint16_t)res[OFFSET_Q1]) << 8) | (uint16_t)res[OFFSET_Q2];
+        user_id = (static_cast<uint16_t>(res[OFFSET_Q1]) << 8) | static_cast<uint16_t>(res[OFFSET_Q2]);
         return true;
     }
     return false;
@@ -594,6 +620,11 @@ bool UnitFPC1XXX::identifyCharacteristic(uint16_t& user_id, const uint8_t charac
 bool UnitFPC1XXX::compareCharacteristic(bool& match, const uint8_t characteristic[193])
 {
     match = false;
+
+    if (!characteristic) {
+        M5_LIB_LOGE("characteristic is null");
+        return false;
+    }
 
     std::array<uint8_t, 193 + 3> payload{};  // [0...2] zero
     memcpy(payload.data() + 3, characteristic, 193);
@@ -616,9 +647,9 @@ bool UnitFPC1XXX::readSerialNumber(uint32_t& no)
     Frame res{};
     if (transceive_command(res, CMD_READ_SERIAL_NO)) {
         no = 0;
-        no |= ((uint32_t)res[OFFSET_Q1]) << 16;
-        no |= ((uint32_t)res[OFFSET_Q2]) << 8;
-        no |= ((uint32_t)res[OFFSET_Q3]);
+        no |= static_cast<uint32_t>(res[OFFSET_Q1]) << 16;
+        no |= static_cast<uint32_t>(res[OFFSET_Q2]) << 8;
+        no |= static_cast<uint32_t>(res[OFFSET_Q3]);
         return true;
     }
     return false;
@@ -631,12 +662,13 @@ bool UnitFPC1XXX::readVersion(char str[9])
 
         Frame res{};
         if (transceive_command(res, CMD_READ_VERSION) && is_valid_ACK(res)) {
-            uint16_t vlen = (((uint16_t)res[OFFSET_Q1]) << 8) | res[OFFSET_Q2];
+            uint16_t vlen = (static_cast<uint16_t>(res[OFFSET_Q1]) << 8) | res[OFFSET_Q2];
             if (vlen == 9) {
                 uint8_t vbuf[VERSION_LEN + OVERHEAD]{};
                 if (readWithTransaction(vbuf, vlen + OVERHEAD) == m5::hal::error::error_t::OK &&
                     is_valid_payload(vbuf, vlen + OVERHEAD)) {
-                    memcpy(reinterpret_cast<uint8_t*>(str), vbuf + 1, vlen);
+                    memcpy(str, vbuf + 1, vlen);
+                    str[8] = '\0';
                     return true;
                 }
             } else {

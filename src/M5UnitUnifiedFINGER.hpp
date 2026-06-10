@@ -19,7 +19,7 @@
 
 /*!
   @namespace m5
-  @brief Top level namespace of M5stack
+  @brief Top level namespace of M5Stack
  */
 namespace m5 {
 
@@ -29,8 +29,8 @@ namespace m5 {
  */
 namespace unit {
 
-using UnitFinger = m5::unit::UnitFPC1020A;
-using HatFinger  = m5::unit::UnitFPC1020A;
+using UnitFinger = m5::unit::UnitFPC1020A;  //!< Alias for Unit Finger (FPC1020A, UART / GROVE)
+using HatFinger  = m5::unit::UnitFPC1020A;  //!< Alias for Hat Finger (FPC1020A, UART / HAT)
 
 }  // namespace unit
 }  // namespace m5
