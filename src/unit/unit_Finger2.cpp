@@ -175,7 +175,12 @@ bool UnitFinger2::readWorkMode(finger2::WorkMode& wm)
 
     Packet pkt{};
     if (transceive_command(pkt, CMD_GET_WORK_MODE, _address)) {
-        wm = static_cast<WorkMode>(pkt[10]);
+        const uint8_t v = pkt[10];
+        if (v > m5::stl::to_underlying(WorkMode::AlwaysActive)) {
+            M5_LIB_LOGE("Illegal work mode %u", v);
+            return false;
+        }
+        wm = static_cast<WorkMode>(v);
         return true;
     }
     return false;
@@ -381,8 +386,12 @@ bool UnitFinger2::search(bool& matched, uint16_t& matching_page_id, uint16_t& sc
         return false;
     }
 
-    uint16_t pages = (page_num > 0) ? page_num : capacity() - start_page - 1;
-    if (!capacity() || pages > capacity() - 1) {
+    if (!capacity() || start_page >= capacity()) {
+        M5_LIB_LOGE("Illegal start_page %u/%u", start_page, capacity());
+        return false;
+    }
+    uint16_t pages = (page_num > 0) ? page_num : capacity() - start_page;
+    if (start_page + pages > capacity()) {
         M5_LIB_LOGE("Illegal pages %u %u/%u/%u", pages, start_page, page_num, capacity());
         return false;
     }
@@ -414,8 +423,12 @@ bool UnitFinger2::searchNow(bool& matched, uint16_t& matching_page_id, uint16_t&
     matching_page_id = 0xFFFF;
     score            = 0;
 
-    uint16_t pages = (page_num > 0) ? page_num : capacity() - start_page - 1;
-    if (!capacity() || pages > capacity() - 1) {
+    if (!capacity() || start_page >= capacity()) {
+        M5_LIB_LOGE("Illegal start_page %u/%u", start_page, capacity());
+        return false;
+    }
+    uint16_t pages = (page_num > 0) ? page_num : capacity() - start_page;
+    if (start_page + pages > capacity()) {
         M5_LIB_LOGE("Illegal pages %u %u/%u/%u", pages, start_page, page_num, capacity());
         return false;
     }
@@ -461,6 +474,11 @@ bool UnitFinger2::readTemplate(uint16_t& actual_size, uint8_t* buf, const uint16
         actual_size = (static_cast<uint16_t>(pkt[10]) << 8) | pkt[11];
         if (actual_size > buf_size) {
             actual_size = buf_size;
+        }
+        if (pkt.size() < 12U + actual_size) {
+            M5_LIB_LOGE("Illegal packet size %zu/%u", pkt.size(), actual_size);
+            actual_size = 0;
+            return false;
         }
         memcpy(buf, pkt.data() + 12, actual_size);
         return true;
@@ -652,15 +670,13 @@ bool UnitFinger2::readIndexTable(uint8_t table[32])
         // Multi-page support requires API change (table size > 32 bytes) if capacity > 256.
         if (transceive_command8(pkt, CMD_READ_INDEX_TABLE, _address, 0) && pkt.size() == 44) {
             // Copy table and clear exceeding the capacity
+            memset(table, 0x00, 32);
             uint32_t copy_len = cap / 8;
             uint8_t remain    = cap & 0x07;
             memcpy(table, pkt.data() + 10, copy_len);
             if (remain) {
                 uint8_t mask    = (1U << remain) - 1;
                 table[copy_len] = pkt[10 + copy_len] & mask;
-            }
-            if (copy_len + 1 < 32) {
-                memset(&table[copy_len + 1], 0x00, 32 - (copy_len + 1));
             }
             return true;
         }
@@ -851,7 +867,9 @@ bool UnitFinger2::autoIdentify(bool& matched, uint16_t& matching_page_id, uint16
             stage = static_cast<AutoIdentifyStage>(pkt[10]);
 
             bool abort =
-                (callback && stage < AutoIdentifyStage::Result) ? !callback(process_times, confirm, stage) : false;
+                (callback && (stage == AutoIdentifyStage::VerifyCommand || stage == AutoIdentifyStage::GetImage))
+                    ? !callback(process_times, confirm, stage)
+                    : false;
 
             // M5_LIB_LOGD(">>>> Confirm:%02x Stage:%02u abort:%u", confirm, stage, abort);
             if (abort || confirm != ConfirmCode::OK) {
@@ -1082,7 +1100,13 @@ ConfirmCode UnitFinger2::read_response(Packet& rbuf)
             M5_LIB_LOGV("CONFIRM:%02X Sum:%04X/%04X", rbuf[9], sum, rsum);
 
             if (sum == rsum) {
-                return static_cast<ConfirmCode>(rbuf[9]);
+                const uint8_t c = rbuf[9];
+                if (c > m5::stl::to_underlying(ConfirmCode::IllegalData) &&
+                    c < m5::stl::to_underlying(ConfirmCode::PacketTimeout)) {
+                    M5_LIB_LOGE("Unknown confirm code %02X", c);
+                    return ConfirmCode::PacketError;
+                }
+                return static_cast<ConfirmCode>(c);
             }
         }
     }

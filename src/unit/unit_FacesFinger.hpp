@@ -39,17 +39,26 @@ public:
     }
     virtual ~UnitFacesFinger() = default;
 
-    //! @brief Begin communication with the unit
+    /*!
+      @brief Begin communication with the unit
+      @return True if successful
+     */
     virtual bool begin() override;
 
     ///@name Settings for begin
     ///@{
-    /*! @brief Gets the configuration */
-    inline config_t config()
+    /*!
+      @brief Gets the configuration
+      @return Configuration
+     */
+    inline config_t config() const
     {
         return _faces_cfg;
     }
-    //! @brief Set the configuration
+    /*!
+      @brief Set the configuration
+      @param cfg Configuration
+     */
     inline void config(const config_t& cfg)
     {
         _faces_cfg = cfg;

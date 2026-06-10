@@ -1,0 +1,10 @@
+## Dependencies for the ESP-IDF build of the UnitFinger Capture example.
+## - M5Unit-FINGER (the component under test) is taken from this local repo (path) so
+##   in-progress changes are picked up. M5UnitUnified is resolved from M5Unit-FINGER's own manifest
+##   (GitHub main), which pulls in M5HAL / M5Utility transitively.
+## - M5Unified is example-only (M5Unit-FINGER does not depend on it); it pulls in M5GFX transitively.
+dependencies:
+  idf: ">=5.0"
+  m5stack/M5Unit-FINGER:
+    path: "../../../../.."
+  m5stack/M5Unified: ">=0.2.17"

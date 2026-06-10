@@ -61,6 +61,29 @@ You must choose a define symbol for the unit you will use.
 #endif
 ```
 
+### For ESP-IDF settings
+The examples also build as native ESP-IDF projects (`idf.py`). Each example directory is a standalone project that pulls in this library together with `M5UnitUnified` / `M5Unified` via `main/idf_component.yml`.
+
+```sh
+cd examples/UnitUnified/UnitFinger/Capture   # or any example
+idf.py set-target esp32s3                     # or esp32 / esp32c6 / esp32p4 / ...
+idf.py menuconfig                             # UnitFinger family only (see below)
+idf.py build flash monitor
+```
+
+For the **UnitFinger family** (FPC1020A: UnitFinger / HatFinger / FacesFinger) the unit/board is selected via Kconfig instead of editing the source `#define`. Each example exposes the same choice through `main/Kconfig.projbuild` (which sources `examples/UnitUnified/common/Kconfig.variant`), and `examples/UnitUnified/common/variant.cmake` maps the chosen `CONFIG_EXAMPLE_USING_*` to the source-level `USING_*` macro shared with the Arduino build:
+
+```
+# -> M5Unit-FINGER example -> Target unit / board -> choose ONE:
+#       UnitFinger  (FPC1020A, UART / GROVE PortC)
+#       HatFinger   (FPC1020A, UART / HAT)
+#       FacesFinger (FPC1020A, UART / M-Bus)
+```
+
+The **UnitFinger2** examples drive a single unit over UART and have no variant choice, so no `menuconfig` selection is needed.
+
+**ESP32-P4 / M5Tab5:** early P4 silicon (M5Tab5 reports revision v1.0) is rejected by the IDF v5.5+ default minimum chip revision (v3.1), so flashing fails with `bootloader.bin requires chip revision in range [v3.1 - v3.99]`. `examples/UnitUnified/common/sdkconfig.defaults.esp32p4` lowers the minimum so every P4 revision boots; it is applied automatically when the target is `esp32p4`.
+
 ## Doxygen document
 [GitHub Pages](https://m5stack.github.io/M5Unit-FINGER/)
 
@@ -75,7 +98,6 @@ If you want to output Git commit hashes to html, do it for the git cloned folder
 
 ### Required
 - [Doxygen](https://www.doxygen.nl/)
-- [pcregrep](https://formulae.brew.sh/formula/pcre2)
 - [Git](https://git-scm.com/) (Output commit hash to html)
 
 

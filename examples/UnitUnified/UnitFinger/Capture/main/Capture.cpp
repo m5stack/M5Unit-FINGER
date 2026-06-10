@@ -10,6 +10,8 @@
 #include <M5UnitUnified.h>
 #include <M5UnitUnifiedFINGER.h>
 #include <M5Utility.hpp>
+#include <wiring/m5_unit_unified_wiring.hpp>
+#include <wiring/m5_unit_finger_wiring.hpp>
 
 // *************************************************************
 // Choose one define symbol to match the unit you are using
@@ -63,60 +65,11 @@ void make_sprite4(LGFX_Sprite& s, const std::vector<uint8_t>& v, const uint16_t 
     }
 }
 
-#if defined(USING_HAT_FINGER)
-struct UartPins {
-    int rx;  // SCL pin of Hat connector
-    int tx;  // SDA pin of Hat connector
-};
-
-UartPins get_hat_uart_pins(const m5::board_t board)
-{
-    switch (board) {
-        case m5::board_t::board_M5StickC:
-        case m5::board_t::board_M5StickCPlus:
-        case m5::board_t::board_M5StickCPlus2:
-            return {26, 0};
-        case m5::board_t::board_M5StickS3:
-            return {0, 8};
-        case m5::board_t::board_M5StackCoreInk:
-            return {26, 25};
-        default:
-            return {-1, -1};
-    }
-}
-#endif
-
-#if defined(USING_FACES_FINGER)
-// M-Bus pins for Faces Finger (GPIO varies by board)
-struct FacesPins {
-    int rx;           // UART RX (mbus_pin15)
-    int tx;           // UART TX (mbus_pin16)
-    int panel_power;  // Panel power (mbus_pin10)
-    int touch_power;  // Touch IC power (mbus_pin20)
-};
-
-FacesPins get_faces_pins()
-{
-    switch (M5.getBoard()) {
-        case m5::board_t::board_M5Stack:  // Core/Gray/Fire
-            return {16, 17, 26, 5};
-        default:
-            return {-1, -1, -1, -1};
-    }
-}
-#endif
-
 }  // namespace
 
 void setup()
 {
-    auto m5cfg = M5.config();
-#if defined(USING_HAT_FINGER)
-    m5cfg.pmic_button  = false;  // Disable BtnPWR
-    m5cfg.internal_imu = false;  // Disable internal IMU
-    m5cfg.internal_rtc = false;  // Disable internal RTC
-#endif
-    M5.begin(m5cfg);
+    M5.begin();
     M5.setTouchButtonHeightByRatio(100);
 
     // The screen shall be in landscape mode
@@ -125,74 +78,24 @@ void setup()
     }
 
 #if defined(USING_HAT_FINGER)
-    const auto pins = get_hat_uart_pins(M5.getBoard());
-    M5_LOGI("getHatPin: RX:%d TX:%d", pins.rx, pins.tx);
-    if (pins.rx < 0 || pins.tx < 0) {
-        M5_LOGE("No Hat port on this board");
-        lcd.fillScreen(TFT_RED);
-        while (true) {
-            m5::utility::delay(10000);
-        }
-    }
-    auto pin_num_in  = pins.rx;
-    auto pin_num_out = pins.tx;
-#elif defined(USING_FACES_FINGER)
-    const auto fp = get_faces_pins();
-    M5_LOGI("getFacesPin: RX:%d TX:%d PWR:%d TCH:%d", fp.rx, fp.tx, fp.panel_power, fp.touch_power);
-    if (fp.rx < 0 || fp.tx < 0) {
-        M5_LOGE("No M-Bus on this board");
-        lcd.fillScreen(TFT_RED);
-        while (true) {
-            m5::utility::delay(10000);
-        }
-    }
-    auto pin_num_in  = fp.rx;
-    auto pin_num_out = fp.tx;
-
-    {
-        auto cfg            = unit.config();
-        cfg.panel_power_pin = fp.panel_power;
-        cfg.touch_power_pin = fp.touch_power;
-        unit.config(cfg);
-    }
-#else
-    auto pin_num_in  = M5.getPin(m5::pin_name_t::port_c_rxd);
-    auto pin_num_out = M5.getPin(m5::pin_name_t::port_c_txd);
-    if (pin_num_in < 0 || pin_num_out < 0) {
-        M5_LOGW("PortC is not available");
-        // NanoC6: Ex_I2C.setPort() registers m5gfx::i2c on GROVE pins;
-        // Wire.end() alone won't release it, causing dual-driver conflict on uart_driver_install
-        if (M5.getBoard() == m5::board_t::board_M5NanoC6) {
-            M5.Ex_I2C.release();
-        }
-        Wire.end();
-        pin_num_in  = M5.getPin(m5::pin_name_t::port_a_pin1);
-        pin_num_out = M5.getPin(m5::pin_name_t::port_a_pin2);
-    }
-#endif
-    M5_LOGI("getPin: %d,%d", pin_num_in, pin_num_out);
-
-    // clang-format off
-#if defined(CONFIG_IDF_TARGET_ESP32C6)
-    auto& s = Serial1;
-#elif SOC_UART_NUM > 2
-    auto& s = Serial2;
-#elif SOC_UART_NUM > 1
-    auto& s = Serial1;
-#else
-#error "Not enough Serial"
-#endif
-    // clang-format on
-    s.end();
-    s.begin(19200, SERIAL_8N1, pin_num_in, pin_num_out);
-
-    if (!Units.add(unit, s) || !Units.begin()) {
+    // HatFinger: board-aware Hat UART (wiring helper covers StickCPlus/Plus2/StickS3/CoreInk/NessoN1).
+    if (!m5::unit::wiring::addHatUART(Units, unit, 19200) || !Units.begin()) {
         M5_LOGE("Failed to begin");
-        lcd.fillScreen(TFT_RED);
-        while (true) {
-            m5::utility::delay(10000);
-        }
+        m5::unit::wiring::failStop();
     }
+#elif defined(USING_FACES_FINGER)
+    // FacesFinger: M-Bus UART with panel / touch power pin control (FINGER-local wiring helper).
+    if (!m5::unit::fpc1xxx::faces::wiring::addFacesUART(Units, unit, 19200) || !Units.begin()) {
+        M5_LOGE("Failed to begin");
+        m5::unit::wiring::failStop();
+    }
+#else  // USING_UNIT_FINGER
+    // UnitFinger (GROVE PortC): wiring helper handles PortA fallback + NanoC6/NanoH2 Ex_I2C release.
+    if (!m5::unit::wiring::addUART(Units, unit, 19200) || !Units.begin()) {
+        M5_LOGE("Failed to begin");
+        m5::unit::wiring::failStop();
+    }
+#endif
 
     M5_LOGI("M5UnitUnified initialized");
     M5_LOGI("%s", Units.debugInfo().c_str());
@@ -253,3 +156,34 @@ void loop()
         }
     }
 }
+
+#if !defined(ARDUINO)
+#include <freertos/FreeRTOS.h>
+#include <freertos/task.h>
+#include <esp_timer.h>
+
+#if CONFIG_FREERTOS_UNICORE
+static inline void feedIdleTaskPeriodically(void)
+{
+    constexpr uint32_t FEED_INTERVAL_MS   = 2000;
+    constexpr TickType_t FEED_SLEEP_TICKS = pdMS_TO_TICKS(5);
+    static uint32_t s_next_feed_ms        = 0;
+    const uint32_t now_ms                 = static_cast<uint32_t>(esp_timer_get_time() / 1000);
+    if (now_ms >= s_next_feed_ms) {
+        s_next_feed_ms = now_ms + FEED_INTERVAL_MS;
+        vTaskDelay(FEED_SLEEP_TICKS);
+    }
+}
+#endif
+
+extern "C" void app_main(void)
+{
+    setup();
+    for (;;) {
+#if CONFIG_FREERTOS_UNICORE
+        feedIdleTaskPeriodically();
+#endif
+        loop();
+    }
+}
+#endif

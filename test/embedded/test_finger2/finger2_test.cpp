@@ -10,6 +10,7 @@
 #include <Wire.h>
 #include <M5Unified.h>
 #include <M5UnitUnified.hpp>
+#include <wiring/m5_unit_unified_wiring.hpp>
 #include <googletest/test_template.hpp>
 #include <googletest/test_helper.hpp>
 #include <unit/unit_Finger2.hpp>
@@ -36,54 +37,42 @@ protected:
         return ptr;
     }
 
-    virtual HardwareSerial* init_serial() override
+    void get_serial_pins(int& pin_num_in, int& pin_num_out)
     {
-        auto pin_num_in  = M5.getPin(m5::pin_name_t::port_c_rxd);
-        auto pin_num_out = M5.getPin(m5::pin_name_t::port_c_txd);
+        pin_num_in  = M5.getPin(m5::pin_name_t::port_c_rxd);
+        pin_num_out = M5.getPin(m5::pin_name_t::port_c_txd);
         if (pin_num_in < 0 || pin_num_out < 0) {
-            // NanoC6: Ex_I2C.setPort() registers m5gfx::i2c on GPIO 1/2;
+            // NanoC6 / NanoH2: Ex_I2C.setPort() registers m5gfx::i2c on GPIO 1/2;
             // Wire.end() alone won't release it, causing dual-driver conflict on uart_driver_install
-            if (M5.getBoard() == m5::board_t::board_M5NanoC6) {
+            const auto b = M5.getBoard();
+            if (b == m5::board_t::board_M5NanoC6 || b == m5::board_t::board_M5NanoH2) {
                 M5.Ex_I2C.release();
             }
             Wire.end();
             pin_num_in  = M5.getPin(m5::pin_name_t::port_a_pin1);
             pin_num_out = M5.getPin(m5::pin_name_t::port_a_pin2);
         }
+    }
 
-        // clang-format off
-#if defined(CONFIG_IDF_TARGET_ESP32C6)
-    auto& s = Serial1;
-#elif SOC_UART_NUM > 2
-    auto& s = Serial2;
-#elif SOC_UART_NUM > 1
-    auto& s = Serial1;
-#else
-#error "Not enough Serial"
-#endif
-        // clang-format on
-
-        // M5_LOGI("getPin: %d,%d", pin_num_in, pin_num_out);
-        s.end();
-        s.begin(115200, SERIAL_8N1, pin_num_in, pin_num_out);
+    virtual HardwareSerial* init_serial() override
+    {
+        auto& s = m5::unit::wiring::defaultUartSerial();
         return &s;
+    }
+
+    virtual bool begin() override
+    {
+        serial = init_serial();
+        if (!serial) {
+            return false;
+        }
+        return m5::unit::wiring::addUART(Units, *unit, 115200) && Units.begin();
     }
 
     void reset_serial(const uint32_t baud = 115200)
     {
-        auto pin_num_in  = M5.getPin(m5::pin_name_t::port_c_rxd);
-        auto pin_num_out = M5.getPin(m5::pin_name_t::port_c_txd);
-        if (pin_num_in < 0 || pin_num_out < 0) {
-            // NanoC6: Ex_I2C.setPort() registers m5gfx::i2c on GPIO 1/2;
-            // Wire.end() alone won't release it, causing dual-driver conflict on uart_driver_install
-            if (M5.getBoard() == m5::board_t::board_M5NanoC6) {
-                M5.Ex_I2C.release();
-            }
-            Wire.end();
-            pin_num_in  = M5.getPin(m5::pin_name_t::port_a_pin1);
-            pin_num_out = M5.getPin(m5::pin_name_t::port_a_pin2);
-        }
-        // M5_LOGI("%u getPin: %d,%d", baud, pin_num_in, pin_num_out);
+        int pin_num_in{-1}, pin_num_out{-1};
+        get_serial_pins(pin_num_in, pin_num_out);
         serial->end();
         serial->begin(baud, SERIAL_8N1, pin_num_in, pin_num_out);
         while (serial->available()) {
