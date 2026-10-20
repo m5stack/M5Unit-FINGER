@@ -323,6 +323,13 @@ TEST_F(TestFPC1020A, User)
 
         EXPECT_TRUE(unit->findAvailableUserID(id, unit->maximumUserID(), unit->maximumUserID()));
         EXPECT_EQ(id, unit->maximumUserID());
+
+        EXPECT_FALSE(unit->findAvailableUserID(id, 10, 1));
+        EXPECT_EQ(id, 0);
+        EXPECT_TRUE(unit->findAvailableUserID(id, 100, 110));
+        EXPECT_EQ(id, 100);
+        EXPECT_FALSE(unit->findAvailableUserID(id, 1, unit->maximumUserID() + 1));
+        EXPECT_EQ(id, 0);
     }
 
     // Make random users
@@ -381,6 +388,12 @@ TEST_F(TestFPC1020A, Finger)
     EXPECT_TRUE(unit->deleteAllUsers());
 
     EXPECT_FALSE(unit->registerFinger(1, 1));
+    {
+        // step > 4 is rejected before communication
+        const auto start = m5::utility::millis();
+        EXPECT_FALSE(unit->registerFinger(1, 1, 5));
+        EXPECT_LT(m5::utility::millis() - start, 50U);
+    }
 
     bool match{};
     EXPECT_TRUE(unit->verifyFinger(match, 1));

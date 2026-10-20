@@ -68,6 +68,7 @@ bool is_valid_payload(const uint8_t* data, const uint16_t len)
 
 namespace {
 constexpr uint32_t TIMEOUT_MS{1000 * 4};
+constexpr uint8_t REGISTER_STEP_MAX{4};  // Intermediate 0x02 command can be repeated 0 - 4 times
 
 using Frame         = m5::unit::UnitFPC1XXX::Frame;
 using VariableFrame = m5::unit::UnitFPC1XXX::VariableFrame;
@@ -119,7 +120,7 @@ VariableFrame make_variable_frame(const uint8_t cmd, const uint16_t len, const u
     return frame;
 }
 
-bool is_valid_ACK(const Frame& f)
+bool is_valid_ack(const Frame& f)
 {
     if (f[OFFSET_Q3] == m5::stl::to_underlying(ACK::Success)) {
         return true;
@@ -156,23 +157,6 @@ bool UnitFPC1XXX::begin()
     ad->flushRX();
 
     uint32_t sno{0xdeadbeef};
-
-#if 0
-    for (int retry = 0; retry < 3; ++retry) {
-        if (readSerialNumber(sno) && sno != 0xdeadbeef) {
-            break;
-        }
-        M5_LIB_LOGW("Retry wakeup (%d)", retry);
-        m5::utility::delay(100);
-        ad->flushRX();
-        sno = 0xdeadbeef;
-    }
-    if (sno == 0xdeadbeef) {
-        M5_LIB_LOGE("Failed to readSerialNumber");
-        return false;
-    }
-#endif
-
     if (!readSerialNumber(sno)) {
         M5_LIB_LOGE("Failed to readSerialNumber %x", sno);
         return false;
@@ -193,7 +177,7 @@ bool UnitFPC1XXX::readRegistrationMode(fpc1xxx::Mode& mode)
     mode = Mode::AllowDuplicate;
 
     Frame res{};
-    if (transceive_command(res, CMD_REGISTRATION_MODE, 0, 0, 1 /* read */) && is_valid_ACK(res)) {
+    if (transceive_command(res, CMD_REGISTRATION_MODE, 0, 0, 1 /* read */) && is_valid_ack(res)) {
         const uint8_t v = res[OFFSET_Q2];
         if (v > m5::stl::to_underlying(Mode::ProhibitDuplicate)) {
             M5_LIB_LOGE("Illegal mode %u", v);
@@ -209,7 +193,7 @@ bool UnitFPC1XXX::writeRegistrationMode(const fpc1xxx::Mode mode)
 {
     Frame res{};
     return transceive_command(res, CMD_REGISTRATION_MODE, 0, m5::stl::to_underlying(mode), 0 /* write */) &&
-           is_valid_ACK(res);
+           is_valid_ack(res);
 }
 
 bool UnitFPC1XXX::readComparisonLevel(uint8_t& lv)
@@ -217,7 +201,7 @@ bool UnitFPC1XXX::readComparisonLevel(uint8_t& lv)
     lv = 0xFF;
 
     Frame res{};
-    if (transceive_command(res, CMD_COMPARISON_LEVEL, 0, 0, 1 /* read */) && is_valid_ACK(res)) {
+    if (transceive_command(res, CMD_COMPARISON_LEVEL, 0, 0, 1 /* read */) && is_valid_ack(res)) {
         lv = res[OFFSET_Q2];
         return true;
     }
@@ -231,7 +215,7 @@ bool UnitFPC1XXX::writeComparisonLevel(const uint8_t lv)
         M5_LIB_LOGE("lv must be 0-9 (%u)", lv);
         return false;
     }
-    return transceive_command(res, CMD_COMPARISON_LEVEL, 0, lv, 0 /* write */) && is_valid_ACK(res);
+    return transceive_command(res, CMD_COMPARISON_LEVEL, 0, lv, 0 /* write */) && is_valid_ack(res);
 }
 
 bool UnitFPC1XXX::writeBaudRate(const fpc1xxx::BaudRate baud)
@@ -250,7 +234,7 @@ bool UnitFPC1XXX::readTimeout(uint8_t& timeout)
     timeout = 0;
 
     Frame res{};
-    if (transceive_command(res, CMD_TIMEOUT, 0, 0, 1 /* read */) && is_valid_ACK(res)) {
+    if (transceive_command(res, CMD_TIMEOUT, 0, 0, 1 /* read */) && is_valid_ack(res)) {
         timeout = res[OFFSET_Q2];
         return true;
     }
@@ -260,7 +244,7 @@ bool UnitFPC1XXX::readTimeout(uint8_t& timeout)
 bool UnitFPC1XXX::writeTimeout(const uint8_t timeout)
 {
     Frame res{};
-    return transceive_command(res, CMD_TIMEOUT, 0, timeout, 0 /* write */) && is_valid_ACK(res);
+    return transceive_command(res, CMD_TIMEOUT, 0, timeout, 0 /* write */) && is_valid_ack(res);
 }
 
 bool UnitFPC1XXX::readRegisteredUserCount(uint16_t& count)
@@ -268,7 +252,7 @@ bool UnitFPC1XXX::readRegisteredUserCount(uint16_t& count)
     count = 0;
 
     Frame res{};
-    if (transceive_command(res, CMD_READ_REGISTERED_USER_COUNT) && is_valid_ACK(res)) {
+    if (transceive_command(res, CMD_READ_REGISTERED_USER_COUNT) && is_valid_ack(res)) {
         count |= static_cast<uint16_t>(res[OFFSET_Q1]) << 8;
         count |= static_cast<uint16_t>(res[OFFSET_Q2]);
         return true;
@@ -299,7 +283,7 @@ bool UnitFPC1XXX::readAllUser(std::vector<fpc1xxx::User>& v)
     v.clear();
 
     Frame res{};
-    if (transceive_command(res, CMD_READ_ALL_USER_DATA) && is_valid_ACK(res)) {
+    if (transceive_command(res, CMD_READ_ALL_USER_DATA) && is_valid_ack(res)) {
         uint16_t vlen = (static_cast<uint16_t>(res[OFFSET_Q1]) << 8) | res[OFFSET_Q2];
         uint8_t vbuf[MAX_USER_PAYLOAD + OVERHEAD]{};
         if (vlen + OVERHEAD > sizeof(vbuf)) {
@@ -339,13 +323,12 @@ bool UnitFPC1XXX::readUserCharacteristic(uint8_t characteristic[193], const uint
     memset(characteristic, 0x00, 193);
 
     Frame res{};
-    if (transceive_command(res, CMD_READ_USER_CHARACTERISTIC, user_id >> 8, user_id & 0xFF) && is_valid_ACK(res)) {
+    if (transceive_command(res, CMD_READ_USER_CHARACTERISTIC, user_id >> 8, user_id & 0xFF) && is_valid_ack(res)) {
         uint16_t vlen = (static_cast<uint16_t>(res[OFFSET_Q1]) << 8) | res[OFFSET_Q2];
         if (vlen == 196) {
             uint8_t vbuf[CHARACTERISTIC_LEN + OVERHEAD]{};
             if (readWithTransaction(vbuf, vlen + OVERHEAD) == m5::hal::error::error_t::OK &&
                 is_valid_payload(vbuf, vlen + OVERHEAD)) {
-                //                m5::utility::log::dump(vbuf, vlen + 3, false);
                 uint16_t read_user_id = (static_cast<uint16_t>(vbuf[1]) << 8) | vbuf[2];
                 if (user_id != read_user_id) {
                     M5_LIB_LOGE("Illegal user %u/%u", read_user_id, user_id);
@@ -367,6 +350,10 @@ bool UnitFPC1XXX::findAvailableUserID(uint16_t& user_id, const uint16_t low, con
 
     uint16_t low_id  = low ? low : minimumUserID();
     uint16_t high_id = high ? high : maximumUserID();
+    if (!is_valid_user_id(low_id) || !is_valid_user_id(high_id) || low_id > high_id) {
+        M5_LIB_LOGE("Illegal range %u - %u", low_id, high_id);
+        return false;
+    }
 
     std::array<uint8_t, 4> payload{};
     payload[0] = low_id >> 8;
@@ -378,7 +365,7 @@ bool UnitFPC1XXX::findAvailableUserID(uint16_t& user_id, const uint16_t low, con
     Frame res{};
     if (writeWithTransaction(frame.data(), frame.size()) == m5::hal::error::error_t::OK &&
         readWithTransaction(res.data(), res.size()) == m5::hal::error::error_t::OK &&
-        res[OFFSET_CMD] == CMD_FIND_UNREGISTERED_USER_ID && is_valid_sum(res) && is_valid_ACK(res)) {
+        res[OFFSET_CMD] == CMD_FIND_UNREGISTERED_USER_ID && is_valid_sum(res) && is_valid_ack(res)) {
         user_id = (static_cast<uint16_t>(res[OFFSET_Q1]) << 8) | static_cast<uint16_t>(res[OFFSET_Q2]);
         return true;
     }
@@ -393,13 +380,13 @@ bool UnitFPC1XXX::deleteUser(const uint16_t user_id)
     }
 
     Frame res{};
-    return transceive_command(res, CMD_DELETE_USER, user_id >> 8, user_id & 0xFF) && is_valid_ACK(res);
+    return transceive_command(res, CMD_DELETE_USER, user_id >> 8, user_id & 0xFF) && is_valid_ack(res);
 }
 
 bool UnitFPC1XXX::deleteAllUsers()
 {
     Frame res{};
-    return transceive_command(res, CMD_DELETE_ALL_USERS) && is_valid_ACK(res);
+    return transceive_command(res, CMD_DELETE_ALL_USERS) && is_valid_ack(res);
 }
 
 bool UnitFPC1XXX::registerFinger(const uint16_t user_id, const uint8_t permission, const uint8_t step)
@@ -413,13 +400,17 @@ bool UnitFPC1XXX::registerFinger(const uint16_t user_id, const uint8_t permissio
         M5_LIB_LOGE("Illegal permission %u", permission);
         return false;
     }
+    if (step > REGISTER_STEP_MAX) {
+        M5_LIB_LOGE("step must be 0 - %u (%u)", REGISTER_STEP_MAX, step);
+        return false;
+    }
 
     uint8_t id_h = user_id >> 8;
     uint8_t id_l = user_id & 0xFF;
 
     Frame res{};
     // First
-    if (!transceive_command(res, CMD_REGISTER_FINGER_FIRST, id_h, id_l, permission) || !is_valid_ACK(res)) {
+    if (!transceive_command(res, CMD_REGISTER_FINGER_FIRST, id_h, id_l, permission) || !is_valid_ack(res)) {
         M5_LIB_LOGE("Failed to register 1st %u", res[OFFSET_Q3]);
         if (res[OFFSET_Q3] == m5::stl::to_underlying(ACK::ExistUser)) {
             M5_LIB_LOGW("User already exists");
@@ -430,7 +421,7 @@ bool UnitFPC1XXX::registerFinger(const uint16_t user_id, const uint8_t permissio
     // 2nd steps
     for (uint_fast8_t i = 0; i < step; ++i) {
         res.fill(0);
-        if (!transceive_command(res, CMD_REGISTER_FINGER_STEP, id_h, id_l, permission) || !is_valid_ACK(res)) {
+        if (!transceive_command(res, CMD_REGISTER_FINGER_STEP, id_h, id_l, permission) || !is_valid_ack(res)) {
             M5_LIB_LOGE("Failed to register 2nd[%u] %u", i, res[OFFSET_Q3]);
             return false;
         }
@@ -438,7 +429,7 @@ bool UnitFPC1XXX::registerFinger(const uint16_t user_id, const uint8_t permissio
 
     // Final
     res.fill(0);
-    if (!transceive_command(res, CMD_REGISTER_FINGER_LAST, id_h, id_l, permission) || !is_valid_ACK(res)) {
+    if (!transceive_command(res, CMD_REGISTER_FINGER_LAST, id_h, id_l, permission) || !is_valid_ack(res)) {
         M5_LIB_LOGE("Failed to register 3rd %u", res[OFFSET_Q3]);
         return false;
     }
@@ -456,7 +447,7 @@ bool UnitFPC1XXX::verifyFinger(bool& match, const uint16_t user_id)
 
     Frame res{};
     if (transceive_command(res, CMD_VERIFY_FINGER, user_id >> 8, user_id & 0xFF)) {
-        match = is_valid_ACK(res);
+        match = is_valid_ack(res);
         return true;
     }
     return false;
@@ -486,7 +477,7 @@ bool UnitFPC1XXX::scanCharacteristic(uint8_t characteristic[193])
     memset(characteristic, 0x00, 193);
 
     Frame res{};
-    if (transceive_command(res, CMD_SCAN_CHARACTERISTIC) && is_valid_ACK(res)) {
+    if (transceive_command(res, CMD_SCAN_CHARACTERISTIC) && is_valid_ack(res)) {
         uint16_t vlen = (static_cast<uint16_t>(res[OFFSET_Q1]) << 8) | static_cast<uint16_t>(res[OFFSET_Q2]);
         if (vlen != 196) {
             M5_LIB_LOGE("Illegal size %u", vlen);
@@ -512,7 +503,7 @@ bool UnitFPC1XXX::capture_image(std::vector<uint8_t>& img, const bool raw)
     }
 
     Frame res{};
-    if (transceive_command(res, CMD_CAPTURE_IMAGE, 0, 0, raw ? 0x20 : 0x00)) {
+    if (transceive_command(res, CMD_CAPTURE_IMAGE, 0, 0, raw ? 0x20 : 0x00) && is_valid_ack(res)) {
         uint16_t vlen = (static_cast<uint16_t>(res[OFFSET_Q1]) << 8) | res[OFFSET_Q2];
         if (vlen == sz) {
             img.resize(vlen + 3);
@@ -558,7 +549,7 @@ bool UnitFPC1XXX::registerCharacteristic(const uint16_t user_id, const uint8_t p
 
     if (writeWithTransaction(frame.data(), frame.size()) == m5::hal::error::error_t::OK &&
         readWithTransaction(res.data(), res.size()) == m5::hal::error::error_t::OK &&
-        res[OFFSET_CMD] == CMD_REGISTER_CHARACTERISTIC && is_valid_sum(res) && is_valid_ACK(res)) {
+        res[OFFSET_CMD] == CMD_REGISTER_CHARACTERISTIC && is_valid_sum(res) && is_valid_ack(res)) {
         return true;
     }
     return false;
@@ -588,7 +579,7 @@ bool UnitFPC1XXX::verifyCharacteristic(bool& match, const uint16_t user_id, cons
     if (writeWithTransaction(frame.data(), frame.size()) == m5::hal::error::error_t::OK &&
         readWithTransaction(res.data(), res.size()) == m5::hal::error::error_t::OK &&
         res[OFFSET_CMD] == CMD_VERIFY_CHARACTERISTIC && is_valid_sum(res)) {
-        match = is_valid_ACK(res);
+        match = is_valid_ack(res);
         return true;
     }
     return false;
@@ -610,7 +601,7 @@ bool UnitFPC1XXX::identifyCharacteristic(uint16_t& user_id, const uint8_t charac
     Frame res{};
     if (writeWithTransaction(frame.data(), frame.size()) == m5::hal::error::error_t::OK &&
         readWithTransaction(res.data(), res.size()) == m5::hal::error::error_t::OK &&
-        res[OFFSET_CMD] == CMD_IDENTIFY_CHARACTERISTIC && is_valid_sum(res) && is_valid_ACK(res)) {
+        res[OFFSET_CMD] == CMD_IDENTIFY_CHARACTERISTIC && is_valid_sum(res) && is_valid_ack(res)) {
         user_id = (static_cast<uint16_t>(res[OFFSET_Q1]) << 8) | static_cast<uint16_t>(res[OFFSET_Q2]);
         return true;
     }
@@ -634,7 +625,7 @@ bool UnitFPC1XXX::compareCharacteristic(bool& match, const uint8_t characteristi
     if (writeWithTransaction(frame.data(), frame.size()) == m5::hal::error::error_t::OK &&
         readWithTransaction(res.data(), res.size()) == m5::hal::error::error_t::OK &&
         res[OFFSET_CMD] == CMD_COMPARE_CHARACTERISTIC && is_valid_sum(res)) {
-        match = is_valid_ACK(res);
+        match = is_valid_ack(res);
         return true;
     }
     return false;
@@ -645,6 +636,7 @@ bool UnitFPC1XXX::readSerialNumber(uint32_t& no)
     no = 0xdeadbeef;
 
     Frame res{};
+    // Q3 is the lowest byte of the serial number (not ACK)
     if (transceive_command(res, CMD_READ_SERIAL_NO)) {
         no = 0;
         no |= static_cast<uint32_t>(res[OFFSET_Q1]) << 16;
@@ -661,7 +653,7 @@ bool UnitFPC1XXX::readVersion(char str[9])
         *str = '\0';
 
         Frame res{};
-        if (transceive_command(res, CMD_READ_VERSION) && is_valid_ACK(res)) {
+        if (transceive_command(res, CMD_READ_VERSION) && is_valid_ack(res)) {
             uint16_t vlen = (static_cast<uint16_t>(res[OFFSET_Q1]) << 8) | res[OFFSET_Q2];
             if (vlen == 9) {
                 uint8_t vbuf[VERSION_LEN + OVERHEAD]{};
@@ -682,13 +674,13 @@ bool UnitFPC1XXX::readVersion(char str[9])
 bool UnitFPC1XXX::sleep(void)
 {
     Frame res{};
-    return transceive_command(res, CMD_SLEEP) && is_valid_ACK(res);
+    return transceive_command(res, CMD_SLEEP) && is_valid_ack(res);
 }
 
 bool UnitFPC1XXX::transceive_command(Frame& res, const uint8_t cmd, const uint8_t p1, const uint8_t p2,
                                      const uint8_t p3)
 {
-    Frame frame = make_frame(cmd, p1, p2, p3);
+    const Frame frame{make_frame(cmd, p1, p2, p3)};
 
     if (writeWithTransaction(frame.data(), frame.size()) == m5::hal::error::error_t::OK &&
         readWithTransaction(res.data(), res.size()) == m5::hal::error::error_t::OK && res[OFFSET_CMD] == cmd &&

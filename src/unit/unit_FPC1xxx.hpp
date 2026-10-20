@@ -307,7 +307,7 @@ public:
       @brief Register finger
       @param user_id UserID
       @param permission Permission (1,2, or 3)
-      @param step Number of intermediate step repetitions
+      @param step Number of intermediate step repetitions (0 - 4)
       @return True if successful
       @warning Data considered identical will fail if the mode is Mode::ProhibitDuplicate
      */
