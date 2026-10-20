@@ -434,19 +434,19 @@ TEST_F(TestFPC1020A_Detail, XorSum)
 {
     {
         uint8_t data[] = {0};
-        EXPECT_EQ(xorSum(data, 0), 0);
+        EXPECT_EQ(xor_sum(data, 0), 0);
     }
     {
         uint8_t data[] = {0xAB};
-        EXPECT_EQ(xorSum(data, 1), 0xAB);
+        EXPECT_EQ(xor_sum(data, 1), 0xAB);
     }
     {
         uint8_t data[] = {0x01, 0x02, 0x03, 0x04, 0x05};
-        EXPECT_EQ(xorSum(data, 5), 0x01);
+        EXPECT_EQ(xor_sum(data, 5), 0x01);
     }
     {
         uint8_t data[] = {0xFF, 0xFF, 0xFF, 0xFF};
-        EXPECT_EQ(xorSum(data, 4), 0x00);
+        EXPECT_EQ(xor_sum(data, 4), 0x00);
     }
 }
 
@@ -461,7 +461,7 @@ TEST_F(TestFPC1020A_Detail, IsValidSum)
         f[3] = 0x03;
         f[4] = 0x04;
         f[5] = 0x00;
-        f[6] = xorSum(f.data() + 1, 5);
+        f[6] = xor_sum(f.data() + 1, 5);
         f[7] = MARKER;
         EXPECT_TRUE(is_valid_sum(f, true));
         EXPECT_TRUE(is_valid_sum(f, false));
@@ -475,7 +475,7 @@ TEST_F(TestFPC1020A_Detail, IsValidSum)
         f[3] = 0x03;
         f[4] = 0x04;
         f[5] = 0x00;
-        f[6] = xorSum(f.data() + 1, 5) ^ 0xFF;
+        f[6] = xor_sum(f.data() + 1, 5) ^ 0xFF;
         f[7] = MARKER;
         EXPECT_FALSE(is_valid_sum(f, true));
         EXPECT_FALSE(is_valid_sum(f, false));
@@ -489,7 +489,7 @@ TEST_F(TestFPC1020A_Detail, IsValidSum)
         f[3] = 0x03;
         f[4] = 0x04;
         f[5] = 0x00;
-        f[6] = xorSum(f.data() + 1, 5);
+        f[6] = xor_sum(f.data() + 1, 5);
         f[7] = MARKER;
         EXPECT_FALSE(is_valid_sum(f, true));
         EXPECT_TRUE(is_valid_sum(f, false));
@@ -501,7 +501,7 @@ TEST_F(TestFPC1020A_Detail, IsValidPayload)
     // Valid: MARKER DATA CHK MARKER
     {
         uint8_t d[] = {MARKER, 0x11, 0x22, 0x00, MARKER};
-        d[3]        = xorSum(d + 1, 2);
+        d[3]        = xor_sum(d + 1, 2);
         EXPECT_TRUE(is_valid_payload(d, sizeof(d)));
     }
     // Bad checksum
@@ -512,7 +512,7 @@ TEST_F(TestFPC1020A_Detail, IsValidPayload)
     // Bad head marker
     {
         uint8_t d[] = {0x00, 0x11, 0x00, MARKER};
-        d[2]        = xorSum(d + 1, 1);
+        d[2]        = xor_sum(d + 1, 1);
         EXPECT_FALSE(is_valid_payload(d, sizeof(d)));
     }
     // Too short

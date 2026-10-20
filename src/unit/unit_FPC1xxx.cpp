@@ -39,7 +39,7 @@ namespace unit {
 namespace fpc1xxx {
 namespace detail {
 
-uint8_t xorSum(const uint8_t* data, const uint16_t len)
+uint8_t xor_sum(const uint8_t* data, const uint16_t len)
 {
     uint8_t sum{};
     for (uint_fast16_t i = 0; i < len; ++i) {
@@ -50,7 +50,7 @@ uint8_t xorSum(const uint8_t* data, const uint16_t len)
 
 bool is_valid_sum(const Frame& response, const bool check_marker)
 {
-    return (xorSum(response.data() + 1, 5) == response[OFFSET_CRC]) &&
+    return (xor_sum(response.data() + 1, 5) == response[OFFSET_CRC]) &&
            (check_marker ? (response[OFFSET_HEAD] == MARKER && response[OFFSET_TAIL] == MARKER) : true);
 }
 
@@ -58,7 +58,7 @@ bool is_valid_payload(const uint8_t* data, const uint16_t len)
 {
     // 0xF5 Data... CHK 0xF5
     return data && len >= 4 && data[0] == MARKER && data[len - 1] == MARKER &&
-           xorSum(data + 1, len - 3) == data[len - 2];
+           xor_sum(data + 1, len - 3) == data[len - 2];
 }
 
 }  // namespace detail
@@ -86,7 +86,7 @@ Frame make_frame(const uint8_t cmd, const uint8_t p1 = 0, const uint8_t p2 = 0, 
     frame[OFFSET_P2]                        = p2;
     frame[OFFSET_P3]                        = p3;
     frame[OFFSET_RESERVE]                   = 0;
-    frame[OFFSET_CRC]                       = xorSum(frame.data() + 1, 5);
+    frame[OFFSET_CRC]                       = xor_sum(frame.data() + 1, 5);
     return frame;
 }
 
@@ -101,7 +101,7 @@ VariableFrame make_variable_frame(const uint8_t cmd, const uint16_t len, const u
     frame[OFFSET_LEN_L]                     = len & 0xFF;
     frame[OFFSET_P3]                        = 0;
     frame[OFFSET_RESERVE]                   = 0;
-    frame[OFFSET_CRC]                       = xorSum(frame.data() + 1, 5);
+    frame[OFFSET_CRC]                       = xor_sum(frame.data() + 1, 5);
 
     if (!data || !dlen) {
         M5_LIB_LOGW("Payload empty");
@@ -112,7 +112,7 @@ VariableFrame make_variable_frame(const uint8_t cmd, const uint16_t len, const u
     *ptr++   = MARKER;
     memcpy(ptr, data, dlen);
     ptr += dlen;
-    *ptr++ = xorSum(data, dlen);
+    *ptr++ = xor_sum(data, dlen);
     *ptr++ = MARKER;
 
     assert(ptr - frame.data() == frame.size() && "Illegal size");

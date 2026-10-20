@@ -59,6 +59,11 @@ enum class Mode : uint8_t {
   @brief User data
  */
 struct User {
+    /*!
+      @brief Constructor
+      @param i Identifier
+      @param p Permission (1, 2, or 3)
+     */
     User(const uint16_t i, const uint8_t p) : id{i}, permission{p}
     {
     }
@@ -88,20 +93,22 @@ class UnitFPC1XXX : public Component {
 
 public:
     // The following variables must be defined in the derived class
-    static constexpr uint16_t RESOLUTION_WIDTH{0};
-    static constexpr uint16_t RESOLUTION_HEIGHT{0};
-    static constexpr uint16_t MINIMUM_USER_ID{0};
-    static constexpr uint16_t MAXIMUM_USER_ID{0};
+    static constexpr uint16_t RESOLUTION_WIDTH{0};   //!< Resolution width (defined in the derived class)
+    static constexpr uint16_t RESOLUTION_HEIGHT{0};  //!< Resolution height (defined in the derived class)
+    static constexpr uint16_t MINIMUM_USER_ID{0};    //!< Minimum user ID (defined in the derived class)
+    static constexpr uint16_t MAXIMUM_USER_ID{0};    //!< Maximum user ID (defined in the derived class)
 
 protected:
+    //! @brief Constructor
     UnitFPC1XXX() : Component(DEFAULT_ADDRESS)
     {
     }
 
 public:
-    using Frame         = std::array<uint8_t, 8>;  //    0xF5 CMD P1 P2 P3 0 CHK 0xF5
-    using VariableFrame = std::vector<uint8_t>;    //    0xF5 CMD LEN(MSB) LEN(LSB) 0 0 CHK 0xF5,...
+    using Frame         = std::array<uint8_t, 8>;  //!< Fixed frame (0xF5 CMD P1 P2 P3 0 CHK 0xF5)
+    using VariableFrame = std::vector<uint8_t>;    //!< Variable frame (header frame + 0xF5 data CHK 0xF5)
 
+    //! @brief Destructor
     virtual ~UnitFPC1XXX() = default;
 
     /*!
@@ -115,7 +122,7 @@ public:
       @brief Settings for begin
      */
     struct config_t {
-        uint32_t timeout_ms{1000 * 4};  //!< Serial I/O timeout (ms)
+        uint32_t timeout_ms{1000 * 4};  //!< Serial I/O timeout (ms) (4000 if zero)
     };
 
     ///@name Settings for begin
@@ -228,6 +235,7 @@ public:
       @return True if successful
       @note After response, the communication speed is changed
       @note The settings are saved in the DSP and remain valid after reset
+      @note The host UART baud rate is not changed; reconfigure the host serial after this call
     */
     bool writeBaudRate(const fpc1xxx::BaudRate baud);
     /*!
@@ -308,7 +316,7 @@ public:
       @brief Verify specific user finger (1:1)
       @param[out] match Match if true
       @param user_id UserID
-      @return True if successful
+      @return True if the response was received (check match for the result)
      */
     bool verifyFinger(bool& match, const uint16_t user_id);
     /*!
@@ -350,7 +358,7 @@ public:
       @param[out] match Match if true
       @param user_id UserID
       @param characteristic Characteristic data
-      @return True if successful
+      @return True if the response was received (check match for the result)
      */
     bool verifyCharacteristic(bool& match, const uint16_t user_id, const uint8_t characteristic[193]);
     /*!
@@ -364,7 +372,7 @@ public:
       @brief Compare characteristic
       @param[out] match Match if true
       @param characteristic Characteristic data
-      @return True if successful
+      @return True if the response was received (check match for the result)
      */
     bool compareCharacteristic(bool& match, const uint8_t characteristic[193]);
     ///@}
@@ -396,7 +404,7 @@ protected:
     }
     bool transceive_command(Frame& res, const uint8_t cmd, const uint8_t p1 = 0, const uint8_t p2 = 0,
                             const uint8_t p3 = 0);
-    bool capture_image(std::vector<uint8_t>& img, const bool full = false);
+    bool capture_image(std::vector<uint8_t>& img, const bool raw = false);
 
 private:
     config_t _cfg{};
@@ -414,14 +422,16 @@ class UnitFPC1020A : public UnitFPC1XXX {
     M5_UNIT_COMPONENT_HPP_BUILDER(UnitFPC1020A, 0x00);
 
 public:
-    static constexpr uint16_t RESOLUTION_WIDTH{160};
-    static constexpr uint16_t RESOLUTION_HEIGHT{160};
-    static constexpr uint16_t MINIMUM_USER_ID{1};
-    static constexpr uint16_t MAXIMUM_USER_ID{150};
+    static constexpr uint16_t RESOLUTION_WIDTH{160};   //!< Resolution width
+    static constexpr uint16_t RESOLUTION_HEIGHT{160};  //!< Resolution height
+    static constexpr uint16_t MINIMUM_USER_ID{1};      //!< Minimum user ID
+    static constexpr uint16_t MAXIMUM_USER_ID{150};    //!< Maximum user ID
 
+    //! @brief Constructor
     UnitFPC1020A() : UnitFPC1XXX()
     {
     }
+    //! @brief Destructor
     virtual ~UnitFPC1020A() = default;
 
     /*!
@@ -490,13 +500,18 @@ constexpr uint8_t CMD_COMPARE_CHARACTERISTIC{0x44};
 namespace detail {
 using Frame = UnitFPC1XXX::Frame;
 
-constexpr uint8_t MARKER{0xF5};  //!< Frame marker for head and tail
+constexpr uint8_t MARKER{0xF5};  // Frame marker for head and tail
 
-//! @brief XOR checksum
-uint8_t xorSum(const uint8_t* data, const uint16_t len);
-//! @brief Validate frame checksum (and optionally markers)
+// XOR checksum
+uint8_t xor_sum(const uint8_t* data, const uint16_t len);
+// Deprecated alias of xor_sum
+[[deprecated("use xor_sum")]] inline uint8_t xorSum(const uint8_t* data, const uint16_t len)
+{
+    return xor_sum(data, len);
+}
+// Validate frame checksum (and optionally markers)
 bool is_valid_sum(const Frame& response, const bool check_marker = true);
-//! @brief Validate variable-length payload checksum and markers
+// Validate variable-length payload checksum and markers
 bool is_valid_payload(const uint8_t* data, const uint16_t len);
 }  // namespace detail
 ///@endcond
