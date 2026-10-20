@@ -171,6 +171,8 @@ protected:
 
 namespace {
 
+#if 0
+// Debug helper: dump all registered users
 void print_all_users(UnitFPC1020A* unit)
 {
     std::vector<User> v{};
@@ -182,6 +184,7 @@ void print_all_users(UnitFPC1020A* unit)
         }
     }
 }
+#endif
 
 constexpr BaudRate br_table[5] = {
     BaudRate::Baud9600, BaudRate::Baud19200, BaudRate::Baud38400, BaudRate::Baud57600, BaudRate::Baud115200,
@@ -204,6 +207,9 @@ constexpr uint8_t ch_data[193] = {
 
 }  // namespace
 
+// NOTE: Test order matters on the hardware.
+// - Baud must end at 19200 (the fixture talks at 19200); if it fails midway, the following tests fail too.
+// - Sleep must be the last hardware test; the unit needs a power cycle to wake up from deep sleep.
 TEST_F(TestFPC1020A, Baud)
 {
     uint32_t idx{};
@@ -241,6 +247,13 @@ TEST_F(TestFPC1020A, Basic)
 TEST_F(TestFPC1020A, Settings)
 {
     SCOPED_TRACE(ustr);
+
+    // Keep the current settings to restore them at the end
+    Mode org_mode{};
+    uint8_t org_lv{}, org_timeout{};
+    EXPECT_TRUE(unit->readRegistrationMode(org_mode));
+    EXPECT_TRUE(unit->readComparisonLevel(org_lv));
+    EXPECT_TRUE(unit->readTimeout(org_timeout));
 
     {
         uint16_t users{};
@@ -302,6 +315,12 @@ TEST_F(TestFPC1020A, Settings)
         EXPECT_TRUE(unit->readTimeout(to2));
         EXPECT_EQ(to2, 0);
     }
+
+    // Restore
+    EXPECT_TRUE(unit->writeRegistrationMode(org_mode));
+    EXPECT_TRUE(unit->writeComparisonLevel(org_lv));
+    EXPECT_TRUE(unit->writeTimeout(org_timeout));
+    EXPECT_TRUE(unit->deleteAllUsers());
 }
 
 TEST_F(TestFPC1020A, User)

@@ -37,23 +37,6 @@ protected:
         return ptr;
     }
 
-    void get_serial_pins(int& pin_num_in, int& pin_num_out)
-    {
-        pin_num_in  = M5.getPin(m5::pin_name_t::port_c_rxd);
-        pin_num_out = M5.getPin(m5::pin_name_t::port_c_txd);
-        if (pin_num_in < 0 || pin_num_out < 0) {
-            // NanoC6 / NanoH2: Ex_I2C.setPort() registers m5gfx::i2c on GPIO 1/2;
-            // Wire.end() alone won't release it, causing dual-driver conflict on uart_driver_install
-            const auto b = M5.getBoard();
-            if (b == m5::board_t::board_M5NanoC6 || b == m5::board_t::board_M5NanoH2) {
-                M5.Ex_I2C.release();
-            }
-            Wire.end();
-            pin_num_in  = M5.getPin(m5::pin_name_t::port_a_pin1);
-            pin_num_out = M5.getPin(m5::pin_name_t::port_a_pin2);
-        }
-    }
-
     virtual HardwareSerial* init_serial() override
     {
         auto& s = m5::unit::wiring::defaultUartSerial();
@@ -67,17 +50,6 @@ protected:
             return false;
         }
         return m5::unit::wiring::addUART(Units, *unit, 115200) && Units.begin();
-    }
-
-    void reset_serial(const uint32_t baud = 115200)
-    {
-        int pin_num_in{-1}, pin_num_out{-1};
-        get_serial_pins(pin_num_in, pin_num_out);
-        serial->end();
-        serial->begin(baud, SERIAL_8N1, pin_num_in, pin_num_out);
-        while (serial->available()) {
-            serial->read();
-        }
     }
 };
 
@@ -122,9 +94,15 @@ constexpr auto_identify_flag_t identify_flags_table[] = {
 
 void wait_sleep(UnitFinger2* u)
 {
-    m5::utility::delay(10 * 1000 + 100);
+    const uint32_t sleep_ms{u->config().sleep_time * 1000U};
+    m5::utility::delay(sleep_ms + 100);
+    const auto start_at = m5::utility::millis();
     bool awake{true};
     while (awake) {
+        if (m5::utility::hasElapsed(start_at, 5000)) {
+            ADD_FAILURE() << "The unit did not go to sleep";
+            return;
+        }
         bool b{};
         if (u->readModuleStatus(b)) {
             // M5_LOGW("Awake? %u", b);
@@ -200,9 +178,7 @@ TEST_F(TestFinger2, Basic)
         EXPECT_EQ(params.database_capacity, 100u);
         EXPECT_EQ(params.score_level, 3);
         EXPECT_EQ(params.address, 0xFFFFFFFFu);
-        EXPECT_GE(params.packet_size, 0u);
         EXPECT_LE(params.packet_size, 3u);
-        EXPECT_EQ(params.address, 0xFFFFFFFFu);
         EXPECT_EQ(params.baud_rate, 6u);  // 57600 only (STM32 <-> Chip)
 
         //
@@ -754,7 +730,7 @@ TEST_F(TestFinger2, Automatic)
 
 // --- deprecated API compatibility (no hardware required) ---
 
-TEST_F(TestFinger2, DeprecatedAPI)
+TEST(Finger2Deprecated, Alias)
 {
     // LEDMode::Bleath is a deprecated alias for LEDMode::Breath
     EXPECT_EQ(LEDMode::Bleath, LEDMode::Breath);
@@ -797,6 +773,38 @@ TEST_F(TestFinger2, BeginConfig)
     // Restore defaults
     EXPECT_TRUE(unit->writeWorkMode(cfg.work_mode));
     EXPECT_TRUE(unit->writeSleepTime(cfg.sleep_time));
+}
+
+// begin() with a non-default config must apply it to the unit
+class TestFinger2Config : public TestFinger2 {
+protected:
+    virtual UnitFinger2* get_instance() override
+    {
+        auto ptr       = new m5::unit::UnitFinger2();
+        auto cfg       = ptr->config();
+        cfg.work_mode  = WorkMode::AlwaysActive;
+        cfg.sleep_time = 30;
+        ptr->config(cfg);
+        return ptr;
+    }
+};
+
+TEST_F(TestFinger2Config, BeginConfig)
+{
+    SCOPED_TRACE(ustr);
+
+    WorkMode mode{};
+    EXPECT_TRUE(unit->readWorkMode(mode));
+    EXPECT_EQ(mode, WorkMode::AlwaysActive);
+
+    uint8_t sec{};
+    EXPECT_TRUE(unit->readSleepTime(sec));
+    EXPECT_EQ(sec, 30);
+
+    // Restore defaults
+    const UnitFinger2::config_t def{};
+    EXPECT_TRUE(unit->writeWorkMode(def.work_mode));
+    EXPECT_TRUE(unit->writeSleepTime(def.sleep_time));
 }
 
 #if 0
