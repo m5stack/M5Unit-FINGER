@@ -37,15 +37,15 @@ enum class WorkMode : uint8_t {
   @brief LED operation mode
  */
 enum class LEDMode : uint8_t {
-    None,             //!< None
-    Breath,           //!< Roundtrip between light up and out gradually (as default)
-    Blink,            //!< Blinking
-    On,               //!< Light up
-    Off,              //!< Light out
-    Fadein,           //!< Light up gradually
-    Fadeout,          //!< Light out gradually
-    Rainbow,          //!< Roundtrip rainbow color
-    Bleath = Breath,  //!< @deprecated Use Breath
+    None,     //!< None
+    Breath,   //!< Roundtrip between light up and out gradually (as default)
+    Blink,    //!< Blinking
+    On,       //!< Light up
+    Off,      //!< Light out
+    Fadein,   //!< Light up gradually
+    Fadeout,  //!< Light out gradually
+    Rainbow,  //!< Roundtrip rainbow color
+    Bleath __attribute__((deprecated("use Breath"))) = Breath,  //!< @deprecated Use Breath
 };
 
 /*!
@@ -168,9 +168,9 @@ enum class ConfirmCode : uint8_t {
     LowPowerFailed,      //!< 0x12:Cannot be in low power consumption
     PasswordIncorrect,   //!< 0x13:The password incorrect
     ResetFailed,         //!< 0x14:The system reset failed
-    ResettFailed = ResetFailed,  //!< @deprecated Use ResetFailed
-    NoValidImage,                //!< 0x15:There is no valid original image in buffer to generate image
-    UpgradeFailed,               //!< 0x16:On-line upgrading failed;
+    ResettFailed __attribute__((deprecated("use ResetFailed"))) = ResetFailed,  //!< @deprecated Use ResetFailed
+    NoValidImage,          //!< 0x15:There is no valid original image in buffer to generate image
+    UpgradeFailed,         //!< 0x16:On-line upgrading failed;
     IncompleteFinger,      //!< 0x17:There are incomplete fingerprint or finger stay still between twice image capturing
     FlashError,            //!< 0x18:Read-write FLASH error
     RandomError,           //!< 0x19:Random number generation failed
@@ -190,13 +190,14 @@ enum class ConfirmCode : uint8_t {
     AlreadyExists,         //!< 0x27:Fingerprint already exists
     FeatureAssociated,     //!< 0x28:Fingerprint features are associated
     InitializeFailed,      //!< 0x29:Sensor initialization failed
-    initializeFailed = InitializeFailed,  //!< @deprecated Use InitializeFailed
-    InformationNotEmpty,                  //!< 0x2A:Module information is NOT empty
-    InformationEmpty,                     //!< 0x2B:Module information is empty
-    OTPFailed,                            //!< 0x2C:OTP operation failed
-    KeyGenerateFailed,                    //!< 0x2D:Key generation failed
-    KeyNotExist,                          //!< 0x2E:The key does not exist
-    AlgorithmFailed,                      //!< 0x2F:Security algorithm execution failed
+    initializeFailed __attribute__((deprecated("use InitializeFailed"))) =
+        InitializeFailed,          //!< @deprecated Use InitializeFailed
+    InformationNotEmpty,           //!< 0x2A:Module information is NOT empty
+    InformationEmpty,              //!< 0x2B:Module information is empty
+    OTPFailed,                     //!< 0x2C:OTP operation failed
+    KeyGenerateFailed,             //!< 0x2D:Key generation failed
+    KeyNotExist,                   //!< 0x2E:The key does not exist
+    AlgorithmFailed,               //!< 0x2F:Security algorithm execution failed
     IncorrectResult,               //!< 0x30:The encryption/decryption results of the security algorithm are incorrect
     MismatchFunction,              //!< 0x31:Functionality does not match the encryption level
     KeyLocked,                     //!< 0x32:The key has been locked
