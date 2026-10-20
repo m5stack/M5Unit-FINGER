@@ -24,15 +24,19 @@ const types::attr_t UnitFacesFinger::attr{attribute::AccessUART};
 bool UnitFacesFinger::begin()
 {
     if (_faces_cfg.panel_power_pin >= 0) {
-        auto pin = static_cast<gpio_num_t>(_faces_cfg.panel_power_pin);
-        gpio_set_direction(pin, GPIO_MODE_OUTPUT);
-        gpio_set_level(pin, 1);
+        const auto pin = static_cast<gpio_num_t>(_faces_cfg.panel_power_pin);
+        if (gpio_set_direction(pin, GPIO_MODE_OUTPUT) != ESP_OK || gpio_set_level(pin, 1) != ESP_OK) {
+            M5_LIB_LOGE("Failed to turn on panel power (GPIO%d)", _faces_cfg.panel_power_pin);
+            return false;
+        }
         M5_LIB_LOGI("Panel power ON (GPIO%d)", _faces_cfg.panel_power_pin);
     }
     if (_faces_cfg.touch_power_pin >= 0) {
-        auto pin = static_cast<gpio_num_t>(_faces_cfg.touch_power_pin);
-        gpio_set_direction(pin, GPIO_MODE_OUTPUT);
-        gpio_set_level(pin, 1);
+        const auto pin = static_cast<gpio_num_t>(_faces_cfg.touch_power_pin);
+        if (gpio_set_direction(pin, GPIO_MODE_OUTPUT) != ESP_OK || gpio_set_level(pin, 1) != ESP_OK) {
+            M5_LIB_LOGE("Failed to turn on touch IC power (GPIO%d)", _faces_cfg.touch_power_pin);
+            return false;
+        }
         M5_LIB_LOGI("Touch IC power ON (GPIO%d)", _faces_cfg.touch_power_pin);
     }
     m5::utility::delay(100);

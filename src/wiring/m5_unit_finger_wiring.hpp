@@ -62,10 +62,11 @@ inline FacesPins getFacesPins()
   @param unit UnitFacesFinger instance (its config()'s panel_power_pin / touch_power_pin are set here)
   @param baud Baud rate (default 19200 = FPC1020A default)
   @param config Serial config (e.g. SERIAL_8N1)
-  @return True if successful; false on unsupported board (Serial / unit untouched)
+  @return True if successful; false on unsupported board (Serial / unit untouched) or units.add() failure
   @note FacesFinger is M-Bus only (M5Stack Core / Gray / Fire). The panel and touch IC power pins are
         applied to the unit's config before begin() so that UnitFacesFinger::begin() drives them.
         The HardwareSerial is selected via m5::unit::wiring::defaultUartSerial() (mirrors addUART).
+  @note If it fails after the board check, the unit's power pin config and the Serial settings stay modified
 */
 inline bool addFacesUART(UnitUnified& units, UnitFacesFinger& unit, const uint32_t baud = 19200,
                          const uint32_t config = SERIAL_8N1)
@@ -95,7 +96,8 @@ inline bool addFacesUART(UnitUnified& units, UnitFacesFinger& unit, const uint32
   @param unit UnitFacesFinger instance (its config()'s panel_power_pin / touch_power_pin are set here)
   @param baud Baud rate (default 19200 = FPC1020A default)
   @param config UartConfig (default `UartConfig::Default` = 8N1)
-  @return True if successful; false on unsupported board / UART install failure
+  @return True if successful; false on unsupported board, UART install failure or units.add() failure
+  @note If it fails after the board check, the unit's power pin config stays modified
   @note FacesFinger is M-Bus only (M5Stack Core / Gray / Fire). The panel and touch IC power pins are
         applied to the unit's config before begin() so that UnitFacesFinger::begin() drives them (via
         the ESP-IDF native driver/gpio API). The UART port is installed via the M5UnitUnified native

@@ -29,14 +29,16 @@ public:
       @brief Settings for begin
      */
     struct config_t {
-        uint32_t timeout_ms{1000 * 4};  //!< Serial I/O timeout (ms)
-        int panel_power_pin{-1};        //!< Finger panel power pin (mbus_pin10)
-        int touch_power_pin{-1};        //!< Touch IC power pin (mbus_pin20)
+        uint32_t timeout_ms{1000 * 4};  //!< Serial I/O timeout (ms) (4000 if zero)
+        int panel_power_pin{-1};        //!< Finger panel power GPIO number (mbus_pin10), not driven if negative
+        int touch_power_pin{-1};        //!< Touch IC power GPIO number (mbus_pin20), not driven if negative
     };
 
+    //! @brief Constructor
     UnitFacesFinger() : UnitFPC1020A()
     {
     }
+    //! @brief Destructor
     virtual ~UnitFacesFinger() = default;
 
     /*!
@@ -62,7 +64,7 @@ public:
     inline void config(const config_t& cfg)
     {
         _faces_cfg = cfg;
-        UnitFPC1XXX::config_t base_cfg;
+        UnitFPC1XXX::config_t base_cfg{};
         base_cfg.timeout_ms = cfg.timeout_ms;
         UnitFPC1XXX::config(base_cfg);
     }
