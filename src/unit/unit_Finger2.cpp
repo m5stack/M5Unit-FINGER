@@ -162,7 +162,7 @@ bool UnitFinger2::readModuleStatus(bool& awake)
     awake = false;
 
     Packet pkt{};
-    if (transceive_command(pkt, CMD_GET_MODULE_STATUS, _address)) {
+    if (transceive_command(pkt, CMD_GET_MODULE_STATUS, _address) && pkt.size() == 13) {
         awake = pkt[10];
         return true;
     }
@@ -174,7 +174,7 @@ bool UnitFinger2::readWorkMode(finger2::WorkMode& wm)
     wm = WorkMode::ScheduledSleep;
 
     Packet pkt{};
-    if (transceive_command(pkt, CMD_GET_WORK_MODE, _address)) {
+    if (transceive_command(pkt, CMD_GET_WORK_MODE, _address) && pkt.size() == 13) {
         const uint8_t v = pkt[10];
         if (v > m5::stl::to_underlying(WorkMode::AlwaysActive)) {
             M5_LIB_LOGE("Illegal work mode %u", v);
@@ -221,7 +221,7 @@ bool UnitFinger2::readSleepTime(uint8_t& sec)
     sec = 0xFF;
 
     Packet pkt{};
-    if (transceive_command(pkt, CMD_GET_SLEEP_TIME, _address)) {
+    if (transceive_command(pkt, CMD_GET_SLEEP_TIME, _address) && pkt.size() == 13) {
         sec = pkt[10];
         return true;
     }
@@ -291,6 +291,7 @@ bool UnitFinger2::readImage(std::vector<uint8_t>& img)
         if (!(confirm == PID_DATA || confirm == PID_TERMINATE_DATA)) {
             break;
         }
+        // read_data guarantees sz >= 2 (sum[2])
         const uint16_t sz{big_uint16_t(rbuf[7], rbuf[8]).get()};
         img.insert(img.end(), rbuf.begin() + 9, rbuf.begin() + 9 + sz - 2);
 
@@ -458,17 +459,15 @@ bool UnitFinger2::readTemplate(uint16_t& actual_size, uint8_t* buf, const uint16
     const big_uint16_t ofs{offset};
     const big_uint16_t bsz{buf_size};
     uint8_t params[4]{ofs.high(), ofs.low(), bsz.high(), bsz.low()};
-    if (transceive_command(pkt, CMD_UPLOAD_TEMPLATE, _address, params, sizeof(params)) && pkt.size() >= 13) {
-        actual_size = big_uint16_t(pkt[10], pkt[11]).get();
-        if (actual_size > buf_size) {
-            actual_size = buf_size;
-        }
-        if (pkt.size() < 12U + actual_size) {
-            M5_LIB_LOGE("Illegal packet size %zu/%u", pkt.size(), actual_size);
-            actual_size = 0;
+    // Header[9] + Confirm[1] + Size[2] + Data[n] + Sum[2]
+    if (transceive_command(pkt, CMD_UPLOAD_TEMPLATE, _address, params, sizeof(params)) && pkt.size() >= 14) {
+        const uint16_t sz{big_uint16_t(pkt[10], pkt[11]).get()};
+        if (sz > buf_size || pkt.size() < 14U + sz) {
+            M5_LIB_LOGE("Illegal size %u/%u (%zu)", sz, buf_size, pkt.size());
             return false;
         }
-        memcpy(buf, pkt.data() + 12, actual_size);
+        memcpy(buf, pkt.data() + 12, sz);
+        actual_size = sz;
         return true;
     }
     return false;
@@ -485,20 +484,22 @@ bool UnitFinger2::readTemplateAllBatches(uint16_t& actual_size, uint8_t* buf, co
     uint16_t offset{};
     uint16_t call_count{};
     while (offset < buf_size) {
+        const uint16_t req{std::min<uint16_t>(batch_size, buf_size - offset)};
         uint16_t actual{};
-        if (!readTemplate(actual, buf + offset, batch_size, offset)) {
+        if (!readTemplate(actual, buf + offset, req, offset)) {
             return false;
         }
         offset += actual;
         actual_size += actual;
 
-        if (callback && !callback(call_count, actual, batch_size, actual_size, buf_size, actual < batch_size)) {
+        const bool completed{actual < req || offset >= buf_size};
+        if (callback && !callback(call_count, actual, batch_size, actual_size, buf_size, completed)) {
             // Abort by callback
             return true;
         }
         ++call_count;
 
-        if (actual < batch_size) {  // No more data
+        if (actual < req) {  // No more data
             break;
         }
     }
@@ -646,7 +647,7 @@ bool UnitFinger2::readIndexTable(uint8_t table[32])
 {
     const auto cap = capacity();
 
-    if (table && cap / 8 <= 32) {
+    if (table && cap <= 256) {
         Packet pkt{};
         // NOTE: Only index page 0 (entries 0-255) is read; a 32-byte table covers up to 256 templates
         if (transceive_command8(pkt, CMD_READ_INDEX_TABLE, _address, 0) && pkt.size() == 44) {
@@ -937,7 +938,7 @@ bool UnitFinger2::readFirmwareVersion(uint8_t& ver)
 {
     ver = 0x00;
     Packet pkt{};
-    if (transceive_command(pkt, CMD_GET_FIRMWARE_VERSION, _address)) {
+    if (transceive_command(pkt, CMD_GET_FIRMWARE_VERSION, _address) && pkt.size() == 13) {
         ver = pkt[10];
         return true;
     }
@@ -1033,6 +1034,11 @@ bool UnitFinger2::write_command(const uint8_t cmd, const uint32_t addr, const ui
                                 const uint16_t payload_len)
 {
     auto pkt = make_packet(cmd, addr, payload, payload_len);
+    // Discard stale data (e.g. rest of a broken frame, unsolicited passive activation packet) to keep in sync
+    auto ad = asAdapter<AdapterUART>(Adapter::Type::UART);
+    if (ad) {
+        ad->flushRX();
+    }
     return writeWithTransaction(pkt.data(), pkt.size()) == m5::hal::error::error_t::OK;
 }
 
@@ -1043,7 +1049,12 @@ uint8_t UnitFinger2::read_data(Packet& rbuf)
     rbuf.reserve(256);
     rbuf.resize(9);
     if (readWithTransaction(rbuf.data(), rbuf.size()) == m5::hal::error::error_t::OK && is_valid_ack(rbuf)) {
+        // Length: Data[n] + Sum[2]
         const uint16_t sz{big_uint16_t(rbuf[7], rbuf[8]).get()};
+        if (sz < 2 || sz > PACKET_SIZE_MAX - 9) {
+            M5_LIB_LOGE("Illegal length %u", sz);
+            return 0x00;
+        }
         rbuf.resize(rbuf.size() + sz);
         if (readWithTransaction(rbuf.data() + 9, sz) == m5::hal::error::error_t::OK) {
             const auto sum = sum16(rbuf.data() + 6, rbuf.size() - 8);
@@ -1061,7 +1072,12 @@ ConfirmCode UnitFinger2::read_response(Packet& rbuf)
     rbuf.reserve(128);
     rbuf.resize(9);
     if (readWithTransaction(rbuf.data(), rbuf.size()) == m5::hal::error::error_t::OK && is_valid_ack(rbuf)) {
+        // Length: Confirm[1] + Params[n] + Sum[2]
         const uint16_t sz{big_uint16_t(rbuf[7], rbuf[8]).get()};
+        if (sz < 3 || sz > PACKET_SIZE_MAX - 9) {
+            M5_LIB_LOGE("Illegal length %u", sz);
+            return ConfirmCode::PacketError;
+        }
         rbuf.resize(rbuf.size() + sz);
         if (readWithTransaction(rbuf.data() + 9, sz) == m5::hal::error::error_t::OK) {
             const auto sum = sum16(rbuf.data() + 6, rbuf.size() - 8);

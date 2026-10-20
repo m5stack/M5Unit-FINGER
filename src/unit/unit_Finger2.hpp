@@ -586,7 +586,7 @@ public:
       @param[out] buf Output buffer (at least buf_size bytes)
       @param buf_size  size of buf
       @param offset Offset address
-      @return True if successful
+      @return True if successful (false if the reported size exceeds buf_size)
       @pre The template exists in the buffer
      */
     bool readTemplate(uint16_t& actual_size, uint8_t* buf, const uint16_t buf_size, const uint16_t offset);
@@ -653,6 +653,7 @@ public:
       @details Bit-level information for registered templates is retrieved
       @param[out] table Table data (at least 32 bytes)
       @return True if successful
+      @note Only index page 0 (templates 0-255) is read. Returns false if capacity() > 256
      */
     bool readIndexTable(uint8_t table[32]);
 

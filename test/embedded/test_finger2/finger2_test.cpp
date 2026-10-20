@@ -533,6 +533,17 @@ TEST_F(TestFinger2, Template)
         EXPECT_TRUE(unit->readTemplateAllBatches(actual, tbuf.data(), tbuf.size()));
         EXPECT_EQ(actual, tbuf.size());
 
+        // buf_size that is not a multiple of batch_size must not write beyond buf_size
+        {
+            constexpr uint16_t part_size{200};
+            constexpr uint8_t guard{0xA5};
+            std::vector<uint8_t> pbuf(part_size + 64, guard);
+            EXPECT_TRUE(unit->readTemplateAllBatches(actual, pbuf.data(), part_size, 128));
+            EXPECT_EQ(actual, part_size);
+            EXPECT_TRUE(std::equal(pbuf.begin(), pbuf.begin() + part_size, tbuf.begin()));
+            EXPECT_TRUE(std::all_of(pbuf.begin() + part_size, pbuf.end(), [](const uint8_t v) { return v == guard; }));
+        }
+
         auto all = num;
         EXPECT_FALSE(unit->deleteTemplate(100));
         EXPECT_FALSE(unit->deleteTemplate(65535));
