@@ -262,9 +262,9 @@ public:
     bool readRegisteredUserCount(uint16_t& count);
     /*!
       @brief Read the user permission
-      @param[out] permission Permission(1,2,3)
+      @param[out] permission Permission(1,2,3). Not valid if false is returned
       @param user_id user ID
-      @return True if successful
+      @return True if the user exists (false if NoUser or failed)
      */
     bool readUser(uint8_t& permission, const uint16_t user_id);
     /*!
@@ -321,9 +321,9 @@ public:
     bool verifyFinger(bool& match, const uint16_t user_id);
     /*!
       @brief Identify finger (1:N)
-      @param[out] user_id Matching UserID, 0 if NoUser
-      @param[out] permission Matching user permission, 0 if NoUser
-      @return True if successful
+      @param[out] user_id Matching UserID, 0 if not found
+      @param[out] permission Matching user permission, 0 if not found
+      @return True if a matching user was found (false if NoUser, timeout or failed)
      */
     bool identifyFinger(uint16_t& user_id, uint8_t& permission);
     /*!
@@ -363,9 +363,9 @@ public:
     bool verifyCharacteristic(bool& match, const uint16_t user_id, const uint8_t characteristic[193]);
     /*!
       @brief Identify characteristic (1:N)
-      @param[out] user_id Matching UserID, 0 if NoUser
+      @param[out] user_id Matching UserID, 0 if not found
       @param characteristic Characteristic data
-      @return True if successful
+      @return True if a matching user was found (false if NoUser or failed)
      */
     bool identifyCharacteristic(uint16_t& user_id, const uint8_t characteristic[193]);
     /*!
