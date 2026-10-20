@@ -5,22 +5,21 @@
 Library for Finger units using [M5UnitUnified](https://github.com/m5stack/M5UnitUnified).  
 M5UnitUnified is a library for unified handling of various M5 units products.
 
-### SKU:U008
+### SKU:U008 (UnitFinger)
 Unit Finger is a fingerprint recognition sensor. It integrates the FPC1020A capacitive fingerprint recognition module, featuring multi-fingerprint enrollment, image processing, feature extraction, fingerprint matching, and search functions.
 
-### SKU:U074
+### SKU:U074 (HatFinger)
 
 Hat Finger is a fingerprint recognition sensor. It integrates the FPC1020SC capacitive fingerprint recognition module, featuring multi-fingerprint entry, image processing, feature extraction, fingerprint matching, and search functions. 
 
 
-### SKU:A066
+### SKU:A066 (FacesFinger)
 Faces Finger is a fingerprint recognition panel compatible with the FACE kit. It integrates the FPC1020A capacitive fingerprint recognition module internally, featuring functions such as multi-fingerprint enrollment, image processing, feature extraction, fingerprint comparison, and search. It supports setting different security levels, providing a stable and reliable mechanism for fingerprint addition, verification, and management for your projects.
 
-### SKU:U203
+### SKU:U203 (UnitFinger2)
 The Unit Fingerprint2 is a high-performance fingerprint recognition sensor unit, internally integrating an STM32 core controller and an A-K323CP all-in-one fingerprint recognition module. It uses a semiconductor capacitive sensor with functions such as fingerprint acquisition, feature extraction, registration, comparison, storage, and retrieval. 
 
 ## Related Link
-See also examples using conventional methods here.
 
 - [Unit Finger Document & Datasheet](https://docs.m5stack.com/en/unit/finger)
 - [Hat Finger Document & Datasheet](https://docs.m5stack.com/en/hat/hat-finger)
@@ -28,7 +27,7 @@ See also examples using conventional methods here.
 - [Unit Fingerprint2 Document & Datasheet](https://docs.m5stack.com/en/unit/Unit_Fingerprint2)
 
 
-## Required Libraries:
+## Required Libraries
 
 - [M5UnitUnified](https://github.com/m5stack/M5UnitUnified)
 - [M5Utility](https://github.com/m5stack/M5Utility)
@@ -62,6 +61,9 @@ You must choose a define symbol for the unit you will use.
 ```
 
 ### For ESP-IDF settings
+
+> **NOTE:** The ESP-IDF native build (`idf.py`) targets ESP-IDF **5.1 or later** (5.x and 6.x).
+
 The examples also build as native ESP-IDF projects (`idf.py`). Each example directory is a standalone project that pulls in this library together with `M5UnitUnified` / `M5Unified` via `main/idf_component.yml`.
 
 ```sh
