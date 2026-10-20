@@ -14,6 +14,8 @@ using namespace m5::utility::mmh3;
 using namespace m5::unit::types;
 using namespace m5::unit::finger2;
 using namespace m5::unit::finger2::command;
+using m5::types::big_uint16_t;
+using m5::types::big_uint32_t;
 using Packet = m5::unit::UnitFinger2::Packet;
 
 namespace {
@@ -62,16 +64,14 @@ Packet make_packet(const uint8_t cmd, const uint32_t addr, const uint8_t* payloa
     pkt[0] = PACKET_HEADER >> 8;
     pkt[1] = PACKET_HEADER & 0xFF;
     // Address[4]
-    pkt[2] = addr >> 24;
-    pkt[3] = addr >> 16;
-    pkt[4] = addr >> 8;
-    pkt[5] = addr & 0xFF;
+    const big_uint32_t a{addr};
+    memcpy(pkt.data() + 2, a.data(), a.size());
     // PID[1]
     pkt[6] = PID_CMD;
     // Length[2]
-    const uint16_t len{static_cast<uint16_t>(3 /* cmd[1] + sum[2] */ + payload_len)};
-    pkt[7] = len >> 8;
-    pkt[8] = len & 0xFF;
+    const big_uint16_t len{static_cast<uint16_t>(3 /* cmd[1] + sum[2] */ + payload_len)};
+    pkt[7] = len.high();
+    pkt[8] = len.low();
     // CMD[1]
     pkt[9] = cmd;
     // Payload[n]
@@ -82,9 +82,9 @@ Packet make_packet(const uint8_t cmd, const uint32_t addr, const uint8_t* payloa
     }
 
     // Sum[2]
-    const auto sum = sum16(&pkt[6], pkt.size() - 8);
-    pkt[offset++]  = sum >> 8;
-    pkt[offset++]  = sum & 0xFF;
+    const big_uint16_t sum{sum16(&pkt[6], pkt.size() - 8)};
+    pkt[offset++] = sum.high();
+    pkt[offset++] = sum.low();
 
     return pkt;
 }
@@ -204,14 +204,13 @@ bool UnitFinger2::readSystemParams(finger2::SystemBasicParams& params)
 
     Packet pkt{};
     if (transceive_command(pkt, CMD_READ_SYSTEM_PARAMETER, _address) && pkt.size() == 28) {
-        params.status            = (static_cast<uint16_t>(pkt[10]) << 8) | pkt[11];
-        params.sensor_type       = (static_cast<uint16_t>(pkt[12]) << 8) | pkt[13];
-        params.database_capacity = (static_cast<uint16_t>(pkt[14]) << 8) | pkt[15];
-        params.score_level       = (static_cast<uint16_t>(pkt[16]) << 8) | pkt[17];
-        params.address           = (static_cast<uint32_t>(pkt[18]) << 24) | (static_cast<uint32_t>(pkt[19]) << 16) |
-                         (static_cast<uint16_t>(pkt[20]) << 8) | pkt[21];
-        params.packet_size = (static_cast<uint16_t>(pkt[22]) << 8) | pkt[23];
-        params.baud_rate   = (static_cast<uint16_t>(pkt[24]) << 8) | pkt[25];
+        params.status            = big_uint16_t(pkt[10], pkt[11]).get();
+        params.sensor_type       = big_uint16_t(pkt[12], pkt[13]).get();
+        params.database_capacity = big_uint16_t(pkt[14], pkt[15]).get();
+        params.score_level       = big_uint16_t(pkt[16], pkt[17]).get();
+        params.address           = big_uint32_t(pkt[18], pkt[19], pkt[20], pkt[21]).get();
+        params.packet_size       = big_uint16_t(pkt[22], pkt[23]).get();
+        params.baud_rate         = big_uint16_t(pkt[24], pkt[25]).get();
         return true;
     }
     return false;
@@ -292,7 +291,7 @@ bool UnitFinger2::readImage(std::vector<uint8_t>& img)
         if (!(confirm == PID_DATA || confirm == PID_TERMINATE_DATA)) {
             break;
         }
-        uint16_t sz = ((static_cast<uint16_t>(rbuf[7])) << 8) | static_cast<uint16_t>(rbuf[8]);
+        const uint16_t sz{big_uint16_t(rbuf[7], rbuf[8]).get()};
         img.insert(img.end(), rbuf.begin() + 9, rbuf.begin() + 9 + sz - 2);
 
         if (confirm == PID_TERMINATE_DATA) {
@@ -331,10 +330,8 @@ bool UnitFinger2::storeTemplate(const uint16_t page_id, const uint8_t buffer_id)
     }
 
     Packet pkt{};
-    uint8_t params[3]{};
-    params[0] = buffer_id;
-    params[1] = page_id >> 8;
-    params[2] = page_id & 0xFF;
+    const big_uint16_t pid{page_id};
+    uint8_t params[3]{buffer_id, pid.high(), pid.low()};
     return transceive_command(pkt, CMD_STORE_TEMPLATE, _address, params, sizeof(params));
 }
 
@@ -350,10 +347,8 @@ bool UnitFinger2::loadTemplate(const uint8_t buffer_id, const uint16_t page_id)
     }
 
     Packet pkt{};
-    uint8_t params[3]{};
-    params[0] = buffer_id;
-    params[1] = page_id >> 8;
-    params[2] = page_id & 0xFF;
+    const big_uint16_t pid{page_id};
+    uint8_t params[3]{buffer_id, pid.high(), pid.low()};
     return transceive_command(pkt, CMD_LOAD_TEMPLATE, _address, params, sizeof(params));
 }
 
@@ -367,7 +362,7 @@ bool UnitFinger2::match(bool& matched, uint16_t& score)
         auto confirm = read_response(pkt);
         if (pkt.size() == 14 && (confirm == ConfirmCode::OK || confirm == ConfirmCode::Unmatched)) {
             matched = (confirm == ConfirmCode::OK);
-            score   = ((static_cast<uint16_t>(pkt[10])) << 8) | (static_cast<uint16_t>(pkt[11]));
+            score   = big_uint16_t(pkt[10], pkt[11]).get();
             return true;
         }
     }
@@ -397,19 +392,16 @@ bool UnitFinger2::search(bool& matched, uint16_t& matching_page_id, uint16_t& sc
     }
 
     Packet pkt{};
-    uint8_t params[5]{};
-    params[0] = buffer_id;
-    params[1] = start_page >> 8;
-    params[2] = start_page & 0xFF;
-    params[3] = pages >> 8;
-    params[4] = pages & 0xFF;
+    const big_uint16_t sp{start_page};
+    const big_uint16_t np{pages};
+    uint8_t params[5]{buffer_id, sp.high(), sp.low(), np.high(), np.low()};
 
     if (write_command(CMD_SEARCH, _address, params, sizeof(params))) {
         auto confirm = read_response(pkt);
         if (pkt.size() == 16 && (confirm == ConfirmCode::OK || confirm == ConfirmCode::NotFound)) {
             matched          = (confirm == ConfirmCode::OK);
-            matching_page_id = ((static_cast<uint16_t>(pkt[10])) << 8) | (static_cast<uint16_t>(pkt[11]));
-            score            = ((static_cast<uint16_t>(pkt[12])) << 8) | (static_cast<uint16_t>(pkt[13]));
+            matching_page_id = big_uint16_t(pkt[10], pkt[11]).get();
+            score            = big_uint16_t(pkt[12], pkt[13]).get();
             return true;
         }
     }
@@ -434,18 +426,16 @@ bool UnitFinger2::searchNow(bool& matched, uint16_t& matching_page_id, uint16_t&
     }
 
     Packet pkt{};
-    uint8_t params[4]{};
-    params[0] = start_page >> 8;
-    params[1] = start_page & 0xFF;
-    params[2] = pages >> 8;
-    params[3] = pages & 0xFF;
+    const big_uint16_t sp{start_page};
+    const big_uint16_t np{pages};
+    uint8_t params[4]{sp.high(), sp.low(), np.high(), np.low()};
 
     if (write_command(CMD_SEARCH_NOW, _address, params, sizeof(params))) {
         auto confirm = read_response(pkt);
         if (pkt.size() == 16 && (confirm == ConfirmCode::OK || confirm == ConfirmCode::NotFound)) {
             matched          = (confirm == ConfirmCode::OK);
-            matching_page_id = ((static_cast<uint16_t>(pkt[10])) << 8) | (static_cast<uint16_t>(pkt[11]));
-            score            = ((static_cast<uint16_t>(pkt[12])) << 8) | (static_cast<uint16_t>(pkt[13]));
+            matching_page_id = big_uint16_t(pkt[10], pkt[11]).get();
+            score            = big_uint16_t(pkt[12], pkt[13]).get();
             return true;
         }
     }
@@ -465,13 +455,11 @@ bool UnitFinger2::readTemplate(uint16_t& actual_size, uint8_t* buf, const uint16
     actual_size = 0;
 
     Packet pkt{};
-    uint8_t params[4]{};
-    params[0] = offset >> 8;
-    params[1] = offset & 0xFF;
-    params[2] = buf_size >> 8;
-    params[3] = buf_size & 0xFF;
+    const big_uint16_t ofs{offset};
+    const big_uint16_t bsz{buf_size};
+    uint8_t params[4]{ofs.high(), ofs.low(), bsz.high(), bsz.low()};
     if (transceive_command(pkt, CMD_UPLOAD_TEMPLATE, _address, params, sizeof(params)) && pkt.size() >= 13) {
-        actual_size = (static_cast<uint16_t>(pkt[10]) << 8) | pkt[11];
+        actual_size = big_uint16_t(pkt[10], pkt[11]).get();
         if (actual_size > buf_size) {
             actual_size = buf_size;
         }
@@ -530,10 +518,12 @@ bool UnitFinger2::writeTemplate(const uint16_t offset, const uint8_t* buf, const
     Packet pkt{};
     std::vector<uint8_t> params{};
     params.resize(4 + buf_size);
-    params[0] = offset >> 8;
-    params[1] = offset & 0xFF;
-    params[2] = buf_size >> 8;
-    params[3] = buf_size & 0xFF;
+    const big_uint16_t ofs{offset};
+    const big_uint16_t bsz{buf_size};
+    params[0] = ofs.high();
+    params[1] = ofs.low();
+    params[2] = bsz.high();
+    params[3] = bsz.low();
     memcpy(params.data() + 4, buf, buf_size);
     return transceive_command(pkt, CMD_DOWNLOAD_TEMPLATE, _address, params.data(), params.size());
 }
@@ -572,11 +562,9 @@ bool UnitFinger2::deleteTemplate(const uint16_t page_id, const uint16_t num)
     }
 
     Packet pkt{};
-    uint8_t params[4]{};
-    params[0] = page_id >> 8;
-    params[1] = page_id & 0xFF;
-    params[2] = num >> 8;
-    params[3] = num & 0xFF;
+    const big_uint16_t pid{page_id};
+    const big_uint16_t n{num};
+    uint8_t params[4]{pid.high(), pid.low(), n.high(), n.low()};
     return transceive_command(pkt, CMD_DELETE_TEMPLATE, _address, params, sizeof(params));
 }
 
@@ -626,7 +614,7 @@ bool UnitFinger2::readInformationPage(uint8_t info[512])
         if (!(confirm == PID_DATA || confirm == PID_TERMINATE_DATA)) {
             break;
         }
-        uint16_t sz = ((static_cast<uint16_t>(rbuf[7])) << 8) | static_cast<uint16_t>(rbuf[8]);
+        uint16_t sz = big_uint16_t(rbuf[7], rbuf[8]).get();
         if (sz <= 2) {
             break;
         }
@@ -648,7 +636,7 @@ bool UnitFinger2::readValidTemplates(uint16_t& num)
 
     Packet pkt{};
     if (transceive_command(pkt, CMD_READ_VALID_TEMPLATE_NUMBER, _address) && pkt.size() == 14) {
-        num = ((static_cast<uint16_t>(pkt[10])) << 8) | (static_cast<uint16_t>(pkt[11]));
+        num = big_uint16_t(pkt[10], pkt[11]).get();
         return true;
     }
     return false;
@@ -768,12 +756,9 @@ bool UnitFinger2::autoEnroll(ConfirmCode& confirm, const uint16_t page_id, const
     }
 
     Packet pkt{};
-    uint8_t params[5]{};
-    params[0] = page_id >> 8;
-    params[1] = page_id & 0xFF;
-    params[2] = capture_times;
-    params[3] = flags >> 8;
-    params[4] = flags & 0xFF;
+    const big_uint16_t pid{page_id};
+    const big_uint16_t flg{flags};
+    uint8_t params[5]{pid.high(), pid.low(), capture_times, flg.high(), flg.low()};
 
     AutoEnrollStage stage{};
     uint8_t state{};
@@ -834,12 +819,9 @@ bool UnitFinger2::autoIdentify(bool& matched, uint16_t& matching_page_id, uint16
     }
 
     Packet pkt{};
-    uint8_t params[5]{};
-    params[0] = security_level;
-    params[1] = page_id >> 8;
-    params[2] = page_id & 0xFF;
-    params[3] = flags >> 8;
-    params[4] = flags & 0xFF;
+    const big_uint16_t pid{page_id};
+    const big_uint16_t flg{flags};
+    uint8_t params[5]{security_level, pid.high(), pid.low(), flg.high(), flg.low()};
 
     AutoIdentifyStage stage{};
     auto confirm = ConfirmCode::PacketError;
@@ -875,8 +857,8 @@ bool UnitFinger2::autoIdentify(bool& matched, uint16_t& matching_page_id, uint16
         if ((stage == AutoIdentifyStage::Result) &&
             (confirm == ConfirmCode::OK || confirm == ConfirmCode::NotFound || confirm == ConfirmCode::Unmatched)) {
             matched          = (confirm == ConfirmCode::OK);
-            matching_page_id = (static_cast<uint16_t>(pkt[11]) << 8) | pkt[12];
-            score            = (static_cast<uint16_t>(pkt[13]) << 8) | pkt[14];
+            matching_page_id = big_uint16_t(pkt[11], pkt[12]).get();
+            score            = big_uint16_t(pkt[13], pkt[14]).get();
             return true;
         }
     }
@@ -929,8 +911,7 @@ bool UnitFinger2::readRandomNumber(uint32_t& value)
 
     Packet pkt{};
     if (transceive_command(pkt, CMD_GET_RANDOM, _address) && pkt.size() == 16) {
-        value = ((static_cast<uint32_t>(pkt[10])) << 24) | ((static_cast<uint32_t>(pkt[11])) << 16) |
-                ((static_cast<uint32_t>(pkt[12])) << 8) | (static_cast<uint32_t>(pkt[13]));
+        value = big_uint32_t(pkt[10], pkt[11], pkt[12], pkt[13]).get();
         return true;
     }
     return false;
@@ -1062,11 +1043,11 @@ uint8_t UnitFinger2::read_data(Packet& rbuf)
     rbuf.reserve(256);
     rbuf.resize(9);
     if (readWithTransaction(rbuf.data(), rbuf.size()) == m5::hal::error::error_t::OK && is_valid_ack(rbuf)) {
-        uint16_t sz = ((static_cast<uint16_t>(rbuf[7])) << 8) | static_cast<uint16_t>(rbuf[8]);
+        const uint16_t sz{big_uint16_t(rbuf[7], rbuf[8]).get()};
         rbuf.resize(rbuf.size() + sz);
         if (readWithTransaction(rbuf.data() + 9, sz) == m5::hal::error::error_t::OK) {
-            auto sum      = sum16(rbuf.data() + 6, rbuf.size() - 8);
-            uint16_t rsum = (rbuf[rbuf.size() - 2] << 8) | rbuf[rbuf.size() - 1];
+            const auto sum = sum16(rbuf.data() + 6, rbuf.size() - 8);
+            const uint16_t rsum{big_uint16_t(rbuf[rbuf.size() - 2], rbuf[rbuf.size() - 1]).get()};
             return sum == rsum ? rbuf[6] : 0x00;
         }
     }
@@ -1080,11 +1061,11 @@ ConfirmCode UnitFinger2::read_response(Packet& rbuf)
     rbuf.reserve(128);
     rbuf.resize(9);
     if (readWithTransaction(rbuf.data(), rbuf.size()) == m5::hal::error::error_t::OK && is_valid_ack(rbuf)) {
-        uint16_t sz = ((static_cast<uint16_t>(rbuf[7])) << 8) | static_cast<uint16_t>(rbuf[8]);
+        const uint16_t sz{big_uint16_t(rbuf[7], rbuf[8]).get()};
         rbuf.resize(rbuf.size() + sz);
         if (readWithTransaction(rbuf.data() + 9, sz) == m5::hal::error::error_t::OK) {
-            auto sum      = sum16(rbuf.data() + 6, rbuf.size() - 8);
-            uint16_t rsum = (rbuf[rbuf.size() - 2] << 8) | rbuf[rbuf.size() - 1];
+            const auto sum = sum16(rbuf.data() + 6, rbuf.size() - 8);
+            const uint16_t rsum{big_uint16_t(rbuf[rbuf.size() - 2], rbuf[rbuf.size() - 1]).get()};
 
             M5_LIB_LOGV("CONFIRM:%02X Sum:%04X/%04X", rbuf[9], sum, rsum);
 
