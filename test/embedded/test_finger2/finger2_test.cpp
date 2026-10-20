@@ -230,6 +230,18 @@ TEST_F(TestFinger2, Basic)
         EXPECT_TRUE(unit->readSystemParams(params));
         EXPECT_EQ(params.packet_size, 1);
 
+        EXPECT_FALSE(unit->writeSystemRegister(RegisterID::ScoreLevel, 0));
+        EXPECT_FALSE(unit->writeSystemRegister(RegisterID::ScoreLevel, 6));
+        for (uint8_t lv = 1; lv <= 5; ++lv) {
+            EXPECT_TRUE(unit->writeSystemRegister(RegisterID::ScoreLevel, lv));
+            EXPECT_TRUE(unit->readSystemParams(params));
+            EXPECT_EQ(params.score_level, lv);
+        }
+        // Restore the default (stored in the module's flash)
+        EXPECT_TRUE(unit->writeSystemRegister(RegisterID::ScoreLevel, 3));
+        EXPECT_TRUE(unit->readSystemParams(params));
+        EXPECT_EQ(params.score_level, 3);
+
         //
         std::vector<uint32_t> rval{};
         for (uint_fast8_t i = 0; i < 100; ++i) {

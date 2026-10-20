@@ -25,6 +25,8 @@ constexpr uint8_t SLEEP_TIME_MAX{254};
 constexpr uint16_t PACKET_SIZE_MAX{4096};
 constexpr uint8_t BUFFER_ID_MIN{1};
 constexpr uint8_t BUFFER_ID_MAX{5};
+constexpr uint8_t SCORE_LEVEL_MIN{1};
+constexpr uint8_t SCORE_LEVEL_MAX{5};
 
 constexpr uint16_t PACKET_HEADER{0xEF01};
 enum PID : uint8_t {
@@ -599,6 +601,12 @@ bool UnitFinger2::writeSystemRegister(const finger2::RegisterID reg_id, const ui
 {
     // Check args
     switch (reg_id) {
+        case RegisterID::ScoreLevel:
+            if (value < SCORE_LEVEL_MIN || value > SCORE_LEVEL_MAX) {
+                M5_LIB_LOGE("ScoreLevel must be %u - %u (%u)", SCORE_LEVEL_MIN, SCORE_LEVEL_MAX, value);
+                return false;
+            }
+            break;
         case RegisterID::PacketSize:
             if (value > 3) {
                 M5_LIB_LOGE("PacketSize must be 0 - 3 (%u)", value);

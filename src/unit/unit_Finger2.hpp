@@ -428,9 +428,11 @@ public:
       @brief Write the value to register for settings
       @details PS_WriteReg
       @param reg_id Target RegisterID
-      @param value Value
+      @param value Value (ScoreLevel: 1 - 5, PacketSize: 0 - 3)
       @return True if successful
+      @note The value is stored in the module's flash and is kept after power off
       @note See also the protocol specification document
+      @warning This API will affect the life of the device. Do not use it frequently.
      */
     bool writeSystemRegister(const finger2::RegisterID reg_id, const uint8_t value);
 
