@@ -39,7 +39,10 @@ bool callback_batch(const uint16_t call_times, const uint16_t actual_size, const
 
 void make_random_user()
 {
-    unit.wakeup();
+    if (!unit.wakeup()) {
+        M5_LOGE("Failed to wakeup");
+        return;
+    }
 
     // Template to buffer
     if (!unit.writeTemplateAllBatches(template_data, template_data_size, 128, callback_batch)) {
@@ -93,6 +96,7 @@ void show_menu()
 int select_menu()
 {
     for (;;) {
+        m5::utility::delay(1);
         M5.update();
         Units.update();
 
@@ -115,6 +119,7 @@ int select_menu()
 bool select_yesno()
 {
     for (;;) {
+        m5::utility::delay(1);
         M5.update();
         Units.update();
         if (M5.BtnA.wasHold()) {
@@ -167,10 +172,11 @@ void loop()
                 std::vector<uint8_t> temp{};
                 temp.resize(m5::unit::UnitFinger2::TEMPLATE_SIZE);
                 uint16_t actual{};
-                if (unit.readTemplateAllBatches(actual, temp.data(), temp.size(), 256, callback_batch)) {
+                if (unit.readTemplateAllBatches(actual, temp.data(), temp.size(), 256, callback_batch) &&
+                    actual == temp.size()) {
                     m5::utility::log::dump(temp.data(), actual, false);
                 } else {
-                    M5_LOGE("Failed to readTemplateAllBatches %u", cur_user);
+                    M5_LOGE("Failed to readTemplateAllBatches %u (%u/%u)", cur_user, actual, (unsigned)temp.size());
                 }
             } else {
                 M5_LOGE("Failed to loadTemplate %u", cur_user);
@@ -211,14 +217,16 @@ void loop()
 #include <esp_timer.h>
 
 #if CONFIG_FREERTOS_UNICORE
+// Single-core SoCs: run loop() back-to-back, but every ~2 s yield a 5 ms slice so the IDLE task
+// runs and feeds the task watchdog (default 5 s).
 static inline void feedIdleTaskPeriodically(void)
 {
-    constexpr uint32_t FEED_INTERVAL_MS   = 2000;
-    constexpr TickType_t FEED_SLEEP_TICKS = pdMS_TO_TICKS(5);
-    static uint32_t s_next_feed_ms        = 0;
-    const uint32_t now_ms                 = static_cast<uint32_t>(esp_timer_get_time() / 1000);
-    if (now_ms >= s_next_feed_ms) {
-        s_next_feed_ms = now_ms + FEED_INTERVAL_MS;
+    constexpr uint32_t FEED_INTERVAL_MS{2000};
+    constexpr TickType_t FEED_SLEEP_TICKS{pdMS_TO_TICKS(5)};
+    static uint32_t s_last_feed_ms{};
+    const uint32_t now_ms{static_cast<uint32_t>(esp_timer_get_time() / 1000)};
+    if (now_ms - s_last_feed_ms >= FEED_INTERVAL_MS) {
+        s_last_feed_ms = now_ms;
         vTaskDelay(FEED_SLEEP_TICKS);
     }
 }

@@ -89,6 +89,7 @@ void show_menu()
 int select_menu()
 {
     for (;;) {
+        m5::utility::delay(1);
         M5.update();
         Units.update();
 
@@ -111,6 +112,7 @@ int select_menu()
 bool select_yesno()
 {
     for (;;) {
+        m5::utility::delay(1);
         M5.update();
         Units.update();
         if (M5.BtnA.wasHold()) {
@@ -161,10 +163,10 @@ void setup()
         uint8_t clv{}, timeout{};
         Mode mode{};
         uint16_t user_count{};
-        unit.readRegistrationMode(mode);
-        unit.readComparisonLevel(clv);
-        unit.readTimeout(timeout);
-        unit.readRegisteredUserCount(user_count);
+        if (!unit.readRegistrationMode(mode) || !unit.readComparisonLevel(clv) || !unit.readTimeout(timeout) ||
+            !unit.readRegisteredUserCount(user_count)) {
+            M5_LOGW("Failed to read settings");
+        }
 
         M5.Log.printf("=== %s information ===\n", unit.deviceName());
         M5.Log.printf("           Mode: %s\n",
@@ -234,14 +236,16 @@ void loop()
 #include <esp_timer.h>
 
 #if CONFIG_FREERTOS_UNICORE
+// Single-core SoCs: run loop() back-to-back, but every ~2 s yield a 5 ms slice so the IDLE task
+// runs and feeds the task watchdog (default 5 s).
 static inline void feedIdleTaskPeriodically(void)
 {
-    constexpr uint32_t FEED_INTERVAL_MS   = 2000;
-    constexpr TickType_t FEED_SLEEP_TICKS = pdMS_TO_TICKS(5);
-    static uint32_t s_next_feed_ms        = 0;
-    const uint32_t now_ms                 = static_cast<uint32_t>(esp_timer_get_time() / 1000);
-    if (now_ms >= s_next_feed_ms) {
-        s_next_feed_ms = now_ms + FEED_INTERVAL_MS;
+    constexpr uint32_t FEED_INTERVAL_MS{2000};
+    constexpr TickType_t FEED_SLEEP_TICKS{pdMS_TO_TICKS(5)};
+    static uint32_t s_last_feed_ms{};
+    const uint32_t now_ms{static_cast<uint32_t>(esp_timer_get_time() / 1000)};
+    if (now_ms - s_last_feed_ms >= FEED_INTERVAL_MS) {
+        s_last_feed_ms = now_ms;
         vTaskDelay(FEED_SLEEP_TICKS);
     }
 }

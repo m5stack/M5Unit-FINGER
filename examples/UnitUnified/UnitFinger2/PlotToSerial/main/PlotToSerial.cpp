@@ -63,12 +63,12 @@ void register_finger()
             lcd.drawString("Please touch finger", 0, 16);
             M5.Log.printf("Please touch finger(%u)\n", cnt + 1);
 
-            auto timeout_at = m5::utility::millis() + 5000;
+            const auto start_at = m5::utility::millis();
             bool touched{};
             do {
                 touched = unit.capture(detected, true /*for enroll */) && detected;
                 m5::utility::delay(1);
-            } while (!touched && m5::utility::millis() <= timeout_at);
+            } while (!touched && !m5::utility::hasElapsed(start_at, 5000));
             if (!touched) {
                 M5_LOGE("Finger undetected %u", cnt + 1);
                 return;
@@ -87,12 +87,12 @@ void register_finger()
                 lcd.drawString("Please release finger", 0, 16);
                 M5.Log.printf("Please release finger(%u)\n", cnt + 1);
 
-                auto timeout_at = m5::utility::millis() + 5000;
+                const auto start_at = m5::utility::millis();
                 bool released{};
                 do {
                     released = unit.capture(detected, true) && !detected;
                     m5::utility::delay(1);
-                } while (!released && m5::utility::millis() <= timeout_at);
+                } while (!released && !m5::utility::hasElapsed(start_at, 5000));
                 if (!released) {
                     M5_LOGE("Finger not released %u", cnt + 1);
                     return;
@@ -237,14 +237,16 @@ void loop()
 #include <esp_timer.h>
 
 #if CONFIG_FREERTOS_UNICORE
+// Single-core SoCs: run loop() back-to-back, but every ~2 s yield a 5 ms slice so the IDLE task
+// runs and feeds the task watchdog (default 5 s).
 static inline void feedIdleTaskPeriodically(void)
 {
-    constexpr uint32_t FEED_INTERVAL_MS   = 2000;
-    constexpr TickType_t FEED_SLEEP_TICKS = pdMS_TO_TICKS(5);
-    static uint32_t s_next_feed_ms        = 0;
-    const uint32_t now_ms                 = static_cast<uint32_t>(esp_timer_get_time() / 1000);
-    if (now_ms >= s_next_feed_ms) {
-        s_next_feed_ms = now_ms + FEED_INTERVAL_MS;
+    constexpr uint32_t FEED_INTERVAL_MS{2000};
+    constexpr TickType_t FEED_SLEEP_TICKS{pdMS_TO_TICKS(5)};
+    static uint32_t s_last_feed_ms{};
+    const uint32_t now_ms{static_cast<uint32_t>(esp_timer_get_time() / 1000)};
+    if (now_ms - s_last_feed_ms >= FEED_INTERVAL_MS) {
+        s_last_feed_ms = now_ms;
         vTaskDelay(FEED_SLEEP_TICKS);
     }
 }
