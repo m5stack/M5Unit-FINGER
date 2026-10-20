@@ -69,9 +69,9 @@ Packet make_packet(const uint8_t cmd, const uint32_t addr, const uint8_t* payloa
     // PID[1]
     pkt[6] = PID_CMD;
     // Length[2]
-    uint16_t len = 3 /* cmd[1] + sum[2] */ + payload_len;
-    pkt[7]       = len >> 8;
-    pkt[8]       = len & 0xFF;
+    const uint16_t len{static_cast<uint16_t>(3 /* cmd[1] + sum[2] */ + payload_len)};
+    pkt[7] = len >> 8;
+    pkt[8] = len & 0xFF;
     // CMD[1]
     pkt[9] = cmd;
     // Payload[n]
@@ -597,15 +597,9 @@ bool UnitFinger2::writeSystemRegister(const finger2::RegisterID reg_id, const ui
             }
             break;
         default:
-            M5_LIB_LOGE("Invalid reg_id %u", reg_id);
+            M5_LIB_LOGE("Invalid reg_id %u", m5::stl::to_underlying(reg_id));
             return false;
     }
-
-#if 0
-    if (reg >= 10) {
-        reg = 0x10 + (reg - 10);  // DEC 10,11... => HEX 0x10, 0x11,...
-    }
-#endif
 
     Packet pkt{};
     uint8_t params[2]{m5::stl::to_underlying(reg_id), value};
@@ -666,8 +660,7 @@ bool UnitFinger2::readIndexTable(uint8_t table[32])
 
     if (table && cap / 8 <= 32) {
         Packet pkt{};
-        // NOTE: Only page 0 (entries 0-255) is read. Sufficient for current hardware (max 200 templates).
-        // Multi-page support requires API change (table size > 32 bytes) if capacity > 256.
+        // NOTE: Only index page 0 (entries 0-255) is read; a 32-byte table covers up to 256 templates
         if (transceive_command8(pkt, CMD_READ_INDEX_TABLE, _address, 0) && pkt.size() == 44) {
             // Copy table and clear exceeding the capacity
             memset(table, 0x00, 32);
@@ -722,7 +715,7 @@ bool UnitFinger2::writeControlLED(const finger2::LEDMode mode, const finger2::LE
                                   const finger2::LEDColor eclr)
 {
     if (mode < LEDMode::Breath || mode > LEDMode::Fadeout) {
-        M5_LIB_LOGE("mode must be between Breath and Fadeout %u", mode);
+        M5_LIB_LOGE("mode must be between Breath and Fadeout %u", m5::stl::to_underlying(mode));
         return false;
     }
 
@@ -806,7 +799,6 @@ bool UnitFinger2::autoEnroll(ConfirmCode& confirm, const uint16_t page_id, const
                              ? !callback(process_times, page_id, confirm, stage, state)
                              : false;
 
-            // M5_LIB_LOGD(">>>> Confirm:%02x Stage:%02u State:%02X abort:%u", confirm, stage, state, abort);
             if (abort || confirm != ConfirmCode::OK) {
                 confirm = abort ? ConfirmCode::OperationBlocked : confirm;
                 break;
@@ -820,7 +812,7 @@ bool UnitFinger2::autoEnroll(ConfirmCode& confirm, const uint16_t page_id, const
             return true;
         }
     }
-    cancel();  // Cancel and purge packets
+    cancel();  // Cancel the ongoing operation
     return false;
 }
 
@@ -871,7 +863,6 @@ bool UnitFinger2::autoIdentify(bool& matched, uint16_t& matching_page_id, uint16
                     ? !callback(process_times, confirm, stage)
                     : false;
 
-            // M5_LIB_LOGD(">>>> Confirm:%02x Stage:%02u abort:%u", confirm, stage, abort);
             if (abort || confirm != ConfirmCode::OK) {
                 confirm = abort ? ConfirmCode::OperationBlocked : confirm;
                 break;
@@ -889,7 +880,7 @@ bool UnitFinger2::autoIdentify(bool& matched, uint16_t& matching_page_id, uint16
             return true;
         }
     }
-    cancel();  // Cancel and purge packets
+    cancel();  // Cancel the ongoing operation
     return false;
 }
 
@@ -1061,8 +1052,6 @@ bool UnitFinger2::write_command(const uint8_t cmd, const uint32_t addr, const ui
                                 const uint16_t payload_len)
 {
     auto pkt = make_packet(cmd, addr, payload, payload_len);
-    // M5_LIB_LOGD(">>>> SEND:%02X", cmd);
-    // m5::utility::log::dump(pkt.data(), pkt.size(), false);
     return writeWithTransaction(pkt.data(), pkt.size()) == m5::hal::error::error_t::OK;
 }
 
