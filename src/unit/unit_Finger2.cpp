@@ -43,10 +43,26 @@ uint16_t sum16(const uint8_t* p, const uint32_t n)
     return s;
 }
 
-bool is_valid_ack(const Packet& p)
+// Response accepts PID_ACK only, data accepts PID_DATA and PID_TERMINATE_DATA too
+bool is_valid_packet(const Packet& p, const bool accept_data)
 {
-    return p.size() >= 7 && p[0] == ((PACKET_HEADER >> 8) & 0xFF) && p[1] == (PACKET_HEADER & 0xFF) &&
-           (p[6] == PID_ACK || p[6] == PID_DATA || p[6] == PID_TERMINATE_DATA);
+    return p.size() >= 9 && p[0] == ((PACKET_HEADER >> 8) & 0xFF) && p[1] == (PACKET_HEADER & 0xFF) &&
+           (p[6] == PID_ACK || (accept_data && (p[6] == PID_DATA || p[6] == PID_TERMINATE_DATA)));
+}
+
+bool is_known_confirm_code(const uint8_t c)
+{
+    return c <= m5::stl::to_underlying(ConfirmCode::IllegalData) ||
+           c == m5::stl::to_underlying(ConfirmCode::StaticObjectInFeature) ||
+           c == m5::stl::to_underlying(ConfirmCode::PoorTemplateQuality) ||
+           c >= m5::stl::to_underlying(ConfirmCode::PacketTimeout);
+}
+
+// The module waits for the next capture by itself when GenerateCharacteristic fails with these
+bool is_retryable_enroll_error(const ConfirmCode c)
+{
+    return c == ConfirmCode::ImageTooFew || c == ConfirmCode::Unmatched || c == ConfirmCode::MergeFailed ||
+           c == ConfirmCode::FeatureAssociated;
 }
 
 Packet make_packet(const uint8_t cmd, const uint32_t addr, const uint8_t* payload = nullptr,
@@ -561,6 +577,10 @@ bool UnitFinger2::deleteTemplate(const uint16_t page_id, const uint16_t num)
         M5_LIB_LOGE("page_id must be 0 - %u (%u)", capacity() - 1, page_id);
         return false;
     }
+    if (!num || page_id + num > capacity()) {
+        M5_LIB_LOGE("num must be 1 - %u (%u)", capacity() - page_id, num);
+        return false;
+    }
 
     Packet pkt{};
     const big_uint16_t pid{page_id};
@@ -784,12 +804,16 @@ bool UnitFinger2::autoEnroll(ConfirmCode& confirm, const uint16_t page_id, const
             bool abort = (callback && stage < AutoEnrollStage::StoreTemplate)
                              ? !callback(process_times, page_id, confirm, stage, state)
                              : false;
+            ++process_times;
 
-            if (abort || confirm != ConfirmCode::OK) {
-                confirm = abort ? ConfirmCode::OperationBlocked : confirm;
+            if (abort) {
+                confirm = ConfirmCode::OperationBlocked;
                 break;
             }
-            ++process_times;
+            if (confirm != ConfirmCode::OK &&
+                !(stage == AutoEnrollStage::GenerateCharacteristic && is_retryable_enroll_error(confirm))) {
+                break;
+            }
 
         } while (stage < AutoEnrollStage::StoreTemplate);
 
@@ -927,7 +951,7 @@ bool UnitFinger2::wakeup()
 bool UnitFinger2::readSerialNumber(uint8_t sn[32])
 {
     Packet pkt{};
-    if (sn && transceive_command(pkt, CMD_GET_SERIAL, _address) && pkt.size() == 44) {
+    if (sn && transceive_command8(pkt, CMD_GET_SERIAL, _address, 0 /* reserved */) && pkt.size() == 44) {
         memcpy(sn, pkt.data() + 10, 32);
         return true;
     }
@@ -1048,7 +1072,7 @@ uint8_t UnitFinger2::read_data(Packet& rbuf)
     rbuf.clear();
     rbuf.reserve(256);
     rbuf.resize(9);
-    if (readWithTransaction(rbuf.data(), rbuf.size()) == m5::hal::error::error_t::OK && is_valid_ack(rbuf)) {
+    if (readWithTransaction(rbuf.data(), rbuf.size()) == m5::hal::error::error_t::OK && is_valid_packet(rbuf, true)) {
         // Length: Data[n] + Sum[2]
         const uint16_t sz{big_uint16_t(rbuf[7], rbuf[8]).get()};
         if (sz < 2 || sz > PACKET_SIZE_MAX - 9) {
@@ -1071,7 +1095,7 @@ ConfirmCode UnitFinger2::read_response(Packet& rbuf)
     rbuf.clear();
     rbuf.reserve(128);
     rbuf.resize(9);
-    if (readWithTransaction(rbuf.data(), rbuf.size()) == m5::hal::error::error_t::OK && is_valid_ack(rbuf)) {
+    if (readWithTransaction(rbuf.data(), rbuf.size()) == m5::hal::error::error_t::OK && is_valid_packet(rbuf, false)) {
         // Length: Confirm[1] + Params[n] + Sum[2]
         const uint16_t sz{big_uint16_t(rbuf[7], rbuf[8]).get()};
         if (sz < 3 || sz > PACKET_SIZE_MAX - 9) {
@@ -1087,8 +1111,7 @@ ConfirmCode UnitFinger2::read_response(Packet& rbuf)
 
             if (sum == rsum) {
                 const uint8_t c = rbuf[9];
-                if (c > m5::stl::to_underlying(ConfirmCode::IllegalData) &&
-                    c < m5::stl::to_underlying(ConfirmCode::PacketTimeout)) {
+                if (!is_known_confirm_code(c)) {
                     M5_LIB_LOGE("Unknown confirm code %02X", c);
                     return ConfirmCode::PacketError;
                 }

@@ -194,19 +194,21 @@ enum class ConfirmCode : uint8_t {
     KeyGenerateFailed,                    //!< 0x2D:Key generation failed
     KeyNotExist,                          //!< 0x2E:The key does not exist
     AlgorithmFailed,                      //!< 0x2F:Security algorithm execution failed
-    IncorrectResult,           //!< 0x30:The encryption/decryption results of the security algorithm are incorrect
-    MismatchFunction,          //!< 0x31:Functionality does not match the encryption level
-    KeyLocked,                 //!< 0x32:The key has been locked
-    SmallImage,                //!< 0x33:Image too small
-    StaticObjectInImage,       //!< 0x34:Static foreign object in the image (Orange)
-    IllegalData,               //!< 0x35:The data is illegal
-    PacketTimeout = 0xF9,      //!< 0xF9:Receive packet timeout
-    PacketBad,                 //!< 0xFA:Error Packet (e.g., data not fully received, other packet received)
-    PacketOverflow,            //!< 0xFB:Packet overflow (e.g., when a packet exceeds the maximum length)
-    OperationBlocked,          //!< 0xFC:This operation has been blocked
-    ParameterError,            //!< 0xFD:Parameter error
-    NotActive,                 //!< 0xFE:The fingerprint module is not activated
-    PassiveActivation = 0xFF,  //!< 0xFF:Passive activation
+    IncorrectResult,               //!< 0x30:The encryption/decryption results of the security algorithm are incorrect
+    MismatchFunction,              //!< 0x31:Functionality does not match the encryption level
+    KeyLocked,                     //!< 0x32:The key has been locked
+    SmallImage,                    //!< 0x33:Image too small
+    StaticObjectInImage,           //!< 0x34:Static foreign object in the image (Orange)
+    IllegalData,                   //!< 0x35:The data is illegal
+    StaticObjectInFeature = 0x37,  //!< 0x37:Static foreign object in the feature (Orange)
+    PoorTemplateQuality   = 0x3B,  //!< 0x3B:Template quality is too poor to merge
+    PacketTimeout         = 0xF9,  //!< 0xF9:Receive packet timeout
+    PacketBad,                     //!< 0xFA:Error Packet (e.g., data not fully received, other packet received)
+    PacketOverflow,                //!< 0xFB:Packet overflow (e.g., when a packet exceeds the maximum length)
+    OperationBlocked,              //!< 0xFC:This operation has been blocked
+    ParameterError,                //!< 0xFD:Parameter error
+    NotActive,                     //!< 0xFE:The fingerprint module is not activated
+    PassiveActivation = 0xFF,      //!< 0xFF:Passive activation
 };
 
 /*!
@@ -626,7 +628,7 @@ public:
       @brief Delete templates
       @details PS_DeletChar
       @param page_id First page to be deleted
-      @param num How many to delete starting from the first target
+      @param num How many to delete starting from the first target (1 - capacity() - page_id)
       @return True if successful
      */
     bool deleteTemplate(const uint16_t page_id, const uint16_t num = 1);
@@ -697,6 +699,8 @@ public:
       @param flags Operation Control Flag
       @param callback Callback function that receives and processes intermediate results
       @return True if successful
+      @note If GenerateCharacteristic fails with ImageTooFew, Unmatched, MergeFailed or FeatureAssociated,
+      the module waits for the next capture and the process continues (the error is passed to the callback)
       @warning This feature is supported when the security level is 0 or 1
     */
     bool autoEnroll(finger2::ConfirmCode& confirm, const uint16_t page_id, const uint8_t capture_times = 5,
