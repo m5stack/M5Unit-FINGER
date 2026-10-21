@@ -49,10 +49,6 @@ void setup()
 void loop()
 {
     test();
-#if 0
-    delay(1000);
-    esp_restart();
-#endif
     while (true) {
         delay(10000);
     }
