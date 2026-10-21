@@ -176,7 +176,8 @@ void loop()
                     actual == temp.size()) {
                     m5::utility::log::dump(temp.data(), actual, false);
                 } else {
-                    M5_LOGE("Failed to readTemplateAllBatches %u (%u/%u)", cur_user, actual, (unsigned)temp.size());
+                    M5_LOGE("Failed to readTemplateAllBatches %u (%u/%u)", cur_user, actual,
+                            static_cast<unsigned>(temp.size()));
                 }
             } else {
                 M5_LOGE("Failed to loadTemplate %u", cur_user);
