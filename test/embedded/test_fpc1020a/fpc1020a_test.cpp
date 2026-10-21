@@ -465,6 +465,14 @@ using namespace m5::unit::fpc1xxx::detail;
 TEST_F(TestFPC1020A_Detail, XorSum)
 {
     {
+        // xorSum is a deprecated alias for xor_sum (used on purpose)
+        const uint8_t data[] = {0x12, 0x34, 0x56};
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+        EXPECT_EQ(xorSum(data, sizeof(data)), xor_sum(data, sizeof(data)));
+#pragma GCC diagnostic pop
+    }
+    {
         uint8_t data[] = {0};
         EXPECT_EQ(xor_sum(data, 0), 0);
     }

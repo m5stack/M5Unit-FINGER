@@ -94,7 +94,11 @@ constexpr auto_identify_flag_t identify_flags_table[] = {
 
 void wait_sleep(UnitFinger2* u)
 {
-    const uint32_t sleep_ms{u->config().sleep_time * 1000U};
+    uint8_t sec{};
+    if (!u->readSleepTime(sec)) {
+        sec = u->config().sleep_time;
+    }
+    const uint32_t sleep_ms{sec * 1000U};
     m5::utility::delay(sleep_ms + 100);
     const auto start_at = m5::utility::millis();
     bool awake{true};
@@ -730,6 +734,9 @@ TEST_F(TestFinger2, Automatic)
 
 // --- deprecated API compatibility (no hardware required) ---
 
+// The deprecated names are used on purpose
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 TEST(Finger2Deprecated, Alias)
 {
     // LEDMode::Bleath is a deprecated alias for LEDMode::Breath
@@ -745,6 +752,7 @@ TEST(Finger2Deprecated, Alias)
     // initializeFailed is a deprecated alias for InitializeFailed
     EXPECT_EQ(ConfirmCode::initializeFailed, ConfirmCode::InitializeFailed);
 }
+#pragma GCC diagnostic pop
 
 TEST_F(TestFinger2, BeginConfig)
 {
