@@ -539,7 +539,7 @@ public:
       @param[out] matched true if matched
       @param[out] score Matching score (lowest: 0)
       @pre Buffer IDs 1 and 2 contain template
-      @return True if the response was received (check matched for the result)
+      @return True if the comparison completed (check matched for the result)
       @warning This feature is supported when the security level is 0 or 1
     */
     bool match(bool& matched, uint16_t& score);
@@ -553,7 +553,7 @@ public:
       @param buffer_id Buffer number (comparison target) (1 - 5)
       @param start_page Search start page
       @param page_num Number of search pages (0: From start_page to end)
-      @return True if the response was received (check matched for the result)
+      @return True if the comparison completed (check matched for the result)
       @pre The data exists in the specified buffer
       @warning This feature is supported when the security level is 0 or 1
      */
@@ -568,7 +568,7 @@ public:
       @param[out] score Matching score (lowest: 0)
       @param start_page Search start page
       @param page_num Number of search pages (0: From start_page to end)
-      @return True if the response was received (check matched for the result)
+      @return True if the comparison completed (check matched for the result)
       @pre The data exists in the specified buffer
       @warning This feature is supported when the security level is 0 or 1
      */
@@ -726,7 +726,7 @@ public:
       @param security_level Security level (0 or 1)
       @param flags Operation Control Flag
       @param callback Callback function that receives and processes intermediate results
-      @return True if the response was received (check matched for the result)
+      @return True if the comparison completed (check matched for the result)
       @warning This feature is supported when the security level is 0 or 1
      */
     bool autoIdentify(bool& matched, uint16_t& matching_page_id, uint16_t& score, const uint16_t page_id = 0xFFFF,

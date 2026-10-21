@@ -62,7 +62,7 @@ struct User {
     /*!
       @brief Constructor
       @param i Identifier
-      @param p Permission (1, 2, or 3)
+      @param p Permission(1,2,3)
      */
     User(const uint16_t i, const uint8_t p) : id{i}, permission{p}
     {
@@ -99,7 +99,7 @@ public:
     static constexpr uint16_t MAXIMUM_USER_ID{0};    //!< Maximum user ID (defined in the derived class)
 
 protected:
-    //! @brief Constructor
+    // Constructor
     UnitFPC1XXX() : Component(DEFAULT_ADDRESS)
     {
     }
