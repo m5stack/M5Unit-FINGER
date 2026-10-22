@@ -21,6 +21,8 @@ using Packet = m5::unit::UnitFinger2::Packet;
 namespace {
 constexpr uint32_t TIMEOUT_MS{1000 * 4};
 constexpr uint32_t AUTO_STEP_TIMEOUT_MS{1000 * 30};
+constexpr uint32_t BEGIN_RETRY_TIMES{3};
+constexpr uint32_t BEGIN_RETRY_INTERVAL_MS{100};
 constexpr uint8_t SLEEP_TIME_MIN{10};
 constexpr uint8_t SLEEP_TIME_MAX{254};
 constexpr uint16_t PACKET_SIZE_MAX{4096};
@@ -155,14 +157,16 @@ bool UnitFinger2::begin()
 
     // Retry for NessoN1 first-transaction failure (Flash instruction cache timing)
     uint8_t ver{};
-    for (int retry = 0; retry < 3; ++retry) {
+    for (uint32_t i = 0; i < BEGIN_RETRY_TIMES; ++i) {
         if (wakeup() && readFirmwareVersion(ver) && ver != 0x00) {
             break;
         }
-        M5_LIB_LOGW("Retry wakeup (%d)", retry);
-        m5::utility::delay(100);
-        ad->flushRX();
         ver = 0;
+        if (i + 1 < BEGIN_RETRY_TIMES) {
+            M5_LIB_LOGW("Retry wakeup (%u)", static_cast<unsigned>(i + 1));
+            m5::utility::delay(BEGIN_RETRY_INTERVAL_MS);
+            ad->flushRX();
+        }
     }
     if (ver == 0x00) {
         M5_LIB_LOGE("UnitFinger2 was not detected %02X", ver);
