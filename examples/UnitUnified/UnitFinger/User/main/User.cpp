@@ -306,6 +306,8 @@ void loop()
                     M5_LOGE("Failed to delete all users");
                     snprintf(last_result, sizeof(last_result), "Failed to delete all");
                 }
+            } else {
+                snprintf(last_result, sizeof(last_result), "Cancelled");
             }
             break;
         default:
