@@ -503,7 +503,9 @@ bool UnitFPC1XXX::capture_image(std::vector<uint8_t>& img, const bool raw)
     }
 
     Frame res{};
-    if (transceive_command(res, CMD_CAPTURE_IMAGE, 0, 0, raw ? 0x20 : 0x00) && is_valid_ack(res)) {
+    // Q3 of the header is ACK_SUCCESS for a compressed image, the echoed parameter (0x20) for a raw image
+    const uint8_t ok_q3{raw ? static_cast<uint8_t>(0x20) : m5::stl::to_underlying(ACK::Success)};
+    if (transceive_command(res, CMD_CAPTURE_IMAGE, 0, 0, raw ? 0x20 : 0x00) && res[OFFSET_Q3] == ok_q3) {
         uint16_t vlen = (static_cast<uint16_t>(res[OFFSET_Q1]) << 8) | res[OFFSET_Q2];
         if (vlen == sz) {
             img.resize(vlen + 3);
