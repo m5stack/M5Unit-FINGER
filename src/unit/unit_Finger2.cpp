@@ -69,20 +69,22 @@ bool is_retryable_enroll_error(const ConfirmCode c)
            c == ConfirmCode::FeatureAssociated;
 }
 
-// Sets the serial timeout while it is alive, and restores it on scope exit
+// Restores the serial timeout on scope exit
 class TimeoutScope {
 public:
-    TimeoutScope(m5::unit::AdapterUART* ad, const uint32_t timeout_ms, const uint32_t restore_ms)
-        : _ad{ad}, _restore_ms{restore_ms}
+    TimeoutScope(m5::unit::AdapterUART* ad, const uint32_t restore_ms) : _ad{ad}, _restore_ms{restore_ms}
+    {
+    }
+    TimeoutScope(const TimeoutScope&) = delete;
+    TimeoutScope& operator=(const TimeoutScope&) = delete;
+    ~TimeoutScope()
+    {
+        set(_restore_ms);
+    }
+    void set(const uint32_t timeout_ms)
     {
         if (_ad) {
             _ad->setTimeout(timeout_ms);
-        }
-    }
-    ~TimeoutScope()
-    {
-        if (_ad) {
-            _ad->setTimeout(_restore_ms);
         }
     }
 
@@ -818,11 +820,12 @@ bool UnitFinger2::autoEnroll(ConfirmCode& confirm, const uint16_t page_id, const
     uint8_t process_times{};
     confirm = ConfirmCode::PacketError;
     if (write_command(CMD_AUTO_ENROLL, _address, params, sizeof(params))) {
-        // Each response waits for the user operation (placing / releasing a finger)
-        TimeoutScope ts(asAdapter<AdapterUART>(Adapter::Type::UART), auto_step_timeout(), serial_timeout());
+        // Each response after the first waits for the user operation (placing / releasing a finger)
+        TimeoutScope ts(asAdapter<AdapterUART>(Adapter::Type::UART), serial_timeout());
         // Depending on the flags specified, multiple responses may be returned
         do {
             confirm = read_response(pkt);
+            ts.set(auto_step_timeout());  // The first response (command check) arrives with the normal timeout
             // An OK or PassiveActivation packet without a payload (not size 14) may arrive when passive activation
             if (pkt.size() != 14) {
                 if (confirm != ConfirmCode::OK && confirm != ConfirmCode::PassiveActivation) {
@@ -886,11 +889,12 @@ bool UnitFinger2::autoIdentify(bool& matched, uint16_t& matching_page_id, uint16
     auto confirm = ConfirmCode::PacketError;
     uint8_t process_times{};
     if (write_command(CMD_AUTO_IDENTIFY, _address, params, sizeof(params))) {
-        // Each response waits for the user operation (placing a finger)
-        TimeoutScope ts(asAdapter<AdapterUART>(Adapter::Type::UART), auto_step_timeout(), serial_timeout());
+        // Each response after the first waits for the user operation (placing a finger)
+        TimeoutScope ts(asAdapter<AdapterUART>(Adapter::Type::UART), serial_timeout());
         // Depending on the flags specified, multiple responses may be returned
         do {
             confirm = read_response(pkt);
+            ts.set(auto_step_timeout());  // The first response (command check) arrives with the normal timeout
             // An OK or PassiveActivation packet without a payload (not size 17) may arrive when passive activation
             if (pkt.size() != 17) {
                 if (confirm != ConfirmCode::OK && confirm != ConfirmCode::PassiveActivation) {
