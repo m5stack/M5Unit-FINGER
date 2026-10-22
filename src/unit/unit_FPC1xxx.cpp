@@ -156,8 +156,19 @@ bool UnitFPC1XXX::begin()
     ad->setTimeout(_cfg.timeout_ms ? _cfg.timeout_ms : TIMEOUT_MS);
     ad->flushRX();
 
+    // Retry for the first transaction failure (e.g. the host was reset in the middle of a frame)
     uint32_t sno{0xdeadbeef};
-    if (!readSerialNumber(sno)) {
+    bool detected{};
+    for (int retry = 0; retry < 3; ++retry) {
+        if (readSerialNumber(sno)) {
+            detected = true;
+            break;
+        }
+        M5_LIB_LOGW("Retry readSerialNumber (%d)", retry);
+        m5::utility::delay(100);
+        ad->flushRX();
+    }
+    if (!detected) {
         M5_LIB_LOGE("Failed to readSerialNumber %x", sno);
         return false;
     }
