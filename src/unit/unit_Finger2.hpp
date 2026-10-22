@@ -208,11 +208,12 @@ enum class ConfirmCode : uint8_t {
     PoorTemplateQuality   = 0x3B,  //!< 0x3B:Template quality is too poor to merge
     PacketTimeout         = 0xF9,  //!< 0xF9:Receive packet timeout
     PacketBad,                     //!< 0xFA:Error Packet (e.g., data not fully received, other packet received)
-    PacketOverflow,                //!< 0xFB:Packet overflow (e.g., when a packet exceeds the maximum length)
-    OperationBlocked,              //!< 0xFC:This operation has been blocked
-    ParameterError,                //!< 0xFD:Parameter error
-    NotActive,                     //!< 0xFE:The fingerprint module is not activated
-    PassiveActivation = 0xFF,      //!< 0xFF:Passive activation
+    ModuleBusy,                    //!< 0xFB:Busy (the unit is checking whether a finger is present before sleeping)
+    PacketOverflow __attribute__((deprecated("use ModuleBusy"))) = ModuleBusy,  //!< @deprecated Use ModuleBusy
+    OperationBlocked,          //!< 0xFC:This operation has been blocked
+    ParameterError,            //!< 0xFD:Parameter error
+    NotActive,                 //!< 0xFE:The fingerprint module is not activated
+    PassiveActivation = 0xFF,  //!< 0xFF:Passive activation
 };
 
 /*!

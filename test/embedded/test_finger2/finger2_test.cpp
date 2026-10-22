@@ -751,6 +751,10 @@ TEST(Finger2Deprecated, Alias)
 
     // initializeFailed is a deprecated alias for InitializeFailed
     EXPECT_EQ(ConfirmCode::initializeFailed, ConfirmCode::InitializeFailed);
+
+    // PacketOverflow is a deprecated alias for ModuleBusy (0xFB)
+    EXPECT_EQ(ConfirmCode::PacketOverflow, ConfirmCode::ModuleBusy);
+    EXPECT_EQ(static_cast<uint8_t>(ConfirmCode::ModuleBusy), 0xFB);
 }
 #pragma GCC diagnostic pop
 
