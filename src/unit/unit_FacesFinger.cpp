@@ -25,7 +25,8 @@ bool UnitFacesFinger::begin()
 {
     if (_faces_cfg.panel_power_pin >= 0) {
         const auto pin = static_cast<gpio_num_t>(_faces_cfg.panel_power_pin);
-        if (gpio_set_direction(pin, GPIO_MODE_OUTPUT) != ESP_OK || gpio_set_level(pin, 1) != ESP_OK) {
+        if (gpio_reset_pin(pin) != ESP_OK || gpio_set_direction(pin, GPIO_MODE_OUTPUT) != ESP_OK ||
+            gpio_set_level(pin, 1) != ESP_OK) {
             M5_LIB_LOGE("Failed to turn on panel power (GPIO%d)", _faces_cfg.panel_power_pin);
             return false;
         }
@@ -33,7 +34,8 @@ bool UnitFacesFinger::begin()
     }
     if (_faces_cfg.touch_power_pin >= 0) {
         const auto pin = static_cast<gpio_num_t>(_faces_cfg.touch_power_pin);
-        if (gpio_set_direction(pin, GPIO_MODE_OUTPUT) != ESP_OK || gpio_set_level(pin, 1) != ESP_OK) {
+        if (gpio_reset_pin(pin) != ESP_OK || gpio_set_direction(pin, GPIO_MODE_OUTPUT) != ESP_OK ||
+            gpio_set_level(pin, 1) != ESP_OK) {
             M5_LIB_LOGE("Failed to turn on touch IC power (GPIO%d)", _faces_cfg.touch_power_pin);
             return false;
         }
