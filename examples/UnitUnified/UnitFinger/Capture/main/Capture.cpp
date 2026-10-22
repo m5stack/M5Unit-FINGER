@@ -43,6 +43,56 @@ m5::unit::UnitFacesFinger unit;
 #error Please choose unit!
 #endif
 
+constexpr char GUIDE[] = "Place finger, Click:Capture";
+
+// Screen state (the background color tells the state)
+enum class State : uint8_t { Idle, Place, Release, Busy, Success, Failure };
+
+struct StateStyle {
+    uint16_t bg;
+    uint16_t fg;
+};
+constexpr StateStyle state_style[] = {
+    {TFT_DARKGREY, TFT_WHITE},   // Idle
+    {TFT_YELLOW, TFT_BLACK},     // Place
+    {TFT_BLUE, TFT_WHITE},       // Release
+    {TFT_ORANGE, TFT_BLACK},     // Busy
+    {TFT_DARKGREEN, TFT_WHITE},  // Success
+    {TFT_RED, TFT_WHITE},        // Failure
+};
+
+// Status (large, centered) and guide (small, bottom)
+void draw_status(const State state, const char* status, const char* guide = GUIDE)
+{
+    if (!lcd.width()) {
+        return;  // No display
+    }
+    const auto& st = state_style[m5::stl::to_underlying(state)];
+    lcd.startWrite();
+    lcd.fillScreen(st.bg);
+    lcd.setFont(&fonts::AsciiFont8x16);
+    lcd.setTextColor(st.fg, st.bg);
+    lcd.setTextSize(std::max<int32_t>(1, lcd.width() / 160));
+    lcd.setTextDatum(textdatum_t::middle_center);
+    lcd.drawString(status, lcd.width() >> 1, lcd.height() >> 1);
+    lcd.setTextSize(std::max<int32_t>(1, lcd.width() / 320));
+    lcd.setTextDatum(textdatum_t::bottom_left);
+    lcd.drawString(guide, 0, lcd.height());
+    lcd.endWrite();
+}
+
+// Captured image on the left, caption on the right
+void draw_image(LGFX_Sprite& s, const char* caption)
+{
+    draw_status(State::Success, "");
+    lcd.startWrite();
+    s.pushSprite(&lcd, 0, 0);
+    lcd.setTextSize(std::max<int32_t>(1, lcd.width() / 320));
+    lcd.setTextDatum(textdatum_t::top_left);
+    lcd.drawString(caption, s.width() + 8, 0);
+    lcd.endWrite();
+}
+
 void make_sprite8(LGFX_Sprite& s, const std::vector<uint8_t>& v, const uint16_t wid, const uint16_t hgt)
 {
     // Make 8bit grayscale sprite image
@@ -112,7 +162,7 @@ void setup()
         sprite8.createSprite(m5::unit::UnitFinger::RESOLUTION_WIDTH, m5::unit::UnitFinger::RESOLUTION_HEIGHT);
         sprite8.createPalette();
     }
-    lcd.fillScreen(TFT_DARKGREEN);
+    draw_status(State::Idle, "Ready");
 }
 
 void loop()
@@ -123,11 +173,9 @@ void loop()
     Units.update();
 
     if (M5.BtnA.wasClicked()) {
-        lcd.fillScreen(TFT_DARKGREEN);
         M5.Speaker.tone(1500, 20);
-
-        lcd.setCursor(0, 0);
-        lcd.printf("Try capture %s", raw ? "RAW" : "COMPRESSED");
+        // NOTE: A raw image takes about 13 seconds at 19200 bps
+        draw_status(State::Busy, raw ? "Capturing RAW" : "Capturing");
         M5.Log.printf("Try capture %s\n", raw ? "RAW" : "COMPRESSED");
 
         std::vector<uint8_t> v{};
@@ -139,10 +187,10 @@ void loop()
             if (lcd.width() && lcd.height()) {
                 if (raw) {
                     make_sprite8(sprite8, v, unit.imageWidth(raw), unit.imageHeight(raw));
-                    sprite8.pushSprite(&lcd, 0, 0);
+                    draw_image(sprite8, "RAW / Next:COMPRESSED");
                 } else {
                     make_sprite4(sprite4, v, unit.imageWidth(raw), unit.imageHeight(raw));
-                    sprite4.pushSprite(&lcd, 0, 0);
+                    draw_image(sprite4, "COMPRESSED / Next:RAW");
                 }
             } else {
                 M5.Log.printf("Captured data\n");
@@ -151,7 +199,8 @@ void loop()
             raw = !raw;
         } else {
             M5_LOGE("Failed to capture");
-            lcd.drawString("Try again       ", 0, 0);
+            M5.Speaker.tone(800, 40);
+            draw_status(State::Failure, "Try again");
             return;
         }
     }

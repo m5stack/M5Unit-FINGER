@@ -21,6 +21,56 @@ LGFX_Sprite sprite4;
 m5::unit::UnitUnified Units;
 m5::unit::UnitFinger2 unit;
 
+constexpr char GUIDE[] = "Place finger, Click:Capture";
+
+// Screen state (the background color tells the state)
+enum class State : uint8_t { Idle, Place, Release, Busy, Success, Failure };
+
+struct StateStyle {
+    uint16_t bg;
+    uint16_t fg;
+};
+constexpr StateStyle state_style[] = {
+    {TFT_DARKGREY, TFT_WHITE},   // Idle
+    {TFT_YELLOW, TFT_BLACK},     // Place
+    {TFT_BLUE, TFT_WHITE},       // Release
+    {TFT_ORANGE, TFT_BLACK},     // Busy
+    {TFT_DARKGREEN, TFT_WHITE},  // Success
+    {TFT_RED, TFT_WHITE},        // Failure
+};
+
+// Status (large, centered) and guide (small, bottom)
+void draw_status(const State state, const char* status, const char* guide = GUIDE)
+{
+    if (!lcd.width()) {
+        return;  // No display
+    }
+    const auto& st = state_style[m5::stl::to_underlying(state)];
+    lcd.startWrite();
+    lcd.fillScreen(st.bg);
+    lcd.setFont(&fonts::AsciiFont8x16);
+    lcd.setTextColor(st.fg, st.bg);
+    lcd.setTextSize(std::max<int32_t>(1, lcd.width() / 160));
+    lcd.setTextDatum(textdatum_t::middle_center);
+    lcd.drawString(status, lcd.width() >> 1, lcd.height() >> 1);
+    lcd.setTextSize(std::max<int32_t>(1, lcd.width() / 320));
+    lcd.setTextDatum(textdatum_t::bottom_left);
+    lcd.drawString(guide, 0, lcd.height());
+    lcd.endWrite();
+}
+
+// Captured image on the left, caption on the right
+void draw_image(LGFX_Sprite& s, const char* caption)
+{
+    draw_status(State::Success, "");
+    lcd.startWrite();
+    s.pushSprite(&lcd, 0, 0);
+    lcd.setTextSize(std::max<int32_t>(1, lcd.width() / 320));
+    lcd.setTextDatum(textdatum_t::top_left);
+    lcd.drawString(caption, s.width() + 8, 0);
+    lcd.endWrite();
+}
+
 void make_sprite4(LGFX_Sprite& s, const std::vector<uint8_t>& v, const uint16_t wid, const uint16_t hgt)
 {
     // Make 4bit grayscale sprite image
@@ -53,15 +103,13 @@ void setup()
 
     M5_LOGI("M5UnitUnified initialized");
     M5_LOGI("%s", Units.debugInfo().c_str());
-    lcd.fillScreen(TFT_DARKGREEN);
-    lcd.setFont(&fonts::AsciiFont8x16);
-
     if (lcd.width() && lcd.height()) {
         sprite4.setPsram(false);
         sprite4.setColorDepth(lgfx::color_depth_t::grayscale_4bit);
         sprite4.createSprite(m5::unit::UnitFinger2::IMAGE_WIDTH, m5::unit::UnitFinger2::IMAGE_HEIGHT);
         sprite4.createPalette();
     }
+    draw_status(State::Idle, "Ready");
 }
 
 void loop()
@@ -70,10 +118,8 @@ void loop()
     Units.update();
 
     if (M5.BtnA.wasClicked()) {
-        lcd.fillScreen(TFT_DARKGREEN);
         M5.Speaker.tone(2500, 20);
-        lcd.setCursor(0, 0);
-        lcd.printf("Try capture     ");
+        draw_status(State::Busy, "Capturing");
         M5.Log.printf("Try capture\n");
 
         std::vector<uint8_t> v{};
@@ -91,7 +137,7 @@ void loop()
                         M5.Log.printf("Successful\n");
                         if (lcd.width() && lcd.height()) {
                             make_sprite4(sprite4, v, unit.imageWidth(), unit.imageHeight());
-                            sprite4.pushSprite(&lcd, 0, 0);
+                            draw_image(sprite4, "Captured");
                         } else {
                             M5.Log.printf("Image data %u x %u\n", unit.imageWidth(), unit.imageHeight());
                             m5::utility::log::dump(v.data(), v.size(), false);
@@ -103,6 +149,9 @@ void loop()
                     }
                 } else {
                     M5_LOGE("Finger not detected");
+                    M5.Speaker.tone(1000, 20);
+                    draw_status(State::Failure, "No finger");
+                    return;
                 }
             } else {
                 M5_LOGE("Failed to capture");
@@ -111,8 +160,7 @@ void loop()
             M5_LOGE("Failed to wakeup");
         }
         M5.Speaker.tone(1000, 20);
-        lcd.setCursor(0, 0);
-        lcd.printf("Try again       ");
+        draw_status(State::Failure, "Try again");
     }
 }
 

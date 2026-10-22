@@ -44,6 +44,82 @@ m5::unit::UnitFacesFinger unit;
 uint32_t cur_menu{};
 uint16_t cur_user{1};
 
+constexpr char GUIDE[] = "Hold:Next Click:Select";
+
+// Screen state (the background color tells the state)
+enum class State : uint8_t { Idle, Place, Release, Busy, Success, Failure };
+
+struct StateStyle {
+    uint16_t bg;
+    uint16_t fg;
+};
+constexpr StateStyle state_style[] = {
+    {TFT_DARKGREY, TFT_WHITE},   // Idle
+    {TFT_YELLOW, TFT_BLACK},     // Place
+    {TFT_BLUE, TFT_WHITE},       // Release
+    {TFT_ORANGE, TFT_BLACK},     // Busy
+    {TFT_DARKGREEN, TFT_WHITE},  // Success
+    {TFT_RED, TFT_WHITE},        // Failure
+};
+
+// Status (large, centered) and guide (small, bottom)
+void draw_status(const State state, const char* status, const char* guide = GUIDE)
+{
+    if (!lcd.width()) {
+        return;  // No display
+    }
+    const auto& st = state_style[m5::stl::to_underlying(state)];
+    lcd.startWrite();
+    lcd.fillScreen(st.bg);
+    lcd.setFont(&fonts::AsciiFont8x16);
+    lcd.setTextColor(st.fg, st.bg);
+    lcd.setTextSize(std::max<int32_t>(1, lcd.width() / 160));
+    lcd.setTextDatum(textdatum_t::middle_center);
+    lcd.drawString(status, lcd.width() >> 1, lcd.height() >> 1);
+    lcd.setTextSize(std::max<int32_t>(1, lcd.width() / 320));
+    lcd.setTextDatum(textdatum_t::bottom_left);
+    lcd.drawString(guide, 0, lcd.height());
+    lcd.endWrite();
+}
+
+char last_result[48]{};
+constexpr const char* menu_items[] = {"Change user", "Show user", "Show all users", "Delete user", "Delete all users"};
+
+// Menu with the selected item highlighted, the last result and the guide
+void draw_menu()
+{
+    if (!lcd.width()) {
+        return;  // No display
+    }
+    const int32_t sz     = std::max<int32_t>(1, lcd.width() / 320);
+    const int32_t line_h = 16 * sz;
+
+    char header[32]{};
+    snprintf(header, sizeof(header), "Current user:%u", cur_user);
+
+    lcd.startWrite();
+    lcd.fillScreen(TFT_DARKGREY);
+    lcd.setFont(&fonts::AsciiFont8x16);
+    lcd.setTextSize(sz);
+    lcd.setTextDatum(textdatum_t::top_left);
+    lcd.setTextColor(TFT_WHITE, TFT_DARKGREY);
+    lcd.drawString(header, 0, 0);
+    for (uint32_t i = 0; i < m5::stl::size(menu_items); ++i) {
+        const bool selected = (i == cur_menu);
+        const int32_t y     = line_h * static_cast<int32_t>(i + 1);
+        if (selected) {
+            lcd.fillRect(0, y, lcd.width(), line_h, TFT_YELLOW);
+        }
+        lcd.setTextColor(selected ? TFT_BLACK : TFT_WHITE, selected ? TFT_YELLOW : TFT_DARKGREY);
+        lcd.drawString(menu_items[i], 0, y);
+    }
+    lcd.setTextColor(TFT_WHITE, TFT_DARKGREY);
+    lcd.setTextDatum(textdatum_t::bottom_left);
+    lcd.drawString(last_result, 0, lcd.height() - line_h);
+    lcd.drawString(GUIDE, 0, lcd.height());
+    lcd.endWrite();
+}
+
 void make_random_user()
 {
     for (uint_fast8_t i = 1; i <= 10; ++i) {
@@ -84,6 +160,7 @@ void show_menu()
         "%c Delete all users\n",
         cur_user, cur_menu == 0 ? '*' : ' ', cur_menu == 1 ? '*' : ' ', cur_menu == 2 ? '*' : ' ',
         cur_menu == 3 ? '*' : ' ', cur_menu == 4 ? '*' : ' ');
+    draw_menu();
 }
 
 int select_menu()
@@ -115,11 +192,12 @@ bool select_yesno()
         m5::utility::delay(1);
         M5.update();
         Units.update();
+        // Hold to confirm, so that a click by mistake does not delete
         if (M5.BtnA.wasHold()) {
-            return false;
+            return true;
         }
         if (M5.BtnA.wasClicked()) {
-            return true;
+            return false;
         }
     }
 }
@@ -175,7 +253,6 @@ void setup()
         M5.Log.printf("        Timeout: %u\n", timeout);
         M5.Log.printf("Registered user: %u\n", user_count);
     }
-    lcd.fillScreen(TFT_DARKGREEN);
 
     // If the number of registered users is 0, dummy data is registered
     uint16_t users{};
@@ -196,30 +273,38 @@ void loop()
             uint8_t characteristic[193]{};
             if (unit.readUser(perm, cur_user) && unit.readUserCharacteristic(characteristic, cur_user)) {
                 M5.Log.printf("User:%u Permission:%u\n", cur_user, perm);
+                snprintf(last_result, sizeof(last_result), "User:%u permission:%u", cur_user, perm);
                 m5::utility::log::dump(characteristic, 193, false);
             } else {
                 M5_LOGE("Failed to read user %u", cur_user);
+                snprintf(last_result, sizeof(last_result), "No user:%u", cur_user);
             }
 
         } break;
         case 2:
             print_all_users();
+            snprintf(last_result, sizeof(last_result), "Listed on serial");
             break;
         case 3:
             if (unit.deleteUser(cur_user)) {
                 M5.Log.printf("==> User %u deleted\n", cur_user);
+                snprintf(last_result, sizeof(last_result), "Deleted user:%u", cur_user);
             } else {
                 M5_LOGE("Failed to delete user %u", cur_user);
+                snprintf(last_result, sizeof(last_result), "Failed to delete:%u", cur_user);
             }
             break;
         case 4:
-            M5.Log.printf("==> Delete all user sure?\n");
+            M5.Log.printf("==> Delete all users? (Hold:Yes Click:No)\n");
+            draw_status(State::Failure, "Delete all?", "Hold:Yes Click:No");
             if (select_yesno()) {
                 if (unit.deleteAllUsers()) {
                     M5.Log.printf("==> All users deleted\n");
+                    snprintf(last_result, sizeof(last_result), "All users deleted");
                     cur_user = 1;
                 } else {
                     M5_LOGE("Failed to delete all users");
+                    snprintf(last_result, sizeof(last_result), "Failed to delete all");
                 }
             }
             break;
