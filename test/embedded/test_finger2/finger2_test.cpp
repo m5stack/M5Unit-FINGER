@@ -379,6 +379,26 @@ TEST_F(TestFinger2, Notepad)
             EXPECT_TRUE(memcmp(buf, write9, 9) == 0);
             EXPECT_TRUE(memcmp(buf + 9, empty + 9, 32 - 9) == 0);
         }
+
+        // Out of range
+        EXPECT_FALSE(unit->writeNotepad(16, write1, sizeof(write1)));
+        EXPECT_FALSE(unit->writeNotepad(255, write1, sizeof(write1)));
+        EXPECT_FALSE(unit->readNotepad(buf, 16));
+        EXPECT_FALSE(unit->readNotepad(buf, 255));
+
+        // Each page is independent (write all pages first, then read them back)
+        for (uint8_t page = 0; page < 16; ++page) {
+            uint8_t data[32]{};
+            std::fill(std::begin(data), std::end(data), static_cast<uint8_t>(0xA0 + page));
+            EXPECT_TRUE(unit->writeNotepad(page, data, sizeof(data)));
+        }
+        for (uint8_t page = 0; page < 16; ++page) {
+            auto s = m5::utility::formatString("Page:%u", page);
+            SCOPED_TRACE(s.c_str());
+            EXPECT_TRUE(unit->readNotepad(buf, page));
+            EXPECT_TRUE(std::all_of(std::begin(buf), std::end(buf),
+                                    [page](const uint8_t v) { return v == static_cast<uint8_t>(0xA0 + page); }));
+        }
     }
 }
 
@@ -683,7 +703,24 @@ TEST_F(TestFinger2, Finger)
     }
 }
 
-TEST_F(TestFinger2, Automatic)
+namespace {
+constexpr uint32_t TEST_AUTO_STEP_TIMEOUT_MS{2000};
+}  // namespace
+
+// Short auto_step_timeout_ms so that the automatic functions without a finger fail quickly
+class TestFinger2Automatic : public TestFinger2 {
+protected:
+    virtual UnitFinger2* get_instance() override
+    {
+        auto ptr                 = new m5::unit::UnitFinger2();
+        auto cfg                 = ptr->config();
+        cfg.auto_step_timeout_ms = TEST_AUTO_STEP_TIMEOUT_MS;
+        ptr->config(cfg);
+        return ptr;
+    }
+};
+
+TEST_F(TestFinger2Automatic, Automatic)
 {
     SCOPED_TRACE(ustr);
     for (auto&& wm : workmode_table) {
@@ -704,8 +741,15 @@ TEST_F(TestFinger2, Automatic)
             continue;
         }
 
+        // In active (no finger)
         ConfirmCode confirm{};
+        const auto restore_ms = serial->getTimeout();
+        const auto start_at   = m5::utility::millis();
         EXPECT_FALSE(unit->autoEnroll(confirm, 0));
+        // A step waits auto_step_timeout_ms, the command check and cancel use the normal timeout
+        EXPECT_LT(m5::utility::millis() - start_at, TEST_AUTO_STEP_TIMEOUT_MS + unit->config().timeout_ms);
+        EXPECT_EQ(serial->getTimeout(), restore_ms);
+
         bool matched{};
         uint16_t page{}, score{};
         EXPECT_FALSE(unit->autoIdentify(matched, page, score));
