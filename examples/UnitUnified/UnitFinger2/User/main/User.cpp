@@ -257,6 +257,7 @@ void loop()
                 } else {
                     M5_LOGE("Failed to readTemplateAllBatches %u (%u/%u)", cur_user, actual,
                             static_cast<unsigned>(temp.size()));
+                    snprintf(last_result, sizeof(last_result), "Failed to read template:%u", cur_user);
                 }
             } else {
                 M5_LOGE("Failed to loadTemplate %u", cur_user);
@@ -289,6 +290,8 @@ void loop()
                     M5_LOGE("Failed to clear");
                     snprintf(last_result, sizeof(last_result), "Failed to delete all");
                 }
+            } else {
+                snprintf(last_result, sizeof(last_result), "Cancelled");
             }
             break;
         default:
