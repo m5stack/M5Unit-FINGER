@@ -12,6 +12,8 @@
 #include <M5Utility.hpp>
 #include <wiring/m5_unit_unified_wiring.hpp>
 #include <algorithm>
+#include <cstring>
+#include <cstdio>
 
 using namespace m5::unit::finger2;
 
@@ -40,6 +42,37 @@ constexpr StateStyle state_style[] = {
     {TFT_RED, TFT_WHITE},        // Failure
 };
 
+// Small text font: AsciiFont8x16 (scaled on a large screen), or Font0 (6x8) if the text does not fit the width w
+void set_small_font(const char* s, const int32_t w)
+{
+    lcd.setFont(&fonts::AsciiFont8x16);
+    lcd.setTextSize(std::max<int32_t>(1, lcd.width() / 320));
+    if (lcd.textWidth(s) > w) {
+        lcd.setFont(&fonts::Font0);
+        lcd.setTextSize(1);
+    }
+}
+
+// Small text whose top (or bottom if bottom is true) is at y
+// It is split into two lines at the last space if it does not fit, returns the height used
+int32_t draw_small(const char* s, const int32_t x, const int32_t y, const bool bottom)
+{
+    const int32_t w = lcd.width() - x;
+    set_small_font(s, w);
+    lcd.setTextDatum(bottom ? textdatum_t::bottom_left : textdatum_t::top_left);
+    const int32_t fh     = lcd.fontHeight();
+    const char* const sp = strrchr(s, ' ');
+    if (lcd.textWidth(s) <= w || !sp) {
+        lcd.drawString(s, x, y);
+        return fh;
+    }
+    char first[48]{};
+    snprintf(first, sizeof(first), "%.*s", static_cast<int>(sp - s), s);
+    lcd.drawString(first, x, bottom ? y - fh : y);
+    lcd.drawString(sp + 1, x, bottom ? y : y + fh);
+    return fh * 2;
+}
+
 // Header (unit / templates), status (large) and guide / last result
 void draw_screen(const State state, const char* status)
 {
@@ -47,30 +80,24 @@ void draw_screen(const State state, const char* status)
         return;  // No display
     }
     const auto& st         = state_style[m5::stl::to_underlying(state)];
-    const int32_t small_sz = std::max<int32_t>(1, lcd.width() / 320);
     const int32_t large_sz = std::max<int32_t>(1, lcd.width() / 160);
-    const int32_t line_h   = 16 * small_sz;
 
     char header[48]{};
     snprintf(header, sizeof(header), "%s templates:%u/%u", unit.deviceName(), template_count, unit.capacity());
 
     lcd.startWrite();
     lcd.fillScreen(st.bg);
-    lcd.setFont(&fonts::AsciiFont8x16);
     lcd.setTextColor(st.fg, st.bg);
 
-    lcd.setTextSize(small_sz);
-    lcd.setTextDatum(textdatum_t::top_left);
-    lcd.drawString(header, 0, 0);
+    draw_small(header, 0, 0, false);
 
+    lcd.setFont(&fonts::AsciiFont8x16);
     lcd.setTextSize(large_sz);
     lcd.setTextDatum(textdatum_t::middle_center);
     lcd.drawString(status, lcd.width() >> 1, lcd.height() >> 1);
 
-    lcd.setTextSize(small_sz);
-    lcd.setTextDatum(textdatum_t::bottom_left);
-    lcd.drawString("Hold:Register Click:Search", 0, lcd.height() - line_h);
-    lcd.drawString(last_result, 0, lcd.height());
+    const int32_t result_h = draw_small(last_result, 0, lcd.height(), true);
+    draw_small("Hold:Register Click:Search", 0, lcd.height() - result_h, true);
     lcd.endWrite();
 }
 

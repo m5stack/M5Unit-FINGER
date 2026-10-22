@@ -14,6 +14,8 @@
 #include <wiring/m5_unit_finger_wiring.hpp>
 #include <esp_random.h>
 #include <algorithm>
+#include <cstring>
+#include <cstdio>
 
 using namespace m5::unit::fpc1xxx;
 
@@ -62,6 +64,37 @@ constexpr StateStyle state_style[] = {
     {TFT_RED, TFT_WHITE},        // Failure
 };
 
+// Small text font: AsciiFont8x16 (scaled on a large screen), or Font0 (6x8) if the text does not fit the width w
+void set_small_font(const char* s, const int32_t w)
+{
+    lcd.setFont(&fonts::AsciiFont8x16);
+    lcd.setTextSize(std::max<int32_t>(1, lcd.width() / 320));
+    if (lcd.textWidth(s) > w) {
+        lcd.setFont(&fonts::Font0);
+        lcd.setTextSize(1);
+    }
+}
+
+// Small text whose top (or bottom if bottom is true) is at y
+// It is split into two lines at the last space if it does not fit, returns the height used
+int32_t draw_small(const char* s, const int32_t x, const int32_t y, const bool bottom)
+{
+    const int32_t w = lcd.width() - x;
+    set_small_font(s, w);
+    lcd.setTextDatum(bottom ? textdatum_t::bottom_left : textdatum_t::top_left);
+    const int32_t fh     = lcd.fontHeight();
+    const char* const sp = strrchr(s, ' ');
+    if (lcd.textWidth(s) <= w || !sp) {
+        lcd.drawString(s, x, y);
+        return fh;
+    }
+    char first[48]{};
+    snprintf(first, sizeof(first), "%.*s", static_cast<int>(sp - s), s);
+    lcd.drawString(first, x, bottom ? y - fh : y);
+    lcd.drawString(sp + 1, x, bottom ? y : y + fh);
+    return fh * 2;
+}
+
 // Status (large, centered) and guide (small, bottom)
 void draw_status(const State state, const char* status, const char* guide = GUIDE)
 {
@@ -76,9 +109,7 @@ void draw_status(const State state, const char* status, const char* guide = GUID
     lcd.setTextSize(std::max<int32_t>(1, lcd.width() / 160));
     lcd.setTextDatum(textdatum_t::middle_center);
     lcd.drawString(status, lcd.width() >> 1, lcd.height() >> 1);
-    lcd.setTextSize(std::max<int32_t>(1, lcd.width() / 320));
-    lcd.setTextDatum(textdatum_t::bottom_left);
-    lcd.drawString(guide, 0, lcd.height());
+    draw_small(guide, 0, lcd.height(), true);
     lcd.endWrite();
 }
 
@@ -99,11 +130,10 @@ void draw_menu()
 
     lcd.startWrite();
     lcd.fillScreen(TFT_DARKGREY);
+    lcd.setTextColor(TFT_WHITE, TFT_DARKGREY);
+    draw_small(header, 0, 0, false);
     lcd.setFont(&fonts::AsciiFont8x16);
     lcd.setTextSize(sz);
-    lcd.setTextDatum(textdatum_t::top_left);
-    lcd.setTextColor(TFT_WHITE, TFT_DARKGREY);
-    lcd.drawString(header, 0, 0);
     for (uint32_t i = 0; i < m5::stl::size(menu_items); ++i) {
         const bool selected = (i == cur_menu);
         const int32_t y     = line_h * static_cast<int32_t>(i + 1);
@@ -114,9 +144,8 @@ void draw_menu()
         lcd.drawString(menu_items[i], 0, y);
     }
     lcd.setTextColor(TFT_WHITE, TFT_DARKGREY);
-    lcd.setTextDatum(textdatum_t::bottom_left);
-    lcd.drawString(last_result, 0, lcd.height() - line_h);
-    lcd.drawString(GUIDE, 0, lcd.height());
+    const int32_t guide_h = draw_small(GUIDE, 0, lcd.height(), true);
+    draw_small(last_result, 0, lcd.height() - guide_h, true);
     lcd.endWrite();
 }
 
