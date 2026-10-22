@@ -20,6 +20,7 @@ using Packet = m5::unit::UnitFinger2::Packet;
 
 namespace {
 constexpr uint32_t TIMEOUT_MS{1000 * 4};
+constexpr uint32_t AUTO_STEP_TIMEOUT_MS{1000 * 30};
 constexpr uint8_t SLEEP_TIME_MIN{10};
 constexpr uint8_t SLEEP_TIME_MAX{254};
 constexpr uint16_t PACKET_SIZE_MAX{4096};
@@ -66,6 +67,28 @@ bool is_retryable_enroll_error(const ConfirmCode c)
     return c == ConfirmCode::ImageTooFew || c == ConfirmCode::Unmatched || c == ConfirmCode::MergeFailed ||
            c == ConfirmCode::FeatureAssociated;
 }
+
+// Sets the serial timeout while it is alive, and restores it on scope exit
+class TimeoutScope {
+public:
+    TimeoutScope(m5::unit::AdapterUART* ad, const uint32_t timeout_ms, const uint32_t restore_ms)
+        : _ad{ad}, _restore_ms{restore_ms}
+    {
+        if (_ad) {
+            _ad->setTimeout(timeout_ms);
+        }
+    }
+    ~TimeoutScope()
+    {
+        if (_ad) {
+            _ad->setTimeout(_restore_ms);
+        }
+    }
+
+private:
+    m5::unit::AdapterUART* _ad{};
+    uint32_t _restore_ms{};
+};
 
 Packet make_packet(const uint8_t cmd, const uint32_t addr, const uint8_t* payload = nullptr,
                    const uint16_t payload_len = 0)
@@ -124,7 +147,7 @@ bool UnitFinger2::begin()
         M5_LIB_LOGE("Illegal adapter");
         return false;
     }
-    ad->setTimeout(_cfg.timeout_ms ? _cfg.timeout_ms : TIMEOUT_MS);
+    ad->setTimeout(serial_timeout());
     ad->flushRX();
 
     // Retry for NessoN1 first-transaction failure (Flash instruction cache timing)
@@ -794,6 +817,8 @@ bool UnitFinger2::autoEnroll(ConfirmCode& confirm, const uint16_t page_id, const
     uint8_t process_times{};
     confirm = ConfirmCode::PacketError;
     if (write_command(CMD_AUTO_ENROLL, _address, params, sizeof(params))) {
+        // Each response waits for the user operation (placing / releasing a finger)
+        TimeoutScope ts(asAdapter<AdapterUART>(Adapter::Type::UART), auto_step_timeout(), serial_timeout());
         // Depending on the flags specified, multiple responses may be returned
         do {
             confirm = read_response(pkt);
@@ -860,6 +885,8 @@ bool UnitFinger2::autoIdentify(bool& matched, uint16_t& matching_page_id, uint16
     auto confirm = ConfirmCode::PacketError;
     uint8_t process_times{};
     if (write_command(CMD_AUTO_IDENTIFY, _address, params, sizeof(params))) {
+        // Each response waits for the user operation (placing a finger)
+        TimeoutScope ts(asAdapter<AdapterUART>(Adapter::Type::UART), auto_step_timeout(), serial_timeout());
         // Depending on the flags specified, multiple responses may be returned
         do {
             confirm = read_response(pkt);
@@ -1059,6 +1086,16 @@ bool UnitFinger2::findHighestAvailablePage(uint16_t& page)
         return true;
     }
     return false;
+}
+
+uint32_t UnitFinger2::serial_timeout() const
+{
+    return _cfg.timeout_ms ? _cfg.timeout_ms : TIMEOUT_MS;
+}
+
+uint32_t UnitFinger2::auto_step_timeout() const
+{
+    return _cfg.auto_step_timeout_ms ? _cfg.auto_step_timeout_ms : AUTO_STEP_TIMEOUT_MS;
 }
 
 //

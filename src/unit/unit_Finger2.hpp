@@ -299,6 +299,7 @@ public:
         uint32_t timeout_ms{1000 * 4};                                   //!< Serial I/O timeout (ms) (4000 if zero)
         finger2::WorkMode work_mode{finger2::WorkMode::ScheduledSleep};  //!< Work mode
         uint8_t sleep_time{10};                                          //!< Scheduled sleep time (10 - 254) sec
+        uint32_t auto_step_timeout_ms{1000 * 30};  //!< Wait per step of autoEnroll/autoIdentify (ms) (30000 if zero)
     };
 
     ///@name Settings for begin
@@ -709,6 +710,7 @@ public:
       @param flags Operation Control Flag
       @param callback Callback function that receives and processes intermediate results
       @return True if successful
+      @note Each step (placing / releasing a finger) waits up to config_t::auto_step_timeout_ms
       @note If GenerateCharacteristic fails with ImageTooFew, Unmatched, MergeFailed or FeatureAssociated,
       the module waits for the next capture and the process continues (the error is passed to the callback)
       @warning This feature is supported when the security level is 0 or 1
@@ -727,6 +729,7 @@ public:
       @param flags Operation Control Flag
       @param callback Callback function that receives and processes intermediate results
       @return True if the comparison completed (check matched for the result)
+      @note Placing a finger waits up to config_t::auto_step_timeout_ms
       @warning This feature is supported when the security level is 0 or 1
      */
     bool autoIdentify(bool& matched, uint16_t& matching_page_id, uint16_t& score, const uint16_t page_id = 0xFFFF,
@@ -820,6 +823,8 @@ public:
     bool readFirmwareVersion(uint8_t& ver);
 
 protected:
+    uint32_t serial_timeout() const;
+    uint32_t auto_step_timeout() const;
     bool write_command(const uint8_t cmd, const uint32_t addr, const uint8_t* payload = nullptr,
                        const uint16_t payload_len = 0);
     finger2::ConfirmCode read_response(Packet& rbuf);
