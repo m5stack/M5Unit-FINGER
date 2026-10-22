@@ -44,6 +44,64 @@ m5::unit::UnitFacesFinger unit;
 #endif
 
 uint16_t target_user_id{};
+uint16_t user_count{};
+char last_result[48]{};
+
+// Screen state (the background color tells the state)
+enum class State : uint8_t { Idle, Place, Busy, Success, Failure };
+
+struct StateStyle {
+    uint16_t bg;
+    uint16_t fg;
+};
+constexpr StateStyle state_style[] = {
+    {TFT_DARKGREY, TFT_WHITE},   // Idle
+    {TFT_YELLOW, TFT_BLACK},     // Place
+    {TFT_ORANGE, TFT_BLACK},     // Busy
+    {TFT_DARKGREEN, TFT_WHITE},  // Success
+    {TFT_RED, TFT_WHITE},        // Failure
+};
+
+// Header (unit / users), status (large) and guide / last result
+void draw_screen(const State state, const char* status)
+{
+    if (!lcd.width()) {
+        return;  // No display
+    }
+    const auto& st         = state_style[m5::stl::to_underlying(state)];
+    const int32_t small_sz = std::max<int32_t>(1, lcd.width() / 320);
+    const int32_t large_sz = std::max<int32_t>(1, lcd.width() / 160);
+    const int32_t line_h   = 16 * small_sz;
+
+    char header[48]{};
+    snprintf(header, sizeof(header), "%s users:%u next:%u", unit.deviceName(), user_count, target_user_id);
+
+    lcd.startWrite();
+    lcd.fillScreen(st.bg);
+    lcd.setFont(&fonts::AsciiFont8x16);
+    lcd.setTextColor(st.fg, st.bg);
+
+    lcd.setTextSize(small_sz);
+    lcd.setTextDatum(textdatum_t::top_left);
+    lcd.drawString(header, 0, 0);
+
+    lcd.setTextSize(large_sz);
+    lcd.setTextDatum(textdatum_t::middle_center);
+    lcd.drawString(status, lcd.width() >> 1, lcd.height() >> 1);
+
+    lcd.setTextSize(small_sz);
+    lcd.setTextDatum(textdatum_t::bottom_left);
+    lcd.drawString("Hold:Register Click:Match", 0, lcd.height() - line_h);
+    lcd.drawString(last_result, 0, lcd.height());
+    lcd.endWrite();
+}
+
+void update_user_count()
+{
+    if (!unit.readRegisteredUserCount(user_count)) {
+        M5_LOGW("Failed to read user count");
+    }
+}
 
 void print_all_users()
 {
@@ -95,7 +153,6 @@ void setup()
     {
         uint8_t clv{}, timeout{};
         Mode mode{};
-        uint16_t user_count{};
         if (!unit.readRegistrationMode(mode) || !unit.readComparisonLevel(clv) || !unit.readTimeout(timeout) ||
             !unit.readRegisteredUserCount(user_count)) {
             M5_LOGW("Failed to read settings");
@@ -118,7 +175,7 @@ void setup()
             m5::utility::log::dump(characteristic, m5::stl::size(characteristic), false);
         }
     }
-    lcd.fillScreen(TFT_DARKGREEN);
+    draw_screen(State::Idle, "Place finger");
 }
 
 void loop()
@@ -126,24 +183,27 @@ void loop()
     M5.update();
     Units.update();
 
-    // Register finger
+    // Register finger (the finger must be on the sensor)
     if (M5.BtnA.wasHold()) {
-        lcd.fillScreen(TFT_DARKGREEN);
         M5.Speaker.tone(2500, 20);
-        lcd.drawString("Try register", 0, 0);
+        draw_screen(State::Place, "Keep finger on");
         M5.Log.printf("Try register\n");
 
-        if (unit.registerFinger(target_user_id, 1)) {
+        const auto id = target_user_id;
+        if (unit.registerFinger(id, 1)) {
             M5.Speaker.tone(2000, 20);
-            lcd.setCursor(0, 0);
-            lcd.printf("Registered %u", target_user_id);
-            M5.Log.printf("Registered user %u\n", target_user_id);
+            M5.Log.printf("Registered user %u\n", id);
+            snprintf(last_result, sizeof(last_result), "Registered ID:%u", id);
             if (!unit.findAvailableUserID(target_user_id)) {
                 M5_LOGW("No available user ID");
             }
+            update_user_count();
+            draw_screen(State::Success, "Registered");
         } else {
-            M5.Log.printf("Failed to register %u", target_user_id);
-            lcd.drawString("Try again       ", 0, 0);
+            M5.Speaker.tone(800, 40);
+            M5.Log.printf("Failed to register %u\n", id);
+            snprintf(last_result, sizeof(last_result), "Register failed ID:%u", id);
+            draw_screen(State::Failure, "Try again");
         }
         return;
     }
@@ -153,34 +213,30 @@ void loop()
         uint16_t id{};
         uint8_t per{};
         M5.Speaker.tone(1500, 20);
-        lcd.drawString("Try identify", 0, 0);
+        draw_screen(State::Busy, "Identifying");
         M5.Log.printf("Try identify\n");
-        if (unit.identifyFinger(id, per)) {
-            if (id) {
-                M5.Speaker.tone(2000, 20);
-                M5.Log.printf("Identified user:%u, permission:%u\n", id, per);
 
-                // If it was identified, it should pass verification
-                lcd.drawString("Try verify        ", 0, 0);
-                M5.Log.printf("Try verify\n");
-                bool match{};
-                if (unit.verifyFinger(match, id) && match) {
-                    M5.Speaker.tone(2500, 20);
-                    M5.Log.printf("Verified: %u\n", id);
-                    lcd.drawString("Verified         ", 0, 0);
-                } else {
-                    M5.Log.printf("Failed or not match %u\n", id);
-                    lcd.drawString("Failed to Verify   ", 0, 0);
-                }
+        if (unit.identifyFinger(id, per) && id) {
+            M5.Log.printf("Identified user:%u, permission:%u\n", id, per);
+            // If it was identified, it should pass verification
+            M5.Log.printf("Try verify\n");
+            bool match{};
+            if (unit.verifyFinger(match, id) && match) {
+                M5.Speaker.tone(2500, 20);
+                M5.Log.printf("Verified: %u\n", id);
+                snprintf(last_result, sizeof(last_result), "Matched ID:%u", id);
+                draw_screen(State::Success, "Matched");
             } else {
                 M5.Speaker.tone(800, 40);
-                M5.Log.printf("No user\n");
-                lcd.drawString("No user       ", 0, 0);
+                M5.Log.printf("Failed or not match %u\n", id);
+                snprintf(last_result, sizeof(last_result), "Verify failed ID:%u", id);
+                draw_screen(State::Failure, "Not verified");
             }
         } else {
             M5.Speaker.tone(800, 40);
             M5.Log.printf("No user\n");
-            lcd.drawString("No user       ", 0, 0);
+            snprintf(last_result, sizeof(last_result), "No matching user");
+            draw_screen(State::Failure, "No user");
         }
     }
 }

@@ -20,6 +20,66 @@ auto& lcd = M5.Display;
 m5::unit::UnitUnified Units;
 m5::unit::UnitFinger2 unit;
 
+uint16_t template_count{};
+char last_result[48]{};
+
+// Screen state (the background color tells the state)
+enum class State : uint8_t { Idle, Place, Release, Busy, Success, Failure };
+
+struct StateStyle {
+    uint16_t bg;
+    uint16_t fg;
+};
+constexpr StateStyle state_style[] = {
+    {TFT_DARKGREY, TFT_WHITE},   // Idle
+    {TFT_YELLOW, TFT_BLACK},     // Place
+    {TFT_BLUE, TFT_WHITE},       // Release
+    {TFT_ORANGE, TFT_BLACK},     // Busy
+    {TFT_DARKGREEN, TFT_WHITE},  // Success
+    {TFT_RED, TFT_WHITE},        // Failure
+};
+
+// Header (unit / templates), status (large) and guide / last result
+void draw_screen(const State state, const char* status)
+{
+    if (!lcd.width()) {
+        return;  // No display
+    }
+    const auto& st         = state_style[m5::stl::to_underlying(state)];
+    const int32_t small_sz = std::max<int32_t>(1, lcd.width() / 320);
+    const int32_t large_sz = std::max<int32_t>(1, lcd.width() / 160);
+    const int32_t line_h   = 16 * small_sz;
+
+    char header[48]{};
+    snprintf(header, sizeof(header), "%s templates:%u/%u", unit.deviceName(), template_count, unit.capacity());
+
+    lcd.startWrite();
+    lcd.fillScreen(st.bg);
+    lcd.setFont(&fonts::AsciiFont8x16);
+    lcd.setTextColor(st.fg, st.bg);
+
+    lcd.setTextSize(small_sz);
+    lcd.setTextDatum(textdatum_t::top_left);
+    lcd.drawString(header, 0, 0);
+
+    lcd.setTextSize(large_sz);
+    lcd.setTextDatum(textdatum_t::middle_center);
+    lcd.drawString(status, lcd.width() >> 1, lcd.height() >> 1);
+
+    lcd.setTextSize(small_sz);
+    lcd.setTextDatum(textdatum_t::bottom_left);
+    lcd.drawString("Hold:Register Click:Search", 0, lcd.height() - line_h);
+    lcd.drawString(last_result, 0, lcd.height());
+    lcd.endWrite();
+}
+
+void update_template_count()
+{
+    if (!unit.wakeup() || !unit.readValidTemplates(template_count)) {
+        M5_LOGW("Failed to read the number of templates");
+    }
+}
+
 void print_exists_users()
 {
     uint16_t num{};
@@ -41,7 +101,7 @@ void print_exists_users()
 // Example of registration like as autoEnroll
 // Registered IDs will be overwritten.
 // Existing templates will not be considered.
-void register_finger()
+bool register_finger()
 {
     static bool highlow{};
 
@@ -51,7 +111,7 @@ void register_finger()
         if (!(highlow == false ? unit.findLowestAvailablePage(page) : unit.findHighestAvailablePage(page)) ||
             page == 0xFFFF) {
             M5_LOGE("Failed or Invalid page");
-            return;
+            return false;
         }
         M5.Log.printf("Try register to %u\n", page);
 
@@ -59,8 +119,9 @@ void register_finger()
         uint8_t cnt{};
         while (cnt < 5) {
             // Wait touch finger
-            lcd.fillScreen(TFT_ORANGE);
-            lcd.drawString("Please touch finger", 0, 16);
+            char status[24]{};
+            snprintf(status, sizeof(status), "Place %u/5", cnt + 1);
+            draw_screen(State::Place, status);
             M5.Log.printf("Please touch finger(%u)\n", cnt + 1);
 
             const auto start_at = m5::utility::millis();
@@ -71,20 +132,20 @@ void register_finger()
             } while (!touched && !m5::utility::hasElapsed(start_at, 5000));
             if (!touched) {
                 M5_LOGE("Finger undetected %u", cnt + 1);
-                return;
+                return false;
             }
 
             // Generate characteristic (1-5)
             if (!unit.generateCharacteristic(cnt + 1)) {
                 M5_LOGE("Failed to GenerateCharacteristic %u", cnt + 1);
-                return;
+                return false;
             }
 
             // Wait release finger
             if (cnt < 4) {
                 M5.Speaker.tone(3000, 20);
-                lcd.fillScreen(TFT_BLUE);
-                lcd.drawString("Please release finger", 0, 16);
+                snprintf(status, sizeof(status), "Release %u/5", cnt + 1);
+                draw_screen(State::Release, status);
                 M5.Log.printf("Please release finger(%u)\n", cnt + 1);
 
                 const auto start_at = m5::utility::millis();
@@ -95,7 +156,7 @@ void register_finger()
                 } while (!released && !m5::utility::hasElapsed(start_at, 5000));
                 if (!released) {
                     M5_LOGE("Finger not released %u", cnt + 1);
-                    return;
+                    return false;
                 }
             }
 
@@ -103,21 +164,24 @@ void register_finger()
         }
 
         // Generate template(merge 1-5)
-        lcd.fillScreen(TFT_DARKGREEN);
+        draw_screen(State::Busy, "Storing");
         if (!unit.generateTemplate()) {
             M5_LOGE("Failed to generateTemplate");
-            return;
+            return false;
         }
 
         // Store template
         if (!unit.storeTemplate(page)) {
             M5_LOGE("Failed to storeTemplate");
-            return;
+            return false;
         }
 
         highlow = !highlow;
         M5.Log.printf("Registered: %u\n", page);
+        snprintf(last_result, sizeof(last_result), "Registered page:%u", page);
+        return true;
     }
+    return false;
 }
 
 // 1:1
@@ -148,6 +212,11 @@ uint16_t search_finger()
         uint16_t score{};
         if (unit.search(matched, page, score, 1 /* buffer id */)) {
             M5.Log.printf("<1:N> %s Page:%u Score:%u\n", matched ? "Found" : "Not found", page, score);
+            if (matched) {
+                snprintf(last_result, sizeof(last_result), "Found page:%u score:%u", page, score);
+            } else {
+                snprintf(last_result, sizeof(last_result), "Not found");
+            }
             return matched ? page : 0xFFFF;
         } else {
             M5_LOGE("Failed to search");
@@ -200,10 +269,9 @@ void setup()
     M5_LOGI("M5UnitUnified initialized");
     M5_LOGI("%s", Units.debugInfo().c_str());
 
-    lcd.fillScreen(TFT_DARKGREEN);
-    lcd.setFont(&fonts::AsciiFont8x16);
-
     print_exists_users();
+    update_template_count();
+    draw_screen(State::Idle, "Place finger");
 }
 
 void loop()
@@ -214,20 +282,33 @@ void loop()
     // Search,Match
     if (M5.BtnA.wasClicked()) {
         M5.Speaker.tone(2000, 20);
+        draw_screen(State::Busy, "Searching");
         auto page = search_finger();
         if (page != 0xFFFF) {
             auto page2 = search_now_finger();
             if (page2 != 0xFFFF) {
                 match_finger(page);
             }
+            M5.Speaker.tone(2500, 20);
+            draw_screen(State::Success, "Found");
+        } else {
+            M5.Speaker.tone(800, 40);
+            draw_screen(State::Failure, "Not found");
         }
     }
 
     // Register
     if (M5.BtnA.wasHold()) {
         M5.Speaker.tone(4000, 20);
-        register_finger();
-        lcd.fillScreen(TFT_DARKGREEN);
+        if (register_finger()) {
+            M5.Speaker.tone(2000, 20);
+            update_template_count();
+            draw_screen(State::Success, "Registered");
+        } else {
+            M5.Speaker.tone(800, 40);
+            snprintf(last_result, sizeof(last_result), "Register failed");
+            draw_screen(State::Failure, "Try again");
+        }
     }
 }
 
