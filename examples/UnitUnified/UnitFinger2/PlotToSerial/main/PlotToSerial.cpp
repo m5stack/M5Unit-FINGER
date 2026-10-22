@@ -185,7 +185,7 @@ bool register_finger()
 }
 
 // 1:1
-void match_finger(const uint16_t page)
+bool match_finger(const uint16_t page)
 {
     bool detected{};
     if (unit.capture(detected) && detected && unit.generateCharacteristic(1) && unit.loadTemplate(2, page)) {
@@ -193,12 +193,14 @@ void match_finger(const uint16_t page)
         uint16_t score{};
         if (unit.match(matched, score)) {
             M5.Log.printf("<1:1>%u %s, Score:%u\n", page, matched ? "Matched" : "Unmatched", score);
+            return matched;
         } else {
             M5_LOGE("Failed to match");
         }
     } else {
         M5_LOGE("Failed to any function");
     }
+    return false;
 }
 
 // 1:N
@@ -220,9 +222,11 @@ uint16_t search_finger()
             return matched ? page : 0xFFFF;
         } else {
             M5_LOGE("Failed to search");
+            snprintf(last_result, sizeof(last_result), "Search failed");
         }
     } else {
         M5_LOGE("Failed to capture/generate");
+        snprintf(last_result, sizeof(last_result), "Capture failed");
     }
     return 0xFFFF;
 }
@@ -285,12 +289,18 @@ void loop()
         draw_screen(State::Busy, "Searching");
         auto page = search_finger();
         if (page != 0xFFFF) {
-            auto page2 = search_now_finger();
-            if (page2 != 0xFFFF) {
-                match_finger(page);
+            // Check the same finger again with searchNow (1:N) and match (1:1)
+            const bool now_ok   = (search_now_finger() == page);
+            const bool match_ok = now_ok && match_finger(page);
+            if (match_ok) {
+                M5.Speaker.tone(2500, 20);
+                draw_screen(State::Success, "Found");
+            } else {
+                M5.Speaker.tone(800, 40);
+                snprintf(last_result, sizeof(last_result), "page:%u %s", page,
+                         now_ok ? "1:1 unmatched" : "1:N(now) unmatched");
+                draw_screen(State::Failure, "Unmatched");
             }
-            M5.Speaker.tone(2500, 20);
-            draw_screen(State::Success, "Found");
         } else {
             M5.Speaker.tone(800, 40);
             draw_screen(State::Failure, "Not found");
