@@ -209,7 +209,7 @@ enum class ConfirmCode : uint8_t {
     PacketTimeout         = 0xF9,  //!< 0xF9:Receive packet timeout
     PacketBad,                     //!< 0xFA:Error Packet (e.g., data not fully received, other packet received)
     ModuleBusy,                    //!< 0xFB:Busy (the unit is checking whether a finger is present before sleeping)
-    PacketOverflow __attribute__((deprecated("use ModuleBusy"))) = ModuleBusy,  //!< @deprecated Use ModuleBusy
+    PacketOverflow __attribute__((deprecated("use ModuleBusy"))) = ModuleBusy,  //!< 0xFB: @deprecated Use ModuleBusy
     OperationBlocked,          //!< 0xFC:This operation has been blocked
     ParameterError,            //!< 0xFD:Parameter error
     NotActive,                 //!< 0xFE:The fingerprint module is not activated
@@ -300,7 +300,7 @@ public:
         uint32_t timeout_ms{1000 * 4};                                   //!< Serial I/O timeout (ms) (4000 if zero)
         finger2::WorkMode work_mode{finger2::WorkMode::ScheduledSleep};  //!< Work mode
         uint8_t sleep_time{10};                                          //!< Scheduled sleep time (10 - 254) sec
-        uint32_t auto_step_timeout_ms{1000 * 30};  //!< Wait per step of autoEnroll/autoIdentify (ms) (30000 if zero)
+        uint32_t auto_step_timeout_ms{1000 * 30};  //!< Timeout per step of autoEnroll/autoIdentify (ms) (30000 if zero)
     };
 
     ///@name Settings for begin
