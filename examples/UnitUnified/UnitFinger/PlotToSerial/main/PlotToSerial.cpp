@@ -213,7 +213,7 @@ void loop()
         uint16_t id{};
         uint8_t per{};
         M5.Speaker.tone(1500, 20);
-        draw_screen(State::Busy, "Identifying");
+        draw_screen(State::Place, "Identifying");
         M5.Log.printf("Try identify\n");
 
         if (unit.identifyFinger(id, per) && id) {
