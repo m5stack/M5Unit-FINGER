@@ -26,6 +26,7 @@ constexpr uint8_t SLEEP_TIME_MAX{254};
 constexpr uint16_t PACKET_SIZE_MAX{4096};
 constexpr uint8_t BUFFER_ID_MIN{1};
 constexpr uint8_t BUFFER_ID_MAX{5};
+constexpr uint8_t NOTEPAD_PAGE_MAX{15};
 constexpr uint8_t SCORE_LEVEL_MIN{1};
 constexpr uint8_t SCORE_LEVEL_MAX{5};
 
@@ -934,8 +935,8 @@ bool UnitFinger2::cancel()
 
 bool UnitFinger2::readNotepad(uint8_t buf[32], const uint8_t page)
 {
-    if (page > 7) {
-        M5_LIB_LOGE("Page must be between 0 and 7 (%u)", page);
+    if (page > NOTEPAD_PAGE_MAX) {
+        M5_LIB_LOGE("Page must be between 0 and %u (%u)", NOTEPAD_PAGE_MAX, page);
         return false;
     }
 
@@ -949,8 +950,8 @@ bool UnitFinger2::readNotepad(uint8_t buf[32], const uint8_t page)
 
 bool UnitFinger2::writeNotepad(const uint8_t page, const uint8_t* buf, const uint8_t len)
 {
-    if (page > 7) {
-        M5_LIB_LOGE("Page must be between 0 and 7 (%u)", page);
+    if (page > NOTEPAD_PAGE_MAX) {
+        M5_LIB_LOGE("Page must be between 0 and %u (%u)", NOTEPAD_PAGE_MAX, page);
         return false;
     }
     if (!buf || len == 0) {

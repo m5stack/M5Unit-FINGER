@@ -330,23 +330,23 @@ TEST_F(TestFinger2, Notepad)
         if (wm == WorkMode::ScheduledSleep) {
             wait_sleep(unit.get());
 
-            for (uint8_t page = 0; page < 8; ++page) {
+            for (uint8_t page = 0; page < 16; ++page) {
                 EXPECT_FALSE(unit->writeNotepad(page, write1, sizeof(write1)));
                 EXPECT_FALSE(unit->writeNotepad(page, write9, sizeof(write9)));
                 EXPECT_FALSE(unit->writeNotepad(page, write32, sizeof(write32)));
                 EXPECT_FALSE(unit->writeNotepad(page, write33, sizeof(write33)));
                 EXPECT_FALSE(unit->readNotepad(buf, page));
             }
-            EXPECT_FALSE(unit->writeNotepad(8, write1, sizeof(write1)));
+            EXPECT_FALSE(unit->writeNotepad(16, write1, sizeof(write1)));
             EXPECT_FALSE(unit->writeNotepad(255, write1, sizeof(write1)));
-            EXPECT_FALSE(unit->readNotepad(buf, 8));
+            EXPECT_FALSE(unit->readNotepad(buf, 16));
             EXPECT_FALSE(unit->readNotepad(buf, 255));
 
             continue;
         }
 
         // In active
-        for (uint8_t page = 0; page < 8; ++page) {
+        for (uint8_t page = 0; page < 16; ++page) {
             auto s = m5::utility::formatString("Page:%u", page);
             SCOPED_TRACE(s.c_str());
 

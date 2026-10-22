@@ -750,20 +750,20 @@ public:
       @brief Read the notepad(Flash) data
       @details PS_ReadNotepad
       @param[out] buf Buffer (at least 32 bytes)
-      @param page Notepad page number (0 - 7)
+      @param page Notepad page number (0 - 15)
       @return True if successful
-      @note Notepad is an area of 8 pages totaling 256 bytes in 32 byte units
+      @note Notepad is an area of 16 pages totaling 512 bytes in 32 byte units
       @warning Returns an error when device is sleeping
      */
     bool readNotepad(uint8_t buf[32], const uint8_t page);
     /*!
       @brief Write the notepad(Flash) data
       @details PS_WriteNotepad
-      @param page Notepad page number (0 - 7)
+      @param page Notepad page number (0 - 15)
       @param buf Input buffer
       @param len buffer length (1 - 32) If larger than 32 bytes, write up to 32 bytes
       @return True if successful
-      @note Notepad is an area of 8 pages totaling 256 bytes in 32 byte units
+      @note Notepad is an area of 16 pages totaling 512 bytes in 32 byte units
       @warning Returns an error when device is sleeping
       @warning When less than 32 bytes are written, the missing bytes are filled with zeros
      */
