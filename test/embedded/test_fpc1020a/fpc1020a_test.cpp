@@ -429,6 +429,7 @@ TEST_F(TestFPC1020A, Finger)
 
     std::vector<uint8_t> img{};
     EXPECT_FALSE(unit->captureImage(img));
+    EXPECT_FALSE(unit->captureImage(img, true));  // raw
 
     EXPECT_TRUE(unit->registerCharacteristic(1, 2, ch_data));
     EXPECT_TRUE(unit->verifyCharacteristic(match, 1, ch_data));
