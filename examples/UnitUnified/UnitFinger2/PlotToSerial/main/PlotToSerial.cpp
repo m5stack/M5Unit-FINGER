@@ -11,6 +11,7 @@
 #include <M5UnitUnifiedFINGER.h>
 #include <M5Utility.hpp>
 #include <wiring/m5_unit_unified_wiring.hpp>
+#include <algorithm>
 
 using namespace m5::unit::finger2;
 

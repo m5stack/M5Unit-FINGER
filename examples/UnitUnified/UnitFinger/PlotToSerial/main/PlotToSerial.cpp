@@ -12,6 +12,7 @@
 #include <M5Utility.hpp>
 #include <wiring/m5_unit_unified_wiring.hpp>
 #include <wiring/m5_unit_finger_wiring.hpp>
+#include <algorithm>
 
 // *************************************************************
 // Choose one define symbol to match the unit you are using
