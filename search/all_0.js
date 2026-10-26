@@ -14,9 +14,10 @@ var searchData=
   ['auto_5fidentify_5fcallback_5ft_11',['auto_identify_callback_t',['../unit___finger2_8hpp.html#a00f3e5cdc06d9cdbf0ac53c5a065ff74',1,'m5::unit::finger2']]],
   ['auto_5fidentify_5fflag_12',['auto_identify_flag',['../namespaceauto__identify__flag.html',1,'']]],
   ['auto_5fidentify_5fflag_5ft_13',['auto_identify_flag_t',['../unit___finger2_8hpp.html#a0ac4d20b114942e2b2ca258e8e2c3b88',1,'m5::unit::finger2']]],
-  ['autoenroll_14',['autoEnroll',['../classm5_1_1unit_1_1_unit_finger2.html#aa1ed2780f6226ab8827b339bb1724c70',1,'m5::unit::UnitFinger2']]],
-  ['autoenrollfailed_15',['AutoEnrollFailed',['../unit___finger2_8hpp.html#a61296099c4dc3e43e13761d01976ee43a6d11f6343414bdc2e52afac606a88d1a',1,'m5::unit::finger2']]],
-  ['autoenrollstage_16',['AutoEnrollStage',['../unit___finger2_8hpp.html#ad9a809694e7081f91b26d1da8bb0f20b',1,'m5::unit::finger2']]],
-  ['autoidentify_17',['autoIdentify',['../classm5_1_1unit_1_1_unit_finger2.html#a3ab8ab8fe092e8418533e3f120f6afa4',1,'m5::unit::UnitFinger2']]],
-  ['autoidentifystage_18',['AutoIdentifyStage',['../unit___finger2_8hpp.html#a46784bb5ac5c7d7eadaf4bff2b4e74fc',1,'m5::unit::finger2']]]
+  ['auto_5fstep_5ftimeout_5fms_14',['auto_step_timeout_ms',['../structm5_1_1unit_1_1_unit_finger2_1_1config__t.html#a7614de55422707b4fb2bb6706c1d2fb1',1,'m5::unit::UnitFinger2::config_t']]],
+  ['autoenroll_15',['autoEnroll',['../classm5_1_1unit_1_1_unit_finger2.html#aa1ed2780f6226ab8827b339bb1724c70',1,'m5::unit::UnitFinger2']]],
+  ['autoenrollfailed_16',['AutoEnrollFailed',['../unit___finger2_8hpp.html#a61296099c4dc3e43e13761d01976ee43a6d11f6343414bdc2e52afac606a88d1a',1,'m5::unit::finger2']]],
+  ['autoenrollstage_17',['AutoEnrollStage',['../unit___finger2_8hpp.html#ad9a809694e7081f91b26d1da8bb0f20b',1,'m5::unit::finger2']]],
+  ['autoidentify_18',['autoIdentify',['../classm5_1_1unit_1_1_unit_finger2.html#a3ab8ab8fe092e8418533e3f120f6afa4',1,'m5::unit::UnitFinger2']]],
+  ['autoidentifystage_19',['AutoIdentifyStage',['../unit___finger2_8hpp.html#a46784bb5ac5c7d7eadaf4bff2b4e74fc',1,'m5::unit::finger2']]]
 ];

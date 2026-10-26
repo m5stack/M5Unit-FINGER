@@ -27,7 +27,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">M5Unit-FINGER<span id="projectnumber">&#160;0.2.0 git rev:ee2afce</span>
+   <div id="projectname">M5Unit-FINGER<span id="projectnumber">&#160;0.2.1 git rev:342aaa0</span>
    </div>
   </td>
  </tr>
@@ -112,7 +112,7 @@ $(function(){initNavTree('structm5_1_1unit_1_1_unit_finger2_1_1config__t.html','
 Public Attributes</h2></td></tr>
 <tr class="memitem:ab8d1259f8a7553358d6c4b07d9ebb30a" id="r_ab8d1259f8a7553358d6c4b07d9ebb30a"><td class="memItemLeft" align="right" valign="top"><a id="ab8d1259f8a7553358d6c4b07d9ebb30a" name="ab8d1259f8a7553358d6c4b07d9ebb30a"></a>
 uint32_t&#160;</td><td class="memItemRight" valign="bottom"><b>timeout_ms</b> {1000 * 4}</td></tr>
-<tr class="memdesc:ab8d1259f8a7553358d6c4b07d9ebb30a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Serial I/O timeout (ms) <br /></td></tr>
+<tr class="memdesc:ab8d1259f8a7553358d6c4b07d9ebb30a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Serial I/O timeout (ms) (4000 if zero) <br /></td></tr>
 <tr class="separator:ab8d1259f8a7553358d6c4b07d9ebb30a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:abe7ac4b1b0d5b732c7af00537dd02f41" id="r_abe7ac4b1b0d5b732c7af00537dd02f41"><td class="memItemLeft" align="right" valign="top"><a id="abe7ac4b1b0d5b732c7af00537dd02f41" name="abe7ac4b1b0d5b732c7af00537dd02f41"></a>
 <a class="el" href="unit___finger2_8hpp.html#a5773711ddd7ae0f4f37a485953ec3cc3">finger2::WorkMode</a>&#160;</td><td class="memItemRight" valign="bottom"><b>work_mode</b> {<a class="el" href="unit___finger2_8hpp.html#a5773711ddd7ae0f4f37a485953ec3cc3ab692a8c65d48edd50155ff86e08ec19e">finger2::WorkMode::ScheduledSleep</a>}</td></tr>
@@ -122,6 +122,10 @@ uint32_t&#160;</td><td class="memItemRight" valign="bottom"><b>timeout_ms</b> {1
 uint8_t&#160;</td><td class="memItemRight" valign="bottom"><b>sleep_time</b> {10}</td></tr>
 <tr class="memdesc:ac29e3e562e0f0b2f24ff1daf35ff479c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Scheduled sleep time (10 - 254) sec. <br /></td></tr>
 <tr class="separator:ac29e3e562e0f0b2f24ff1daf35ff479c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7614de55422707b4fb2bb6706c1d2fb1" id="r_a7614de55422707b4fb2bb6706c1d2fb1"><td class="memItemLeft" align="right" valign="top"><a id="a7614de55422707b4fb2bb6706c1d2fb1" name="a7614de55422707b4fb2bb6706c1d2fb1"></a>
+uint32_t&#160;</td><td class="memItemRight" valign="bottom"><b>auto_step_timeout_ms</b> {1000 * 30}</td></tr>
+<tr class="memdesc:a7614de55422707b4fb2bb6706c1d2fb1"><td class="mdescLeft">&#160;</td><td class="mdescRight">Timeout per step of autoEnroll/autoIdentify (ms) (30000 if zero) <br /></td></tr>
+<tr class="separator:a7614de55422707b4fb2bb6706c1d2fb1"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Settings for begin. </p>

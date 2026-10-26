@@ -1,5 +1,7 @@
 var classm5_1_1unit_1_1_unit_f_p_c1020_a =
 [
+    [ "UnitFPC1020A", "classm5_1_1unit_1_1_unit_f_p_c1020_a.html#aeea832d9503cded5a47ec8de4aa517f1", null ],
+    [ "~UnitFPC1020A", "classm5_1_1unit_1_1_unit_f_p_c1020_a.html#a48d4978ecef2d092f01bc34d4fbb866f", null ],
     [ "begin", "classm5_1_1unit_1_1_unit_f_p_c1020_a.html#a197b108deef3fbd0e4a266391da0aa72", null ],
     [ "maximumUserID", "classm5_1_1unit_1_1_unit_f_p_c1020_a.html#a119fd33aff7b6bf6d7763dec088311b1", null ],
     [ "minimumUserID", "classm5_1_1unit_1_1_unit_f_p_c1020_a.html#a367e4b836ce1a8438fcd7080c14b3b9b", null ],

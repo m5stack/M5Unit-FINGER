@@ -27,7 +27,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">M5Unit-FINGER<span id="projectnumber">&#160;0.2.0 git rev:ee2afce</span>
+   <div id="projectname">M5Unit-FINGER<span id="projectnumber">&#160;0.2.1 git rev:342aaa0</span>
    </div>
   </td>
  </tr>
@@ -132,13 +132,19 @@ Classes</h2></td></tr>
 Public Types</h2></td></tr>
 <tr class="memitem:acf1da5b3d3603b2157396c03bca052d4" id="r_acf1da5b3d3603b2157396c03bca052d4"><td class="memItemLeft" align="right" valign="top"><a id="acf1da5b3d3603b2157396c03bca052d4" name="acf1da5b3d3603b2157396c03bca052d4"></a>
 using&#160;</td><td class="memItemRight" valign="bottom"><b>Frame</b> = std::array&lt;uint8_t, 8&gt;</td></tr>
+<tr class="memdesc:acf1da5b3d3603b2157396c03bca052d4"><td class="mdescLeft">&#160;</td><td class="mdescRight">Fixed frame (0xF5 CMD P1 P2 P3 0 CHK 0xF5) <br /></td></tr>
 <tr class="separator:acf1da5b3d3603b2157396c03bca052d4"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:acb21382d6e24b2e088ac91c7364a3698" id="r_acb21382d6e24b2e088ac91c7364a3698"><td class="memItemLeft" align="right" valign="top"><a id="acb21382d6e24b2e088ac91c7364a3698" name="acb21382d6e24b2e088ac91c7364a3698"></a>
 using&#160;</td><td class="memItemRight" valign="bottom"><b>VariableFrame</b> = std::vector&lt;uint8_t&gt;</td></tr>
+<tr class="memdesc:acb21382d6e24b2e088ac91c7364a3698"><td class="mdescLeft">&#160;</td><td class="mdescRight">Variable frame (header frame + 0xF5 data CHK 0xF5) <br /></td></tr>
 <tr class="separator:acb21382d6e24b2e088ac91c7364a3698"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-methods" name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
+<tr class="memitem:a9ac4d1842bdd1c7bf5ee1aac57537872" id="r_a9ac4d1842bdd1c7bf5ee1aac57537872"><td class="memItemLeft" align="right" valign="top"><a id="a9ac4d1842bdd1c7bf5ee1aac57537872" name="a9ac4d1842bdd1c7bf5ee1aac57537872"></a>
+virtual&#160;</td><td class="memItemRight" valign="bottom"><b>~UnitFPC1XXX</b> ()=default</td></tr>
+<tr class="memdesc:a9ac4d1842bdd1c7bf5ee1aac57537872"><td class="mdescLeft">&#160;</td><td class="mdescRight">Destructor. <br /></td></tr>
+<tr class="separator:a9ac4d1842bdd1c7bf5ee1aac57537872"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a5475046c4a007425b753596d83adc253" id="r_a5475046c4a007425b753596d83adc253"><td class="memItemLeft" align="right" valign="top">virtual bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a5475046c4a007425b753596d83adc253">begin</a> () override</td></tr>
 <tr class="memdesc:a5475046c4a007425b753596d83adc253"><td class="mdescLeft">&#160;</td><td class="mdescRight">Begin communication with the unit.  <br /></td></tr>
 <tr class="separator:a5475046c4a007425b753596d83adc253"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -254,15 +260,19 @@ Public Member Functions</h2></td></tr>
 Static Public Attributes</h2></td></tr>
 <tr class="memitem:a4b5d3478bc0b90265046d56fd19f7f53" id="r_a4b5d3478bc0b90265046d56fd19f7f53"><td class="memItemLeft" align="right" valign="top"><a id="a4b5d3478bc0b90265046d56fd19f7f53" name="a4b5d3478bc0b90265046d56fd19f7f53"></a>
 static constexpr uint16_t&#160;</td><td class="memItemRight" valign="bottom"><b>RESOLUTION_WIDTH</b> {0}</td></tr>
+<tr class="memdesc:a4b5d3478bc0b90265046d56fd19f7f53"><td class="mdescLeft">&#160;</td><td class="mdescRight">Resolution width (defined in the derived class) <br /></td></tr>
 <tr class="separator:a4b5d3478bc0b90265046d56fd19f7f53"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ac8811b1d3e36556ba1bb1d755244f6f6" id="r_ac8811b1d3e36556ba1bb1d755244f6f6"><td class="memItemLeft" align="right" valign="top"><a id="ac8811b1d3e36556ba1bb1d755244f6f6" name="ac8811b1d3e36556ba1bb1d755244f6f6"></a>
 static constexpr uint16_t&#160;</td><td class="memItemRight" valign="bottom"><b>RESOLUTION_HEIGHT</b> {0}</td></tr>
+<tr class="memdesc:ac8811b1d3e36556ba1bb1d755244f6f6"><td class="mdescLeft">&#160;</td><td class="mdescRight">Resolution height (defined in the derived class) <br /></td></tr>
 <tr class="separator:ac8811b1d3e36556ba1bb1d755244f6f6"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aee9f46c57cb3d6bb2703998da95021e6" id="r_aee9f46c57cb3d6bb2703998da95021e6"><td class="memItemLeft" align="right" valign="top"><a id="aee9f46c57cb3d6bb2703998da95021e6" name="aee9f46c57cb3d6bb2703998da95021e6"></a>
 static constexpr uint16_t&#160;</td><td class="memItemRight" valign="bottom"><b>MINIMUM_USER_ID</b> {0}</td></tr>
+<tr class="memdesc:aee9f46c57cb3d6bb2703998da95021e6"><td class="mdescLeft">&#160;</td><td class="mdescRight">Minimum user ID (defined in the derived class) <br /></td></tr>
 <tr class="separator:aee9f46c57cb3d6bb2703998da95021e6"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aaa95924ae6b3d2c7bd8780aaffa0b4d7" id="r_aaa95924ae6b3d2c7bd8780aaffa0b4d7"><td class="memItemLeft" align="right" valign="top"><a id="aaa95924ae6b3d2c7bd8780aaffa0b4d7" name="aaa95924ae6b3d2c7bd8780aaffa0b4d7"></a>
 static constexpr uint16_t&#160;</td><td class="memItemRight" valign="bottom"><b>MAXIMUM_USER_ID</b> {0}</td></tr>
+<tr class="memdesc:aaa95924ae6b3d2c7bd8780aaffa0b4d7"><td class="mdescLeft">&#160;</td><td class="mdescRight">Maximum user ID (defined in the derived class) <br /></td></tr>
 <tr class="separator:aaa95924ae6b3d2c7bd8780aaffa0b4d7"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pro-methods" name="pro-methods"></a>
@@ -271,11 +281,11 @@ Protected Member Functions</h2></td></tr>
 bool&#160;</td><td class="memItemRight" valign="bottom"><b>is_valid_user_id</b> (const uint16_t user_id) const</td></tr>
 <tr class="separator:a05fa33acf8ff9c766e1ff64d47530fc8"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a79ec3d8f2ddfcc48b060f84761c8240e" id="r_a79ec3d8f2ddfcc48b060f84761c8240e"><td class="memItemLeft" align="right" valign="top"><a id="a79ec3d8f2ddfcc48b060f84761c8240e" name="a79ec3d8f2ddfcc48b060f84761c8240e"></a>
-bool&#160;</td><td class="memItemRight" valign="bottom"><b>transceive_command</b> (Frame &amp;res, const uint8_t cmd, const uint8_t p1=0, const uint8_t p2=0, const uint8_t p3=0)</td></tr>
+bool&#160;</td><td class="memItemRight" valign="bottom"><b>transceive_command</b> (<a class="el" href="#acf1da5b3d3603b2157396c03bca052d4">Frame</a> &amp;res, const uint8_t cmd, const uint8_t p1=0, const uint8_t p2=0, const uint8_t p3=0)</td></tr>
 <tr class="separator:a79ec3d8f2ddfcc48b060f84761c8240e"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a7ca58800af919da26dcaba5a741b6a26" id="r_a7ca58800af919da26dcaba5a741b6a26"><td class="memItemLeft" align="right" valign="top"><a id="a7ca58800af919da26dcaba5a741b6a26" name="a7ca58800af919da26dcaba5a741b6a26"></a>
-bool&#160;</td><td class="memItemRight" valign="bottom"><b>capture_image</b> (std::vector&lt; uint8_t &gt; &amp;img, const bool full=false)</td></tr>
-<tr class="separator:a7ca58800af919da26dcaba5a741b6a26"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2862cce7e4ab03df7358e3ef417727eb" id="r_a2862cce7e4ab03df7358e3ef417727eb"><td class="memItemLeft" align="right" valign="top"><a id="a2862cce7e4ab03df7358e3ef417727eb" name="a2862cce7e4ab03df7358e3ef417727eb"></a>
+bool&#160;</td><td class="memItemRight" valign="bottom"><b>capture_image</b> (std::vector&lt; uint8_t &gt; &amp;img, const bool raw=false)</td></tr>
+<tr class="separator:a2862cce7e4ab03df7358e3ef417727eb"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Base class for FPC1xxx family. </p>
@@ -401,7 +411,7 @@ Read 4 bits grayscale width/2 x height/2 nibble pixel array if NOT raw image </d
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd>True if successful </dd></dl>
+<dl class="section return"><dt>Returns</dt><dd>True if the response was received (check match for the result) </dd></dl>
 
 </div>
 </div>
@@ -571,12 +581,12 @@ Read 4 bits grayscale width/2 x height/2 nibble pixel array if NOT raw image </d
 <p>Identify characteristic (1:N) </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramdir">[out]</td><td class="paramname">user_id</td><td>Matching UserID, 0 if NoUser </td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">user_id</td><td>Matching UserID, 0 if not found </td></tr>
     <tr><td class="paramdir"></td><td class="paramname">characteristic</td><td>Characteristic data </td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd>True if successful </dd></dl>
+<dl class="section return"><dt>Returns</dt><dd>True if a matching user was found (false if NoUser or failed) </dd></dl>
 
 </div>
 </div>
@@ -602,12 +612,12 @@ Read 4 bits grayscale width/2 x height/2 nibble pixel array if NOT raw image </d
 <p>Identify finger (1:N) </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramdir">[out]</td><td class="paramname">user_id</td><td>Matching UserID, 0 if NoUser </td></tr>
-    <tr><td class="paramdir">[out]</td><td class="paramname">permission</td><td>Matching user permission, 0 if NoUser </td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">user_id</td><td>Matching UserID, 0 if not found </td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">permission</td><td>Matching user permission, 0 if not found </td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd>True if successful </dd></dl>
+<dl class="section return"><dt>Returns</dt><dd>True if a matching user was found (false if NoUser, timeout or failed) </dd></dl>
 
 </div>
 </div>
@@ -918,12 +928,12 @@ Read 4 bits grayscale width/2 x height/2 nibble pixel array if NOT raw image </d
 <p>Read the user permission. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramdir">[out]</td><td class="paramname">permission</td><td>Permission(1,2,3) </td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">permission</td><td>Permission(1,2,3). Not valid if false is returned </td></tr>
     <tr><td class="paramdir"></td><td class="paramname">user_id</td><td>user ID </td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd>True if successful </dd></dl>
+<dl class="section return"><dt>Returns</dt><dd>True if the user exists (false if NoUser or failed) </dd></dl>
 
 </div>
 </div>
@@ -1050,7 +1060,7 @@ Read 4 bits grayscale width/2 x height/2 nibble pixel array if NOT raw image </d
   <table class="params">
     <tr><td class="paramname">user_id</td><td>UserID </td></tr>
     <tr><td class="paramname">permission</td><td>Permission (1,2, or 3) </td></tr>
-    <tr><td class="paramname">step</td><td>Number of intermediate step repetitions </td></tr>
+    <tr><td class="paramname">step</td><td>Number of intermediate step repetitions (0 - 4) </td></tr>
   </table>
   </dd>
 </dl>
@@ -1199,7 +1209,7 @@ Read 4 bits grayscale width/2 x height/2 nibble pixel array if NOT raw image </d
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd>True if successful </dd></dl>
+<dl class="section return"><dt>Returns</dt><dd>True if the response was received (check match for the result) </dd></dl>
 
 </div>
 </div>
@@ -1230,7 +1240,7 @@ Read 4 bits grayscale width/2 x height/2 nibble pixel array if NOT raw image </d
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd>True if successful </dd></dl>
+<dl class="section return"><dt>Returns</dt><dd>True if the response was received (check match for the result) </dd></dl>
 
 </div>
 </div>
@@ -1259,7 +1269,9 @@ Read 4 bits grayscale width/2 x height/2 nibble pixel array if NOT raw image </d
 <dl class="section return"><dt>Returns</dt><dd>True if successful </dd></dl>
 <dl class="section note"><dt>Note</dt><dd>After response, the communication speed is changed </dd>
 <dd>
-The settings are saved in the DSP and remain valid after reset </dd></dl>
+The settings are saved in the DSP and remain valid after reset </dd>
+<dd>
+The host UART baud rate is not changed; reconfigure the host serial after this call </dd></dl>
 
 </div>
 </div>

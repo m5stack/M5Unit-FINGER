@@ -12,10 +12,11 @@ var searchData=
   ['sleep_9',['sleep',['../classm5_1_1unit_1_1_unit_f_p_c1_x_x_x.html#a993e12d3650f09f469923f1574d4a502',1,'m5::unit::UnitFPC1XXX']]],
   ['sleep_5ftime_10',['sleep_time',['../structm5_1_1unit_1_1_unit_finger2_1_1config__t.html#ac29e3e562e0f0b2f24ff1daf35ff479c',1,'m5::unit::UnitFinger2::config_t']]],
   ['smallimage_11',['SmallImage',['../unit___finger2_8hpp.html#a61296099c4dc3e43e13761d01976ee43a858be3ee54610680c81b63c4b5df28f8',1,'m5::unit::finger2']]],
-  ['staticobjectinimage_12',['StaticObjectInImage',['../unit___finger2_8hpp.html#a61296099c4dc3e43e13761d01976ee43ad51f16520866bdfa8ac73ee63d256e58',1,'m5::unit::finger2']]],
-  ['status_13',['status',['../structm5_1_1unit_1_1finger2_1_1_system_basic_params.html#ab8137eff0daa193f8510dc72125d5cb7',1,'m5::unit::finger2::SystemBasicParams']]],
-  ['storetemplate_14',['StoreTemplate',['../unit___finger2_8hpp.html#ad9a809694e7081f91b26d1da8bb0f20ba1a21cc7d3d936507d9307ee627a0819a',1,'m5::unit::finger2']]],
-  ['storetemplate_15',['storeTemplate',['../classm5_1_1unit_1_1_unit_finger2.html#a33effad1d4401f0cf767ad6a0d27709b',1,'m5::unit::UnitFinger2']]],
-  ['success_16',['Success',['../unit___f_p_c1xxx_8hpp.html#a2cc69975daa7828be07583aebdaf58a3a505a83f220c02df2f85c3810cd9ceb38',1,'m5::unit::fpc1xxx']]],
-  ['systembasicparams_17',['SystemBasicParams',['../structm5_1_1unit_1_1finger2_1_1_system_basic_params.html',1,'m5::unit::finger2']]]
+  ['staticobjectinfeature_12',['StaticObjectInFeature',['../unit___finger2_8hpp.html#a61296099c4dc3e43e13761d01976ee43a9b23c7ded4bc4236674813d2205139c3',1,'m5::unit::finger2']]],
+  ['staticobjectinimage_13',['StaticObjectInImage',['../unit___finger2_8hpp.html#a61296099c4dc3e43e13761d01976ee43ad51f16520866bdfa8ac73ee63d256e58',1,'m5::unit::finger2']]],
+  ['status_14',['status',['../structm5_1_1unit_1_1finger2_1_1_system_basic_params.html#ab8137eff0daa193f8510dc72125d5cb7',1,'m5::unit::finger2::SystemBasicParams']]],
+  ['storetemplate_15',['StoreTemplate',['../unit___finger2_8hpp.html#ad9a809694e7081f91b26d1da8bb0f20ba1a21cc7d3d936507d9307ee627a0819a',1,'m5::unit::finger2']]],
+  ['storetemplate_16',['storeTemplate',['../classm5_1_1unit_1_1_unit_finger2.html#a33effad1d4401f0cf767ad6a0d27709b',1,'m5::unit::UnitFinger2']]],
+  ['success_17',['Success',['../unit___f_p_c1xxx_8hpp.html#a2cc69975daa7828be07583aebdaf58a3a505a83f220c02df2f85c3810cd9ceb38',1,'m5::unit::fpc1xxx']]],
+  ['systembasicparams_18',['SystemBasicParams',['../structm5_1_1unit_1_1finger2_1_1_system_basic_params.html',1,'m5::unit::finger2']]]
 ];

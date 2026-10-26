@@ -7,14 +7,14 @@ var searchData=
   ['unit_5ffinger2_2ehpp_4',['unit_Finger2.hpp',['../unit___finger2_8hpp.html',1,'']]],
   ['unit_5ffpc1xxx_2ecpp_5',['unit_FPC1xxx.cpp',['../unit___f_p_c1xxx_8cpp.html',1,'']]],
   ['unit_5ffpc1xxx_2ehpp_6',['unit_FPC1xxx.hpp',['../unit___f_p_c1xxx_8hpp.html',1,'']]],
-  ['unitfacesfinger_7',['UnitFacesFinger',['../classm5_1_1unit_1_1_unit_faces_finger.html',1,'m5::unit']]],
+  ['unitfacesfinger_7',['UnitFacesFinger',['../classm5_1_1unit_1_1_unit_faces_finger.html',1,'m5::unit::UnitFacesFinger'],['../classm5_1_1unit_1_1_unit_faces_finger.html#a900be0983d7ace68e3e265b40cbdedac',1,'m5::unit::UnitFacesFinger::UnitFacesFinger()']]],
   ['unitfinger_8',['UnitFinger',['../_m5_unit_unified_f_i_n_g_e_r_8hpp.html#ae49e3af4b01ebe73e7c4ef3edde228d4',1,'m5::unit']]],
-  ['unitfinger2_9',['UnitFinger2',['../classm5_1_1unit_1_1_unit_finger2.html',1,'m5::unit']]],
-  ['unitfpc1020a_10',['UnitFPC1020A',['../classm5_1_1unit_1_1_unit_f_p_c1020_a.html',1,'m5::unit']]],
+  ['unitfinger2_9',['UnitFinger2',['../classm5_1_1unit_1_1_unit_finger2.html',1,'m5::unit::UnitFinger2'],['../classm5_1_1unit_1_1_unit_finger2.html#a0e92110a5fb165f1cb112a2be4134c6c',1,'m5::unit::UnitFinger2::UnitFinger2()']]],
+  ['unitfpc1020a_10',['UnitFPC1020A',['../classm5_1_1unit_1_1_unit_f_p_c1020_a.html',1,'m5::unit::UnitFPC1020A'],['../classm5_1_1unit_1_1_unit_f_p_c1020_a.html#aeea832d9503cded5a47ec8de4aa517f1',1,'m5::unit::UnitFPC1020A::UnitFPC1020A()']]],
   ['unitfpc1xxx_11',['UnitFPC1XXX',['../classm5_1_1unit_1_1_unit_f_p_c1_x_x_x.html',1,'m5::unit']]],
   ['unmatched_12',['Unmatched',['../unit___finger2_8hpp.html#a61296099c4dc3e43e13761d01976ee43a164fe50bf145ff772a4229487cba0b50',1,'m5::unit::finger2']]],
   ['upgradefailed_13',['UpgradeFailed',['../unit___finger2_8hpp.html#a61296099c4dc3e43e13761d01976ee43acb8992c2192fb2bdc4f5f8bfbd392ae8',1,'m5::unit::finger2']]],
   ['uploadfailed_14',['UploadFailed',['../unit___finger2_8hpp.html#a61296099c4dc3e43e13761d01976ee43a974e73d4dba552e1ca3dc63b4d7ed281',1,'m5::unit::finger2']]],
   ['uploadimagefailed_15',['UploadImageFailed',['../unit___finger2_8hpp.html#a61296099c4dc3e43e13761d01976ee43a03c86e63d056c3dd90b501546ab5358c',1,'m5::unit::finger2']]],
-  ['user_16',['User',['../structm5_1_1unit_1_1fpc1xxx_1_1_user.html',1,'m5::unit::fpc1xxx']]]
+  ['user_16',['User',['../structm5_1_1unit_1_1fpc1xxx_1_1_user.html',1,'m5::unit::fpc1xxx::User'],['../structm5_1_1unit_1_1fpc1xxx_1_1_user.html#a9d1d804c7d40943d4dfb09a4b5499f49',1,'m5::unit::fpc1xxx::User::User()']]]
 ];

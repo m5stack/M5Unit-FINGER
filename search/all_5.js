@@ -10,5 +10,6 @@ var searchData=
   ['finger_7',['M5Unit-FINGER',['../index.html',1,'']]],
   ['finger2_8',['finger2',['../namespacefinger2.html',1,'']]],
   ['flasherror_9',['FlashError',['../unit___finger2_8hpp.html#a61296099c4dc3e43e13761d01976ee43a8dc2b8bce6b6535303ba6c3e5671976e',1,'m5::unit::finger2']]],
-  ['full_10',['Full',['../unit___f_p_c1xxx_8hpp.html#a2cc69975daa7828be07583aebdaf58a3abbd47109890259c0127154db1af26c75',1,'m5::unit::fpc1xxx']]]
+  ['frame_10',['Frame',['../classm5_1_1unit_1_1_unit_f_p_c1_x_x_x.html#acf1da5b3d3603b2157396c03bca052d4',1,'m5::unit::UnitFPC1XXX']]],
+  ['full_11',['Full',['../unit___f_p_c1xxx_8hpp.html#a2cc69975daa7828be07583aebdaf58a3abbd47109890259c0127154db1af26c75',1,'m5::unit::fpc1xxx']]]
 ];

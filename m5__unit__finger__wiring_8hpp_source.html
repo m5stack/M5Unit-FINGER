@@ -27,7 +27,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">M5Unit-FINGER<span id="projectnumber">&#160;0.2.0 git rev:ee2afce</span>
+   <div id="projectname">M5Unit-FINGER<span id="projectnumber">&#160;0.2.1 git rev:342aaa0</span>
    </div>
   </td>
  </tr>
@@ -140,60 +140,60 @@ $(function(){initNavTree('m5__unit__finger__wiring_8hpp_source.html',''); initRe
 <div class="line"><a id="l00056" name="l00056"></a><span class="lineno">   56</span>}</div>
 <div class="line"><a id="l00057" name="l00057"></a><span class="lineno">   57</span> </div>
 <div class="line"><a id="l00058" name="l00058"></a><span class="lineno">   58</span><span class="preprocessor">#if defined(ARDUINO)</span></div>
-<div class="line"><a id="l00070" name="l00070"></a><span class="lineno">   70</span><span class="keyword">inline</span> <span class="keywordtype">bool</span> addFacesUART(UnitUnified&amp; units, UnitFacesFinger&amp; <a class="code hl_namespace" href="namespaceunit.html">unit</a>, <span class="keyword">const</span> uint32_t baud = 19200,</div>
-<div class="line"><a id="l00071" name="l00071"></a><span class="lineno">   71</span>                         <span class="keyword">const</span> uint32_t config = SERIAL_8N1)</div>
-<div class="line"><a id="l00072" name="l00072"></a><span class="lineno">   72</span>{</div>
-<div class="line"><a id="l00073" name="l00073"></a><span class="lineno">   73</span>    <span class="keyword">const</span> <span class="keyword">auto</span> fp = getFacesPins();</div>
-<div class="line"><a id="l00074" name="l00074"></a><span class="lineno">   74</span>    <span class="keywordflow">if</span> (fp.rx &lt; 0 || fp.tx &lt; 0) {</div>
-<div class="line"><a id="l00075" name="l00075"></a><span class="lineno">   75</span>        M5_LIB_LOGE(<span class="stringliteral">&quot;wiring: addFacesUART unsupported board=0x%02x&quot;</span>, <span class="keyword">static_cast&lt;</span><span class="keywordtype">int</span><span class="keyword">&gt;</span>(M5.getBoard()));</div>
-<div class="line"><a id="l00076" name="l00076"></a><span class="lineno">   76</span>        <span class="keywordflow">return</span> <span class="keyword">false</span>;</div>
-<div class="line"><a id="l00077" name="l00077"></a><span class="lineno">   77</span>    }</div>
-<div class="line"><a id="l00078" name="l00078"></a><span class="lineno">   78</span>    M5_LIB_LOGI(<span class="stringliteral">&quot;wiring: addFacesUART board=0x%02x rx=%d tx=%d pwr=%d tch=%d baud=%lu&quot;</span>, <span class="keyword">static_cast&lt;</span><span class="keywordtype">int</span><span class="keyword">&gt;</span>(M5.getBoard()),</div>
-<div class="line"><a id="l00079" name="l00079"></a><span class="lineno">   79</span>                fp.rx, fp.tx, fp.panel_power, fp.touch_power, (<span class="keywordtype">unsigned</span> <span class="keywordtype">long</span>)baud);</div>
-<div class="line"><a id="l00080" name="l00080"></a><span class="lineno">   80</span> </div>
-<div class="line"><a id="l00081" name="l00081"></a><span class="lineno">   81</span>    <span class="keyword">auto</span> cfg            = <a class="code hl_namespace" href="namespaceunit.html">unit</a>.config();</div>
-<div class="line"><a id="l00082" name="l00082"></a><span class="lineno">   82</span>    cfg.panel_power_pin = fp.panel_power;</div>
-<div class="line"><a id="l00083" name="l00083"></a><span class="lineno">   83</span>    cfg.touch_power_pin = fp.touch_power;</div>
-<div class="line"><a id="l00084" name="l00084"></a><span class="lineno">   84</span>    <a class="code hl_namespace" href="namespaceunit.html">unit</a>.config(cfg);</div>
-<div class="line"><a id="l00085" name="l00085"></a><span class="lineno">   85</span> </div>
-<div class="line"><a id="l00086" name="l00086"></a><span class="lineno">   86</span>    HardwareSerial&amp; serial = m5::unit::wiring::defaultUartSerial();</div>
-<div class="line"><a id="l00087" name="l00087"></a><span class="lineno">   87</span>    serial.end();</div>
-<div class="line"><a id="l00088" name="l00088"></a><span class="lineno">   88</span>    serial.begin(baud, config, fp.rx, fp.tx);</div>
-<div class="line"><a id="l00089" name="l00089"></a><span class="lineno">   89</span>    <span class="keywordflow">return</span> units.add(<a class="code hl_namespace" href="namespaceunit.html">unit</a>, serial);</div>
-<div class="line"><a id="l00090" name="l00090"></a><span class="lineno">   90</span>}</div>
-<div class="line"><a id="l00091" name="l00091"></a><span class="lineno">   91</span><span class="preprocessor">#else   </span><span class="comment">// ESP-IDF native</span></div>
-<div class="line"><a id="l00104" name="l00104"></a><span class="lineno">  104</span>inline bool addFacesUART(UnitUnified&amp; units, UnitFacesFinger&amp; unit, const uint32_t baud = 19200,</div>
-<div class="line"><a id="l00105" name="l00105"></a><span class="lineno">  105</span>                         <span class="keyword">const</span> m5::unit::wiring::UartConfig config = m5::unit::wiring::UartConfig::Default)</div>
-<div class="line"><a id="l00106" name="l00106"></a><span class="lineno">  106</span>{</div>
-<div class="line"><a id="l00107" name="l00107"></a><span class="lineno">  107</span>    <span class="keyword">const</span> <span class="keyword">auto</span> fp = getFacesPins();</div>
-<div class="line"><a id="l00108" name="l00108"></a><span class="lineno">  108</span>    <span class="keywordflow">if</span> (fp.rx &lt; 0 || fp.tx &lt; 0) {</div>
-<div class="line"><a id="l00109" name="l00109"></a><span class="lineno">  109</span>        M5_LIB_LOGE(<span class="stringliteral">&quot;wiring: addFacesUART unsupported board=0x%02x&quot;</span>, <span class="keyword">static_cast&lt;</span><span class="keywordtype">int</span><span class="keyword">&gt;</span>(M5.getBoard()));</div>
-<div class="line"><a id="l00110" name="l00110"></a><span class="lineno">  110</span>        <span class="keywordflow">return</span> <span class="keyword">false</span>;</div>
-<div class="line"><a id="l00111" name="l00111"></a><span class="lineno">  111</span>    }</div>
-<div class="line"><a id="l00112" name="l00112"></a><span class="lineno">  112</span>    M5_LIB_LOGI(<span class="stringliteral">&quot;wiring(ESP-IDF): addFacesUART board=0x%02x rx=%d tx=%d pwr=%d tch=%d baud=%u&quot;</span>,</div>
-<div class="line"><a id="l00113" name="l00113"></a><span class="lineno">  113</span>                <span class="keyword">static_cast&lt;</span><span class="keywordtype">int</span><span class="keyword">&gt;</span>(M5.getBoard()), fp.rx, fp.tx, fp.panel_power, fp.touch_power, (<span class="keywordtype">unsigned</span>)baud);</div>
-<div class="line"><a id="l00114" name="l00114"></a><span class="lineno">  114</span> </div>
-<div class="line"><a id="l00115" name="l00115"></a><span class="lineno">  115</span>    <span class="keyword">auto</span> cfg            = <a class="code hl_namespace" href="namespaceunit.html">unit</a>.config();</div>
-<div class="line"><a id="l00116" name="l00116"></a><span class="lineno">  116</span>    cfg.panel_power_pin = fp.panel_power;</div>
-<div class="line"><a id="l00117" name="l00117"></a><span class="lineno">  117</span>    cfg.touch_power_pin = fp.touch_power;</div>
-<div class="line"><a id="l00118" name="l00118"></a><span class="lineno">  118</span>    <a class="code hl_namespace" href="namespaceunit.html">unit</a>.config(cfg);</div>
-<div class="line"><a id="l00119" name="l00119"></a><span class="lineno">  119</span> </div>
-<div class="line"><a id="l00120" name="l00120"></a><span class="lineno">  120</span>    <span class="keyword">auto</span> port = m5::unit::wiring::uartPortHandle(m5::unit::wiring::defaultUartPort(), <span class="keyword">static_cast&lt;</span>gpio_num_t<span class="keyword">&gt;</span>(fp.rx),</div>
-<div class="line"><a id="l00121" name="l00121"></a><span class="lineno">  121</span>                                                 <span class="keyword">static_cast&lt;</span>gpio_num_t<span class="keyword">&gt;</span>(fp.tx), baud, config);</div>
-<div class="line"><a id="l00122" name="l00122"></a><span class="lineno">  122</span>    <span class="keywordflow">if</span> (port == UART_NUM_MAX) {</div>
-<div class="line"><a id="l00123" name="l00123"></a><span class="lineno">  123</span>        <span class="keywordflow">return</span> <span class="keyword">false</span>;</div>
-<div class="line"><a id="l00124" name="l00124"></a><span class="lineno">  124</span>    }</div>
-<div class="line"><a id="l00125" name="l00125"></a><span class="lineno">  125</span>    <span class="keywordflow">return</span> units.add(<a class="code hl_namespace" href="namespaceunit.html">unit</a>, port);</div>
-<div class="line"><a id="l00126" name="l00126"></a><span class="lineno">  126</span>}</div>
-<div class="line"><a id="l00127" name="l00127"></a><span class="lineno">  127</span><span class="preprocessor">#endif  </span><span class="comment">// ARDUINO</span></div>
-<div class="line"><a id="l00128" name="l00128"></a><span class="lineno">  128</span><span class="preprocessor">#endif  </span><span class="comment">// __M5UNIFIED_HPP__</span></div>
-<div class="line"><a id="l00129" name="l00129"></a><span class="lineno">  129</span> </div>
-<div class="line"><a id="l00130" name="l00130"></a><span class="lineno">  130</span>}  <span class="comment">// namespace wiring</span></div>
-<div class="line"><a id="l00131" name="l00131"></a><span class="lineno">  131</span>}  <span class="comment">// namespace faces</span></div>
-<div class="line"><a id="l00132" name="l00132"></a><span class="lineno">  132</span>}  <span class="comment">// namespace fpc1xxx</span></div>
-<div class="line"><a id="l00133" name="l00133"></a><span class="lineno">  133</span>}  <span class="comment">// namespace unit</span></div>
-<div class="line"><a id="l00134" name="l00134"></a><span class="lineno">  134</span>}  <span class="comment">// namespace m5</span></div>
-<div class="line"><a id="l00135" name="l00135"></a><span class="lineno">  135</span><span class="preprocessor">#endif  </span><span class="comment">// M5_UNIT_FINGER_WIRING_HPP</span></div>
+<div class="line"><a id="l00071" name="l00071"></a><span class="lineno">   71</span><span class="keyword">inline</span> <span class="keywordtype">bool</span> addFacesUART(UnitUnified&amp; units, UnitFacesFinger&amp; <a class="code hl_namespace" href="namespaceunit.html">unit</a>, <span class="keyword">const</span> uint32_t baud = 19200,</div>
+<div class="line"><a id="l00072" name="l00072"></a><span class="lineno">   72</span>                         <span class="keyword">const</span> uint32_t config = SERIAL_8N1)</div>
+<div class="line"><a id="l00073" name="l00073"></a><span class="lineno">   73</span>{</div>
+<div class="line"><a id="l00074" name="l00074"></a><span class="lineno">   74</span>    <span class="keyword">const</span> <span class="keyword">auto</span> fp = getFacesPins();</div>
+<div class="line"><a id="l00075" name="l00075"></a><span class="lineno">   75</span>    <span class="keywordflow">if</span> (fp.rx &lt; 0 || fp.tx &lt; 0) {</div>
+<div class="line"><a id="l00076" name="l00076"></a><span class="lineno">   76</span>        M5_LIB_LOGE(<span class="stringliteral">&quot;wiring: addFacesUART unsupported board=0x%02x&quot;</span>, <span class="keyword">static_cast&lt;</span><span class="keywordtype">int</span><span class="keyword">&gt;</span>(M5.getBoard()));</div>
+<div class="line"><a id="l00077" name="l00077"></a><span class="lineno">   77</span>        <span class="keywordflow">return</span> <span class="keyword">false</span>;</div>
+<div class="line"><a id="l00078" name="l00078"></a><span class="lineno">   78</span>    }</div>
+<div class="line"><a id="l00079" name="l00079"></a><span class="lineno">   79</span>    M5_LIB_LOGI(<span class="stringliteral">&quot;wiring: addFacesUART board=0x%02x rx=%d tx=%d pwr=%d tch=%d baud=%lu&quot;</span>, <span class="keyword">static_cast&lt;</span><span class="keywordtype">int</span><span class="keyword">&gt;</span>(M5.getBoard()),</div>
+<div class="line"><a id="l00080" name="l00080"></a><span class="lineno">   80</span>                fp.rx, fp.tx, fp.panel_power, fp.touch_power, (<span class="keywordtype">unsigned</span> <span class="keywordtype">long</span>)baud);</div>
+<div class="line"><a id="l00081" name="l00081"></a><span class="lineno">   81</span> </div>
+<div class="line"><a id="l00082" name="l00082"></a><span class="lineno">   82</span>    <span class="keyword">auto</span> cfg            = <a class="code hl_namespace" href="namespaceunit.html">unit</a>.config();</div>
+<div class="line"><a id="l00083" name="l00083"></a><span class="lineno">   83</span>    cfg.panel_power_pin = fp.panel_power;</div>
+<div class="line"><a id="l00084" name="l00084"></a><span class="lineno">   84</span>    cfg.touch_power_pin = fp.touch_power;</div>
+<div class="line"><a id="l00085" name="l00085"></a><span class="lineno">   85</span>    <a class="code hl_namespace" href="namespaceunit.html">unit</a>.config(cfg);</div>
+<div class="line"><a id="l00086" name="l00086"></a><span class="lineno">   86</span> </div>
+<div class="line"><a id="l00087" name="l00087"></a><span class="lineno">   87</span>    HardwareSerial&amp; serial = m5::unit::wiring::defaultUartSerial();</div>
+<div class="line"><a id="l00088" name="l00088"></a><span class="lineno">   88</span>    serial.end();</div>
+<div class="line"><a id="l00089" name="l00089"></a><span class="lineno">   89</span>    serial.begin(baud, config, fp.rx, fp.tx);</div>
+<div class="line"><a id="l00090" name="l00090"></a><span class="lineno">   90</span>    <span class="keywordflow">return</span> units.add(<a class="code hl_namespace" href="namespaceunit.html">unit</a>, serial);</div>
+<div class="line"><a id="l00091" name="l00091"></a><span class="lineno">   91</span>}</div>
+<div class="line"><a id="l00092" name="l00092"></a><span class="lineno">   92</span><span class="preprocessor">#else   </span><span class="comment">// ESP-IDF native</span></div>
+<div class="line"><a id="l00106" name="l00106"></a><span class="lineno">  106</span>inline bool addFacesUART(UnitUnified&amp; units, UnitFacesFinger&amp; unit, const uint32_t baud = 19200,</div>
+<div class="line"><a id="l00107" name="l00107"></a><span class="lineno">  107</span>                         <span class="keyword">const</span> m5::unit::wiring::UartConfig config = m5::unit::wiring::UartConfig::Default)</div>
+<div class="line"><a id="l00108" name="l00108"></a><span class="lineno">  108</span>{</div>
+<div class="line"><a id="l00109" name="l00109"></a><span class="lineno">  109</span>    <span class="keyword">const</span> <span class="keyword">auto</span> fp = getFacesPins();</div>
+<div class="line"><a id="l00110" name="l00110"></a><span class="lineno">  110</span>    <span class="keywordflow">if</span> (fp.rx &lt; 0 || fp.tx &lt; 0) {</div>
+<div class="line"><a id="l00111" name="l00111"></a><span class="lineno">  111</span>        M5_LIB_LOGE(<span class="stringliteral">&quot;wiring: addFacesUART unsupported board=0x%02x&quot;</span>, <span class="keyword">static_cast&lt;</span><span class="keywordtype">int</span><span class="keyword">&gt;</span>(M5.getBoard()));</div>
+<div class="line"><a id="l00112" name="l00112"></a><span class="lineno">  112</span>        <span class="keywordflow">return</span> <span class="keyword">false</span>;</div>
+<div class="line"><a id="l00113" name="l00113"></a><span class="lineno">  113</span>    }</div>
+<div class="line"><a id="l00114" name="l00114"></a><span class="lineno">  114</span>    M5_LIB_LOGI(<span class="stringliteral">&quot;wiring(ESP-IDF): addFacesUART board=0x%02x rx=%d tx=%d pwr=%d tch=%d baud=%u&quot;</span>,</div>
+<div class="line"><a id="l00115" name="l00115"></a><span class="lineno">  115</span>                <span class="keyword">static_cast&lt;</span><span class="keywordtype">int</span><span class="keyword">&gt;</span>(M5.getBoard()), fp.rx, fp.tx, fp.panel_power, fp.touch_power, (<span class="keywordtype">unsigned</span>)baud);</div>
+<div class="line"><a id="l00116" name="l00116"></a><span class="lineno">  116</span> </div>
+<div class="line"><a id="l00117" name="l00117"></a><span class="lineno">  117</span>    <span class="keyword">auto</span> cfg            = <a class="code hl_namespace" href="namespaceunit.html">unit</a>.config();</div>
+<div class="line"><a id="l00118" name="l00118"></a><span class="lineno">  118</span>    cfg.panel_power_pin = fp.panel_power;</div>
+<div class="line"><a id="l00119" name="l00119"></a><span class="lineno">  119</span>    cfg.touch_power_pin = fp.touch_power;</div>
+<div class="line"><a id="l00120" name="l00120"></a><span class="lineno">  120</span>    <a class="code hl_namespace" href="namespaceunit.html">unit</a>.config(cfg);</div>
+<div class="line"><a id="l00121" name="l00121"></a><span class="lineno">  121</span> </div>
+<div class="line"><a id="l00122" name="l00122"></a><span class="lineno">  122</span>    <span class="keyword">auto</span> port = m5::unit::wiring::uartPortHandle(m5::unit::wiring::defaultUartPort(), <span class="keyword">static_cast&lt;</span>gpio_num_t<span class="keyword">&gt;</span>(fp.rx),</div>
+<div class="line"><a id="l00123" name="l00123"></a><span class="lineno">  123</span>                                                 <span class="keyword">static_cast&lt;</span>gpio_num_t<span class="keyword">&gt;</span>(fp.tx), baud, config);</div>
+<div class="line"><a id="l00124" name="l00124"></a><span class="lineno">  124</span>    <span class="keywordflow">if</span> (port == UART_NUM_MAX) {</div>
+<div class="line"><a id="l00125" name="l00125"></a><span class="lineno">  125</span>        <span class="keywordflow">return</span> <span class="keyword">false</span>;</div>
+<div class="line"><a id="l00126" name="l00126"></a><span class="lineno">  126</span>    }</div>
+<div class="line"><a id="l00127" name="l00127"></a><span class="lineno">  127</span>    <span class="keywordflow">return</span> units.add(<a class="code hl_namespace" href="namespaceunit.html">unit</a>, port);</div>
+<div class="line"><a id="l00128" name="l00128"></a><span class="lineno">  128</span>}</div>
+<div class="line"><a id="l00129" name="l00129"></a><span class="lineno">  129</span><span class="preprocessor">#endif  </span><span class="comment">// ARDUINO</span></div>
+<div class="line"><a id="l00130" name="l00130"></a><span class="lineno">  130</span><span class="preprocessor">#endif  </span><span class="comment">// __M5UNIFIED_HPP__</span></div>
+<div class="line"><a id="l00131" name="l00131"></a><span class="lineno">  131</span> </div>
+<div class="line"><a id="l00132" name="l00132"></a><span class="lineno">  132</span>}  <span class="comment">// namespace wiring</span></div>
+<div class="line"><a id="l00133" name="l00133"></a><span class="lineno">  133</span>}  <span class="comment">// namespace faces</span></div>
+<div class="line"><a id="l00134" name="l00134"></a><span class="lineno">  134</span>}  <span class="comment">// namespace fpc1xxx</span></div>
+<div class="line"><a id="l00135" name="l00135"></a><span class="lineno">  135</span>}  <span class="comment">// namespace unit</span></div>
+<div class="line"><a id="l00136" name="l00136"></a><span class="lineno">  136</span>}  <span class="comment">// namespace m5</span></div>
+<div class="line"><a id="l00137" name="l00137"></a><span class="lineno">  137</span><span class="preprocessor">#endif  </span><span class="comment">// M5_UNIT_FINGER_WIRING_HPP</span></div>
 <div class="ttc" id="anamespacem5_html"><div class="ttname"><a href="namespacem5.html">m5</a></div><div class="ttdoc">Top level namespace of M5Stack.</div></div>
 <div class="ttc" id="anamespaceunit_html"><div class="ttname"><a href="namespaceunit.html">unit</a></div><div class="ttdoc">Unit-related namespace.</div></div>
 <div class="ttc" id="aunit___faces_finger_8hpp_html"><div class="ttname"><a href="unit___faces_finger_8hpp.html">unit_FacesFinger.hpp</a></div><div class="ttdoc">Faces Finger Module (FPC1020A via M-Bus) for M5UnitUnified.</div></div>

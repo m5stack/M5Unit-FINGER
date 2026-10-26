@@ -2,6 +2,8 @@ var classm5_1_1unit_1_1_unit_finger2 =
 [
     [ "config_t", "structm5_1_1unit_1_1_unit_finger2_1_1config__t.html", "structm5_1_1unit_1_1_unit_finger2_1_1config__t" ],
     [ "Packet", "classm5_1_1unit_1_1_unit_finger2.html#aece3cdc297f84115bc4a4acc43941d59", null ],
+    [ "UnitFinger2", "classm5_1_1unit_1_1_unit_finger2.html#a0e92110a5fb165f1cb112a2be4134c6c", null ],
+    [ "~UnitFinger2", "classm5_1_1unit_1_1_unit_finger2.html#ad6ee700adc52b1ad1cd0d1950a90b458", null ],
     [ "autoEnroll", "classm5_1_1unit_1_1_unit_finger2.html#aa1ed2780f6226ab8827b339bb1724c70", null ],
     [ "autoIdentify", "classm5_1_1unit_1_1_unit_finger2.html#a3ab8ab8fe092e8418533e3f120f6afa4", null ],
     [ "begin", "classm5_1_1unit_1_1_unit_finger2.html#afb56c39e6b76bd5ebfe0956b31bc9afb", null ],

@@ -1,6 +1,9 @@
 var classm5_1_1unit_1_1_unit_f_p_c1_x_x_x =
 [
     [ "config_t", "structm5_1_1unit_1_1_unit_f_p_c1_x_x_x_1_1config__t.html", "structm5_1_1unit_1_1_unit_f_p_c1_x_x_x_1_1config__t" ],
+    [ "Frame", "classm5_1_1unit_1_1_unit_f_p_c1_x_x_x.html#acf1da5b3d3603b2157396c03bca052d4", null ],
+    [ "VariableFrame", "classm5_1_1unit_1_1_unit_f_p_c1_x_x_x.html#acb21382d6e24b2e088ac91c7364a3698", null ],
+    [ "~UnitFPC1XXX", "classm5_1_1unit_1_1_unit_f_p_c1_x_x_x.html#a9ac4d1842bdd1c7bf5ee1aac57537872", null ],
     [ "begin", "classm5_1_1unit_1_1_unit_f_p_c1_x_x_x.html#a5475046c4a007425b753596d83adc253", null ],
     [ "captureImage", "classm5_1_1unit_1_1_unit_f_p_c1_x_x_x.html#a53b4fd2d7b69cc3cc09ec7e40dc7b607", null ],
     [ "compareCharacteristic", "classm5_1_1unit_1_1_unit_f_p_c1_x_x_x.html#a31c9fc69b6f33aa03294aaea29642a8a", null ],

@@ -27,7 +27,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">M5Unit-FINGER<span id="projectnumber">&#160;0.2.0 git rev:ee2afce</span>
+   <div id="projectname">M5Unit-FINGER<span id="projectnumber">&#160;0.2.1 git rev:342aaa0</span>
    </div>
   </td>
  </tr>
@@ -276,7 +276,7 @@ Enumerations</h2></td></tr>
 &#160;&#160;<a class="el" href="#a61296099c4dc3e43e13761d01976ee43a89b69484680b18e9179e826c6e023805">AlreadyExists</a>
 , <a class="el" href="#a61296099c4dc3e43e13761d01976ee43afe5f5cf61a809d0dd4f355b34caaf648">FeatureAssociated</a>
 , <a class="el" href="#a61296099c4dc3e43e13761d01976ee43a6c38620d8dfc4596db149f65151d2582">InitializeFailed</a>
-, <a class="el" href="#a61296099c4dc3e43e13761d01976ee43a44e88b15b351e7b43a74fe65c5468336">initializeFailed</a> = InitializeFailed
+, <a class="el" href="#a61296099c4dc3e43e13761d01976ee43a44e88b15b351e7b43a74fe65c5468336">initializeFailed</a>
 , <br />
 &#160;&#160;<a class="el" href="#a61296099c4dc3e43e13761d01976ee43a3cd2ea98f70f19a1973f09d0dd740aa5">InformationNotEmpty</a>
 , <a class="el" href="#a61296099c4dc3e43e13761d01976ee43ae3293c9dc28f533e13252a85c986cc28">InformationEmpty</a>
@@ -293,13 +293,17 @@ Enumerations</h2></td></tr>
 , <a class="el" href="#a61296099c4dc3e43e13761d01976ee43ad51f16520866bdfa8ac73ee63d256e58">StaticObjectInImage</a>
 , <a class="el" href="#a61296099c4dc3e43e13761d01976ee43a6e4f8a52dbac837449d22ee3fd9f3d99">IllegalData</a>
 , <br />
-&#160;&#160;<a class="el" href="#a61296099c4dc3e43e13761d01976ee43a5a59267a6dbfd428114c81b8799da8ea">PacketTimeout</a> = 0xF9
+&#160;&#160;<a class="el" href="#a61296099c4dc3e43e13761d01976ee43a9b23c7ded4bc4236674813d2205139c3">StaticObjectInFeature</a> = 0x37
+, <a class="el" href="#a61296099c4dc3e43e13761d01976ee43a4f2e1319b5182b6af003b416aa6fdb94">PoorTemplateQuality</a> = 0x3B
+, <a class="el" href="#a61296099c4dc3e43e13761d01976ee43a5a59267a6dbfd428114c81b8799da8ea">PacketTimeout</a> = 0xF9
 , <a class="el" href="#a61296099c4dc3e43e13761d01976ee43ae2262dc63f9bb77e4c1db31d65b1791b">PacketBad</a>
-, <a class="el" href="#a61296099c4dc3e43e13761d01976ee43a5eb281a5c10f1efd32ab0abc35d5c648">PacketOverflow</a>
-, <a class="el" href="#a61296099c4dc3e43e13761d01976ee43a694829c5919d4c1bacb8f1599e4de884">OperationBlocked</a>
 , <br />
-&#160;&#160;<a class="el" href="#a61296099c4dc3e43e13761d01976ee43a189976b733e988a6903e4d19d8cd2fea">ParameterError</a>
-, <a class="el" href="#a61296099c4dc3e43e13761d01976ee43a2b2c350e9a20a57773a9efa14c8c36e5">NotActive</a>
+&#160;&#160;<a class="el" href="#a61296099c4dc3e43e13761d01976ee43aede1caf3c19ba576ac09378c70ac3350">ModuleBusy</a>
+, <a class="el" href="#a61296099c4dc3e43e13761d01976ee43a5eb281a5c10f1efd32ab0abc35d5c648">PacketOverflow</a> = ModuleBusy
+, <a class="el" href="#a61296099c4dc3e43e13761d01976ee43a694829c5919d4c1bacb8f1599e4de884">OperationBlocked</a>
+, <a class="el" href="#a61296099c4dc3e43e13761d01976ee43a189976b733e988a6903e4d19d8cd2fea">ParameterError</a>
+, <br />
+&#160;&#160;<a class="el" href="#a61296099c4dc3e43e13761d01976ee43a2b2c350e9a20a57773a9efa14c8c36e5">NotActive</a>
 , <a class="el" href="#a61296099c4dc3e43e13761d01976ee43a4de677b08b4f8fbede897517c2a23460">PassiveActivation</a> = 0xFF
 <br />
  }</td></tr>
@@ -325,6 +329,7 @@ constexpr <a class="el" href="#aaa4d455237126dce0e9e47f4aa854d3f">auto_enroll_fl
 <tr class="memdesc:aeced9d214b0046b26f3128da3105ba2a"><td class="mdescLeft">&#160;</td><td class="mdescRight">No need to release finger. <br /></td></tr>
 <tr class="separator:aeced9d214b0046b26f3128da3105ba2a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ae1ba4ac72a4594b7f982397632a8e5c3" id="r_ae1ba4ac72a4594b7f982397632a8e5c3"><td class="memItemLeft" align="right" valign="top">constexpr <a class="el" href="#aaa4d455237126dce0e9e47f4aa854d3f">auto_enroll_flag_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ae1ba4ac72a4594b7f982397632a8e5c3">m5::unit::finger2::auto_enroll_flag::NO_NEED_RELAESE_FINGER</a></td></tr>
+<tr class="memdesc:ae1ba4ac72a4594b7f982397632a8e5c3"><td class="mdescLeft">&#160;</td><td class="mdescRight">No need to release finger (misspelled alias)  <br /></td></tr>
 <tr class="separator:ae1ba4ac72a4594b7f982397632a8e5c3"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a4b9338fdaf620d8327d7d5a843b9baaf" id="r_a4b9338fdaf620d8327d7d5a843b9baaf"><td class="memItemLeft" align="right" valign="top"><a id="a4b9338fdaf620d8327d7d5a843b9baaf" name="a4b9338fdaf620d8327d7d5a843b9baaf"></a>
 constexpr <a class="el" href="#a0ac4d20b114942e2b2ca258e8e2c3b88">auto_identify_flag_t</a>&#160;</td><td class="memItemRight" valign="bottom"><b>m5::unit::finger2::auto_identify_flag::DONT_RETURN_INTERMEDIATE_RESULTS</b> {1U &lt;&lt; 2}</td></tr>
@@ -347,8 +352,8 @@ constexpr <a class="el" href="#a0ac4d20b114942e2b2ca258e8e2c3b88">auto_identify_
 </div><div class="memdoc">
 <b>Initial value:</b><div class="fragment"><div class="line"> bool (*)(<span class="keyword">const</span> uint16_t call_times, <span class="keyword">const</span> uint16_t page_id, <span class="keyword">const</span> <a class="code hl_enumeration" href="#a61296099c4dc3e43e13761d01976ee43">ConfirmCode</a> confirm,</div>
 <div class="line">                                        <span class="keyword">const</span> <a class="code hl_enumeration" href="#ad9a809694e7081f91b26d1da8bb0f20b">AutoEnrollStage</a> stage, <span class="keyword">const</span> uint8_t state)</div>
-<div class="ttc" id="aunit___finger2_8hpp_html_a61296099c4dc3e43e13761d01976ee43"><div class="ttname"><a href="#a61296099c4dc3e43e13761d01976ee43">m5::unit::finger2::ConfirmCode</a></div><div class="ttdeci">ConfirmCode</div><div class="ttdoc">Confirmation code.</div><div class="ttdef"><b>Definition</b> unit_Finger2.hpp:145</div></div>
-<div class="ttc" id="aunit___finger2_8hpp_html_ad9a809694e7081f91b26d1da8bb0f20b"><div class="ttname"><a href="#ad9a809694e7081f91b26d1da8bb0f20b">m5::unit::finger2::AutoEnrollStage</a></div><div class="ttdeci">AutoEnrollStage</div><div class="ttdoc">Interim stage of AutoEnroll.</div><div class="ttdef"><b>Definition</b> unit_Finger2.hpp:121</div></div>
+<div class="ttc" id="aunit___finger2_8hpp_html_a61296099c4dc3e43e13761d01976ee43"><div class="ttname"><a href="#a61296099c4dc3e43e13761d01976ee43">m5::unit::finger2::ConfirmCode</a></div><div class="ttdeci">ConfirmCode</div><div class="ttdoc">Confirmation code.</div><div class="ttdef"><b>Definition</b> unit_Finger2.hpp:148</div></div>
+<div class="ttc" id="aunit___finger2_8hpp_html_ad9a809694e7081f91b26d1da8bb0f20b"><div class="ttname"><a href="#ad9a809694e7081f91b26d1da8bb0f20b">m5::unit::finger2::AutoEnrollStage</a></div><div class="ttdeci">AutoEnrollStage</div><div class="ttdoc">Interim stage of AutoEnroll.</div><div class="ttdef"><b>Definition</b> unit_Finger2.hpp:124</div></div>
 </div><!-- fragment -->
 <p>Callback function for autoEnroll. </p>
 <dl class="params"><dt>Parameters</dt><dd>
@@ -384,7 +389,7 @@ constexpr <a class="el" href="#a0ac4d20b114942e2b2ca258e8e2c3b88">auto_identify_
 </div><div class="memdoc">
 <b>Initial value:</b><div class="fragment"><div class="line"> bool (*)(<span class="keyword">const</span> uint16_t call_times, <span class="keyword">const</span> <a class="code hl_enumeration" href="#a61296099c4dc3e43e13761d01976ee43">ConfirmCode</a> confirm,</div>
 <div class="line">                                          <span class="keyword">const</span> <a class="code hl_enumeration" href="#a46784bb5ac5c7d7eadaf4bff2b4e74fc">AutoIdentifyStage</a> stage)</div>
-<div class="ttc" id="aunit___finger2_8hpp_html_a46784bb5ac5c7d7eadaf4bff2b4e74fc"><div class="ttname"><a href="#a46784bb5ac5c7d7eadaf4bff2b4e74fc">m5::unit::finger2::AutoIdentifyStage</a></div><div class="ttdeci">AutoIdentifyStage</div><div class="ttdoc">Interim stage of AutoIdentify.</div><div class="ttdef"><b>Definition</b> unit_Finger2.hpp:135</div></div>
+<div class="ttc" id="aunit___finger2_8hpp_html_a46784bb5ac5c7d7eadaf4bff2b4e74fc"><div class="ttname"><a href="#a46784bb5ac5c7d7eadaf4bff2b4e74fc">m5::unit::finger2::AutoIdentifyStage</a></div><div class="ttdeci">AutoIdentifyStage</div><div class="ttdoc">Interim stage of AutoIdentify.</div><div class="ttdef"><b>Definition</b> unit_Finger2.hpp:138</div></div>
 </div><!-- fragment -->
 <p>Callback function for autoIdentify. </p>
 <dl class="params"><dt>Parameters</dt><dd>
@@ -427,7 +432,7 @@ constexpr <a class="el" href="#a0ac4d20b114942e2b2ca258e8e2c3b88">auto_identify_
     <tr><td class="paramname">batch_size</td><td>Processing size per batch </td></tr>
     <tr><td class="paramname">total_size</td><td>Total processed size </td></tr>
     <tr><td class="paramname">planned_size</td><td>Planned size </td></tr>
-    <tr><td class="paramname">completed</td><td>Is this the final step? </td></tr>
+    <tr><td class="paramname">completed</td><td>True on the last call (the buffer is filled or no more data) </td></tr>
   </table>
   </dd>
 </dl>
@@ -648,11 +653,18 @@ constexpr <a class="el" href="#a0ac4d20b114942e2b2ca258e8e2c3b88">auto_identify_
 </td></tr>
 <tr><td class="fieldname"><a id="a61296099c4dc3e43e13761d01976ee43a6e4f8a52dbac837449d22ee3fd9f3d99" name="a61296099c4dc3e43e13761d01976ee43a6e4f8a52dbac837449d22ee3fd9f3d99"></a>IllegalData&#160;</td><td class="fielddoc"><p>0x35:The data is illegal </p>
 </td></tr>
+<tr><td class="fieldname"><a id="a61296099c4dc3e43e13761d01976ee43a9b23c7ded4bc4236674813d2205139c3" name="a61296099c4dc3e43e13761d01976ee43a9b23c7ded4bc4236674813d2205139c3"></a>StaticObjectInFeature&#160;</td><td class="fielddoc"><p>0x37:Static foreign object in the feature (Orange) </p>
+</td></tr>
+<tr><td class="fieldname"><a id="a61296099c4dc3e43e13761d01976ee43a4f2e1319b5182b6af003b416aa6fdb94" name="a61296099c4dc3e43e13761d01976ee43a4f2e1319b5182b6af003b416aa6fdb94"></a>PoorTemplateQuality&#160;</td><td class="fielddoc"><p>0x3B:Template quality is too poor to merge </p>
+</td></tr>
 <tr><td class="fieldname"><a id="a61296099c4dc3e43e13761d01976ee43a5a59267a6dbfd428114c81b8799da8ea" name="a61296099c4dc3e43e13761d01976ee43a5a59267a6dbfd428114c81b8799da8ea"></a>PacketTimeout&#160;</td><td class="fielddoc"><p>0xF9:Receive packet timeout </p>
 </td></tr>
 <tr><td class="fieldname"><a id="a61296099c4dc3e43e13761d01976ee43ae2262dc63f9bb77e4c1db31d65b1791b" name="a61296099c4dc3e43e13761d01976ee43ae2262dc63f9bb77e4c1db31d65b1791b"></a>PacketBad&#160;</td><td class="fielddoc"><p>0xFA:Error Packet (e.g., data not fully received, other packet received) </p>
 </td></tr>
-<tr><td class="fieldname"><a id="a61296099c4dc3e43e13761d01976ee43a5eb281a5c10f1efd32ab0abc35d5c648" name="a61296099c4dc3e43e13761d01976ee43a5eb281a5c10f1efd32ab0abc35d5c648"></a>PacketOverflow&#160;</td><td class="fielddoc"><p>0xFB:Packet overflow (e.g., when a packet exceeds the maximum length) </p>
+<tr><td class="fieldname"><a id="a61296099c4dc3e43e13761d01976ee43aede1caf3c19ba576ac09378c70ac3350" name="a61296099c4dc3e43e13761d01976ee43aede1caf3c19ba576ac09378c70ac3350"></a>ModuleBusy&#160;</td><td class="fielddoc"><p>0xFB:Busy (the unit is checking whether a finger is present before sleeping) </p>
+</td></tr>
+<tr><td class="fieldname"><a id="a61296099c4dc3e43e13761d01976ee43a5eb281a5c10f1efd32ab0abc35d5c648" name="a61296099c4dc3e43e13761d01976ee43a5eb281a5c10f1efd32ab0abc35d5c648"></a>PacketOverflow&#160;</td><td class="fielddoc"><p>0xFB: </p>
+<dl class="deprecated"><dt><b><a class="el" href="deprecated.html#_deprecated000005">Deprecated</a></b></dt><dd>Use ModuleBusy </dd></dl>
 </td></tr>
 <tr><td class="fieldname"><a id="a61296099c4dc3e43e13761d01976ee43a694829c5919d4c1bacb8f1599e4de884" name="a61296099c4dc3e43e13761d01976ee43a694829c5919d4c1bacb8f1599e4de884"></a>OperationBlocked&#160;</td><td class="fielddoc"><p>0xFC:This operation has been blocked </p>
 </td></tr>
@@ -835,7 +847,9 @@ constexpr <a class="el" href="#a0ac4d20b114942e2b2ca258e8e2c3b88">auto_identify_
 <b>Initial value:</b><div class="fragment"><div class="line">=</div>
 <div class="line">    <a class="code hl_variable" href="#aeced9d214b0046b26f3128da3105ba2a">NO_NEED_RELEASE_FINGER</a></div>
 <div class="ttc" id="aunit___finger2_8hpp_html_aeced9d214b0046b26f3128da3105ba2a"><div class="ttname"><a href="#aeced9d214b0046b26f3128da3105ba2a">m5::unit::finger2::auto_enroll_flag::NO_NEED_RELEASE_FINGER</a></div><div class="ttdeci">constexpr auto_enroll_flag_t NO_NEED_RELEASE_FINGER</div><div class="ttdoc">No need to release finger.</div><div class="ttdef"><b>Definition</b> unit_Finger2.hpp:101</div></div>
-</div><!-- fragment --><dl class="deprecated"><dt><b><a class="el" href="deprecated.html#_deprecated000002">Deprecated</a></b></dt><dd>Use NO_NEED_RELEASE_FINGER </dd></dl>
+</div><!-- fragment -->
+<p>No need to release finger (misspelled alias) </p>
+<dl class="deprecated"><dt><b><a class="el" href="deprecated.html#_deprecated000002">Deprecated</a></b></dt><dd>Use NO_NEED_RELEASE_FINGER </dd></dl>
 
 </div>
 </div>
