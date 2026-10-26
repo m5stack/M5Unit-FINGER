@@ -2,18 +2,22 @@ description: Library for M5Stack UNIT FINGER using M5UnitUnified.
 url: https://github.com/m5stack/M5Unit-FINGER
 issues: https://github.com/m5stack/M5Unit-FINGER/issues
 license: MIT
-version: "0.2.0"
+version: "0.2.1"
 
 dependencies:
-  idf: ">=5.0"
+  idf: ">=5.1"
   m5stack/M5UnitUnified:
     git: https://github.com/m5stack/M5UnitUnified.git
+    version: main
+  m5stack/M5Utility:
+    git: https://github.com/m5stack/M5Utility.git
     version: main
 
 targets:
   - esp32
   - esp32s3
   - esp32c3
+  - esp32c5
   - esp32c6
   - esp32h2
   - esp32p4
@@ -29,4 +33,5 @@ files:
     - "library.properties"
     - "*_env.ini"
     - ".clang-format"
+    - ".gitignore"
     - "CLAUDE.md"

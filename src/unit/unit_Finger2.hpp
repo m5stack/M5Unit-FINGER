@@ -37,15 +37,15 @@ enum class WorkMode : uint8_t {
   @brief LED operation mode
  */
 enum class LEDMode : uint8_t {
-    None,             //!< None
-    Breath,           //!< Roundtrip between light up and out gradually (as default)
-    Blink,            //!< Blinking
-    On,               //!< Light up
-    Off,              //!< Light out
-    Fadein,           //!< Light up gradually
-    Fadeout,          //!< Light out gradually
-    Rainbow,          //!< Roundtrip rainbow color
-    Bleath = Breath,  //!< @deprecated Use Breath
+    None,     //!< None
+    Breath,   //!< Roundtrip between light up and out gradually (as default)
+    Blink,    //!< Blinking
+    On,       //!< Light up
+    Off,      //!< Light out
+    Fadein,   //!< Light up gradually
+    Fadeout,  //!< Light out gradually
+    Rainbow,  //!< Roundtrip rainbow color
+    Bleath __attribute__((deprecated("use Breath"))) = Breath,  //!< @deprecated Use Breath
 };
 
 /*!
@@ -100,7 +100,10 @@ constexpr auto_enroll_flag_t ALLOW_OVERWRITE_PAGE{1U << 3};              //!< Al
 constexpr auto_enroll_flag_t PROHIBIT_DUPLICATE_TEMPLATE{1U << 4};       //!< Template Duplication prohibited
 constexpr auto_enroll_flag_t NO_NEED_RELEASE_FINGER{1U << 5};            //!< No need to release finger
 
-/*! @deprecated Use NO_NEED_RELEASE_FINGER */
+/*!
+  @brief No need to release finger (misspelled alias)
+  @deprecated Use NO_NEED_RELEASE_FINGER
+ */
 [[deprecated("use NO_NEED_RELEASE_FINGER")]] constexpr auto_enroll_flag_t NO_NEED_RELAESE_FINGER =
     NO_NEED_RELEASE_FINGER;
 
@@ -165,9 +168,9 @@ enum class ConfirmCode : uint8_t {
     LowPowerFailed,      //!< 0x12:Cannot be in low power consumption
     PasswordIncorrect,   //!< 0x13:The password incorrect
     ResetFailed,         //!< 0x14:The system reset failed
-    ResettFailed = ResetFailed,  //!< @deprecated Use ResetFailed
-    NoValidImage,                //!< 0x15:There is no valid original image in buffer to generate image
-    UpgradeFailed,               //!< 0x16:On-line upgrading failed;
+    ResettFailed __attribute__((deprecated("use ResetFailed"))) = ResetFailed,  //!< @deprecated Use ResetFailed
+    NoValidImage,          //!< 0x15:There is no valid original image in buffer to generate image
+    UpgradeFailed,         //!< 0x16:On-line upgrading failed;
     IncompleteFinger,      //!< 0x17:There are incomplete fingerprint or finger stay still between twice image capturing
     FlashError,            //!< 0x18:Read-write FLASH error
     RandomError,           //!< 0x19:Random number generation failed
@@ -187,22 +190,26 @@ enum class ConfirmCode : uint8_t {
     AlreadyExists,         //!< 0x27:Fingerprint already exists
     FeatureAssociated,     //!< 0x28:Fingerprint features are associated
     InitializeFailed,      //!< 0x29:Sensor initialization failed
-    initializeFailed = InitializeFailed,  //!< @deprecated Use InitializeFailed
-    InformationNotEmpty,                  //!< 0x2A:Module information is NOT empty
-    InformationEmpty,                     //!< 0x2B:Module information is empty
-    OTPFailed,                            //!< 0x2C:OTP operation failed
-    KeyGenerateFailed,                    //!< 0x2D:Key generation failed
-    KeyNotExist,                          //!< 0x2E:The key does not exist
-    AlgorithmFailed,                      //!< 0x2F:Security algorithm execution failed
-    IncorrectResult,           //!< 0x30:The encryption/decryption results of the security algorithm are incorrect
-    MismatchFunction,          //!< 0x31:Functionality does not match the encryption level
-    KeyLocked,                 //!< 0x32:The key has been locked
-    SmallImage,                //!< 0x33:Image too small
-    StaticObjectInImage,       //!< 0x34:Static foreign object in the image (Orange)
-    IllegalData,               //!< 0x35:The data is illegal
-    PacketTimeout = 0xF9,      //!< 0xF9:Receive packet timeout
-    PacketBad,                 //!< 0xFA:Error Packet (e.g., data not fully received, other packet received)
-    PacketOverflow,            //!< 0xFB:Packet overflow (e.g., when a packet exceeds the maximum length)
+    initializeFailed __attribute__((deprecated("use InitializeFailed"))) =
+        InitializeFailed,          //!< @deprecated Use InitializeFailed
+    InformationNotEmpty,           //!< 0x2A:Module information is NOT empty
+    InformationEmpty,              //!< 0x2B:Module information is empty
+    OTPFailed,                     //!< 0x2C:OTP operation failed
+    KeyGenerateFailed,             //!< 0x2D:Key generation failed
+    KeyNotExist,                   //!< 0x2E:The key does not exist
+    AlgorithmFailed,               //!< 0x2F:Security algorithm execution failed
+    IncorrectResult,               //!< 0x30:The encryption/decryption results of the security algorithm are incorrect
+    MismatchFunction,              //!< 0x31:Functionality does not match the encryption level
+    KeyLocked,                     //!< 0x32:The key has been locked
+    SmallImage,                    //!< 0x33:Image too small
+    StaticObjectInImage,           //!< 0x34:Static foreign object in the image (Orange)
+    IllegalData,                   //!< 0x35:The data is illegal
+    StaticObjectInFeature = 0x37,  //!< 0x37:Static foreign object in the feature (Orange)
+    PoorTemplateQuality   = 0x3B,  //!< 0x3B:Template quality is too poor to merge
+    PacketTimeout         = 0xF9,  //!< 0xF9:Receive packet timeout
+    PacketBad,                     //!< 0xFA:Error Packet (e.g., data not fully received, other packet received)
+    ModuleBusy,                    //!< 0xFB:Busy (the unit is checking whether a finger is present before sleeping)
+    PacketOverflow __attribute__((deprecated("use ModuleBusy"))) = ModuleBusy,  //!< 0xFB: @deprecated Use ModuleBusy
     OperationBlocked,          //!< 0xFC:This operation has been blocked
     ParameterError,            //!< 0xFD:Parameter error
     NotActive,                 //!< 0xFE:The fingerprint module is not activated
@@ -239,7 +246,7 @@ using auto_identify_callback_t = bool (*)(const uint16_t call_times, const Confi
   @param batch_size Processing size per batch
   @param total_size Total processed size
   @param planned_size Planned size
-  @param completed Is this the final step?
+  @param completed True on the last call (the buffer is filled or no more data)
   @retval true: Continue process
   @retval false: Abort process (If completed == true, ignore)
  */
@@ -269,10 +276,14 @@ protected:
     }
 
 public:
+    /*!
+      @brief Construct with the default module address
+     */
     UnitFinger2() : UnitFinger2(DEFAULT_MODULE_ADDRESS)
     {
     }
 
+    //! @brief Destructor
     virtual ~UnitFinger2() = default;
 
     /*!
@@ -286,9 +297,10 @@ public:
       @brief Settings for begin
      */
     struct config_t {
-        uint32_t timeout_ms{1000 * 4};                                   //!< Serial I/O timeout (ms)
+        uint32_t timeout_ms{1000 * 4};                                   //!< Serial I/O timeout (ms) (4000 if zero)
         finger2::WorkMode work_mode{finger2::WorkMode::ScheduledSleep};  //!< Work mode
         uint8_t sleep_time{10};                                          //!< Scheduled sleep time (10 - 254) sec
+        uint32_t auto_step_timeout_ms{1000 * 30};  //!< Timeout per step of autoEnroll/autoIdentify (ms) (30000 if zero)
     };
 
     ///@name Settings for begin
@@ -426,16 +438,18 @@ public:
       @brief Write the value to register for settings
       @details PS_WriteReg
       @param reg_id Target RegisterID
-      @param value Value
+      @param value Value (ScoreLevel: 1 - 5, PacketSize: 0 - 3)
       @return True if successful
+      @note The value is stored in the module's flash and is kept after power off
       @note See also the protocol specification document
+      @warning This API will affect the life of the device. Do not use it frequently.
      */
     bool writeSystemRegister(const finger2::RegisterID reg_id, const uint8_t value);
 
     /*!
       @brief Write the LED control
       @details PS_ControlBLN
-      @param mode LEDMode (Ignore LEDMode::Rainbow)
+      @param mode LEDMode (Breath - Fadeout. Use writeControlLEDRainbow() for LEDMode::Rainbow)
       @param clr Start LEDColor
       @param cycle Cycle count, infinity if zero. Valid for LEDMode::Breath, LEDMode::Blink
       @param eclr End LEDColor (Valid for LEDMode::Breath)
@@ -449,8 +463,8 @@ public:
       @brief Write the LED control for LEDMode::Rainbow
       @details PS_ControlBLN
       @param tm Color change time (decisecond)
-      @param colors LEDColor array (maximum 10)
-      @param colors_num Number of the colors (maximum 10)
+      @param colors LEDColor array (must not be null)
+      @param colors_num Number of the colors (1 - 10, colors beyond 10 are ignored)
       @param cycle Cycle count, infinity if zero
       @return True if successful
       @warning Returns an error when device is sleeping
@@ -467,17 +481,17 @@ public:
       @details PS_GetImage or PS_GetEnrollImage
       @param[out] detected true if finger detected
       @param enroll true for register(PS_GetEnrollImage), false for detection(PS_GetImage)
-      @return True if successful
+      @return True if successful (also true without a finger, then detected is false)
      */
     bool capture(bool& detected, const bool enroll = false);
 
     /*!
-      @brief Capture the fingerprint and read image information
+      @brief Read the information of the captured image
       @details PS_GetImageInfo
       @param[out] percentage Image area
       @param[out] quality Image quality (true : pass, false: fail)
       @return True if successful
-      @pre capture() succeeded
+      @pre capture() succeeded with detected == true
      */
     bool readImageInformation(uint8_t& percentage, bool& quality);
 
@@ -496,7 +510,7 @@ public:
       @details Generating the original image in ImageBuffer to fingerprint feature file and store it in CharBuffer
       @param buffer_id Buffer number (1 - 5)
       @return True if successful
-      @pre capture() succeeded
+      @pre capture() succeeded with detected == true
      */
     bool generateCharacteristic(const uint8_t buffer_id = 1);
 
@@ -513,7 +527,7 @@ public:
       @brief Store template
       @details PS_StoreChar
       @details Store the template at the buffer_id position into the page_id position in the database
-      @param page_id Page number
+      @param page_id Page number (0 - capacity() - 1)
       @param buffer_id Buffer number (1 - 5)
       @return True if successful
       @pre generateTemplate() succeeded
@@ -527,7 +541,7 @@ public:
       @param[out] matched true if matched
       @param[out] score Matching score (lowest: 0)
       @pre Buffer IDs 1 and 2 contain template
-      @return True if successful
+      @return True if the comparison completed (check matched for the result)
       @warning This feature is supported when the security level is 0 or 1
     */
     bool match(bool& matched, uint16_t& score);
@@ -538,10 +552,10 @@ public:
       @param[out] matched true if matched
       @param[out] matching_page_id Matching page number
       @param[out] score Matching score (lowest: 0)
-      @param buffer_id Buffer number (comparison target)
+      @param buffer_id Buffer number (comparison target) (1 - 5)
       @param start_page Search start page
       @param page_num Number of search pages (0: From start_page to end)
-      @return True if successful
+      @return True if the comparison completed (check matched for the result)
       @pre The data exists in the specified buffer
       @warning This feature is supported when the security level is 0 or 1
      */
@@ -556,7 +570,7 @@ public:
       @param[out] score Matching score (lowest: 0)
       @param start_page Search start page
       @param page_num Number of search pages (0: From start_page to end)
-      @return True if successful
+      @return True if the comparison completed (check matched for the result)
       @pre The data exists in the specified buffer
       @warning This feature is supported when the security level is 0 or 1
      */
@@ -573,7 +587,7 @@ public:
       @details PS_LoadChar
       @details Reading the fingerprint templates which appointed page_id in flash database to template buffer
       @param buffer_id Target buffer number (1 - 5)
-      @param page_id Source page number
+      @param page_id Source page number (0 - capacity() - 1)
       @return True if successful
      */
     bool loadTemplate(const uint8_t buffer_id, const uint16_t page_id);
@@ -584,9 +598,9 @@ public:
       @details Uploading the feature files in feature buffer to the host
       @param [out] actual_size Actual size
       @param[out] buf Output buffer (at least buf_size bytes)
-      @param buf_size  size of buf
+      @param buf_size Size of buf (1 - 4082)
       @param offset Offset address
-      @return True if successful
+      @return True if successful (false if the reported size exceeds buf_size)
       @pre The template exists in the buffer
      */
     bool readTemplate(uint16_t& actual_size, uint8_t* buf, const uint16_t buf_size, const uint16_t offset);
@@ -598,7 +612,7 @@ public:
       @param buf_size Size of buf (the full template is TEMPLATE_SIZE (7262) bytes)
       @param batch_size Processing size per batch
       @param callback Callback invoked for each batch processing
-      @return True if successful
+      @return True if successful (also true if aborted by the callback)
       @pre The template exists in the buffer
      */
     bool readTemplateAllBatches(uint16_t& actual_size, uint8_t* buf, const uint16_t buf_size,
@@ -607,7 +621,7 @@ public:
       @brief Write the specific size template to the specific offset
       @param offset Offset address
       @param buf Input buffer
-      @param buf_size  size of buf
+      @param buf_size Size of buf (1 - 4080)
       @return True if successful
      */
     bool writeTemplate(const uint16_t offset, const uint8_t* buf, const uint16_t buf_size);
@@ -617,7 +631,7 @@ public:
       @param buf_size  size of buf
       @param batch_size Processing size per batch
       @param callback Callback invoked for each batch processing
-      @return True if successful
+      @return True if successful (also true if aborted by the callback)
      */
     bool writeTemplateAllBatches(const uint8_t* buf, const uint16_t buf_size, const uint16_t batch_size = 128,
                                  finger2::batch_callback_t callback = nullptr);
@@ -625,8 +639,8 @@ public:
     /*!
       @brief Delete templates
       @details PS_DeletChar
-      @param page_id First page to be deleted
-      @param num How many to delete starting from the first target
+      @param page_id First page to be deleted (0 - capacity() - 1)
+      @param num How many to delete starting from the first target (1 - capacity() - page_id)
       @return True if successful
      */
     bool deleteTemplate(const uint16_t page_id, const uint16_t num = 1);
@@ -634,7 +648,7 @@ public:
     /*!
       @brief Clear fingerprint database (delete all templates)
       @details PS_Empty
-      @details Deleting all fingerprint modules in flash database
+      @details Deleting all fingerprint templates in flash database
       @return True if successful
      */
     bool clear();
@@ -651,14 +665,15 @@ public:
       @brief Read the index table (Bits of existing templates)
       @details PS_ReadIndexTable
       @details Bit-level information for registered templates is retrieved
-      @param[out] table Table data (at least 32 bytes)
+      @param[out] table Table data (at least 32 bytes). Bit (page_id & 7) of table[page_id >> 3] is set if exists
       @return True if successful
+      @note Only index page 0 (templates 0-255) is read. Returns false if capacity() > 256
      */
     bool readIndexTable(uint8_t table[32]);
 
     /*!
       @brief Exists template?
-      @param page_id Page number
+      @param page_id Page number (0 - capacity() - 1)
       @retval True if exists
       @retval False if not exists or failed
       @note Internally calling readIndexTable()
@@ -691,11 +706,14 @@ public:
       @details Perform capture and generate characteristic operations for the specified number of times, merge them,
       and store template to the specified page_id
       @param[out] confirm ConfirmCode
-      @param page_id Page number
-      @param capture_times Number of finger captures for registration
+      @param page_id Page number (0 - capacity() - 1)
+      @param capture_times Number of finger captures for registration (1 - 5)
       @param flags Operation Control Flag
       @param callback Callback function that receives and processes intermediate results
       @return True if successful
+      @note Each step (placing / releasing a finger) waits up to config_t::auto_step_timeout_ms
+      @note If GenerateCharacteristic fails with ImageTooFew, Unmatched, MergeFailed or FeatureAssociated,
+      the module waits for the next capture and the process continues (the error is passed to the callback)
       @warning This feature is supported when the security level is 0 or 1
     */
     bool autoEnroll(finger2::ConfirmCode& confirm, const uint16_t page_id, const uint8_t capture_times = 5,
@@ -708,10 +726,11 @@ public:
       @param[out] matching_page_id Matching page number
       @param[out] score Matching score (lowest: 0)
       @param page_id Verification target page number(1:1), All page if page_id is 0xFFFF (1:N)
-      @param security_level Security level (0 -1)
+      @param security_level Security level (0 or 1)
       @param flags Operation Control Flag
       @param callback Callback function that receives and processes intermediate results
-      @return True if successful
+      @return True if the comparison completed (check matched for the result)
+      @note Placing a finger waits up to config_t::auto_step_timeout_ms
       @warning This feature is supported when the security level is 0 or 1
      */
     bool autoIdentify(bool& matched, uint16_t& matching_page_id, uint16_t& score, const uint16_t page_id = 0xFFFF,
@@ -732,20 +751,20 @@ public:
       @brief Read the notepad(Flash) data
       @details PS_ReadNotepad
       @param[out] buf Buffer (at least 32 bytes)
-      @param page Notepad page number (0 - 7)
+      @param page Notepad page number (0 - 15)
       @return True if successful
-      @note Notepad is an area of 8 pages totaling 256 bytes in 32 byte units
+      @note Notepad is an area of 16 pages totaling 512 bytes in 32 byte units
       @warning Returns an error when device is sleeping
      */
     bool readNotepad(uint8_t buf[32], const uint8_t page);
     /*!
       @brief Write the notepad(Flash) data
       @details PS_WriteNotepad
-      @param page Notepad page number (0 - 7)
+      @param page Notepad page number (0 - 15)
       @param buf Input buffer
       @param len buffer length (1 - 32) If larger than 32 bytes, write up to 32 bytes
       @return True if successful
-      @note Notepad is an area of 8 pages totaling 256 bytes in 32 byte units
+      @note Notepad is an area of 16 pages totaling 512 bytes in 32 byte units
       @warning Returns an error when device is sleeping
       @warning When less than 32 bytes are written, the missing bytes are filled with zeros
      */
@@ -755,7 +774,7 @@ public:
     /*!
       @brief Read the information page in FLASH (512 bytes)
       @details PS_ReadINFpage
-      @param info Buffer (at least 512 bytes)
+      @param[out] info Buffer (at least 512 bytes)
       @return True if successful
      */
     bool readInformationPage(uint8_t info[512]);
@@ -805,6 +824,8 @@ public:
     bool readFirmwareVersion(uint8_t& ver);
 
 protected:
+    uint32_t serial_timeout() const;
+    uint32_t auto_step_timeout() const;
     bool write_command(const uint8_t cmd, const uint32_t addr, const uint8_t* payload = nullptr,
                        const uint16_t payload_len = 0);
     finger2::ConfirmCode read_response(Packet& rbuf);

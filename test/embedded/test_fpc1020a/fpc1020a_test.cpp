@@ -171,6 +171,8 @@ protected:
 
 namespace {
 
+#if 0
+// Debug helper: dump all registered users
 void print_all_users(UnitFPC1020A* unit)
 {
     std::vector<User> v{};
@@ -182,6 +184,7 @@ void print_all_users(UnitFPC1020A* unit)
         }
     }
 }
+#endif
 
 constexpr BaudRate br_table[5] = {
     BaudRate::Baud9600, BaudRate::Baud19200, BaudRate::Baud38400, BaudRate::Baud57600, BaudRate::Baud115200,
@@ -204,6 +207,9 @@ constexpr uint8_t ch_data[193] = {
 
 }  // namespace
 
+// NOTE: Test order matters on the hardware.
+// - Baud must end at 19200 (the fixture talks at 19200); if it fails midway, the following tests fail too.
+// - Sleep must be the last hardware test; the unit needs a power cycle to wake up from deep sleep.
 TEST_F(TestFPC1020A, Baud)
 {
     uint32_t idx{};
@@ -241,6 +247,13 @@ TEST_F(TestFPC1020A, Basic)
 TEST_F(TestFPC1020A, Settings)
 {
     SCOPED_TRACE(ustr);
+
+    // Keep the current settings to restore them at the end
+    Mode org_mode{};
+    uint8_t org_lv{}, org_timeout{};
+    EXPECT_TRUE(unit->readRegistrationMode(org_mode));
+    EXPECT_TRUE(unit->readComparisonLevel(org_lv));
+    EXPECT_TRUE(unit->readTimeout(org_timeout));
 
     {
         uint16_t users{};
@@ -302,6 +315,12 @@ TEST_F(TestFPC1020A, Settings)
         EXPECT_TRUE(unit->readTimeout(to2));
         EXPECT_EQ(to2, 0);
     }
+
+    // Restore
+    EXPECT_TRUE(unit->writeRegistrationMode(org_mode));
+    EXPECT_TRUE(unit->writeComparisonLevel(org_lv));
+    EXPECT_TRUE(unit->writeTimeout(org_timeout));
+    EXPECT_TRUE(unit->deleteAllUsers());
 }
 
 TEST_F(TestFPC1020A, User)
@@ -323,6 +342,13 @@ TEST_F(TestFPC1020A, User)
 
         EXPECT_TRUE(unit->findAvailableUserID(id, unit->maximumUserID(), unit->maximumUserID()));
         EXPECT_EQ(id, unit->maximumUserID());
+
+        EXPECT_FALSE(unit->findAvailableUserID(id, 10, 1));
+        EXPECT_EQ(id, 0);
+        EXPECT_TRUE(unit->findAvailableUserID(id, 100, 110));
+        EXPECT_EQ(id, 100);
+        EXPECT_FALSE(unit->findAvailableUserID(id, 1, unit->maximumUserID() + 1));
+        EXPECT_EQ(id, 0);
     }
 
     // Make random users
@@ -381,6 +407,12 @@ TEST_F(TestFPC1020A, Finger)
     EXPECT_TRUE(unit->deleteAllUsers());
 
     EXPECT_FALSE(unit->registerFinger(1, 1));
+    {
+        // step > 4 is rejected before communication
+        const auto start = m5::utility::millis();
+        EXPECT_FALSE(unit->registerFinger(1, 1, 5));
+        EXPECT_LT(m5::utility::millis() - start, 50U);
+    }
 
     bool match{};
     EXPECT_TRUE(unit->verifyFinger(match, 1));
@@ -397,6 +429,7 @@ TEST_F(TestFPC1020A, Finger)
 
     std::vector<uint8_t> img{};
     EXPECT_FALSE(unit->captureImage(img));
+    EXPECT_FALSE(unit->captureImage(img, true));  // raw
 
     EXPECT_TRUE(unit->registerCharacteristic(1, 2, ch_data));
     EXPECT_TRUE(unit->verifyCharacteristic(match, 1, ch_data));
@@ -433,20 +466,28 @@ using namespace m5::unit::fpc1xxx::detail;
 TEST_F(TestFPC1020A_Detail, XorSum)
 {
     {
+        // xorSum is a deprecated alias for xor_sum (used on purpose)
+        const uint8_t data[] = {0x12, 0x34, 0x56};
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+        EXPECT_EQ(xorSum(data, sizeof(data)), xor_sum(data, sizeof(data)));
+#pragma GCC diagnostic pop
+    }
+    {
         uint8_t data[] = {0};
-        EXPECT_EQ(xorSum(data, 0), 0);
+        EXPECT_EQ(xor_sum(data, 0), 0);
     }
     {
         uint8_t data[] = {0xAB};
-        EXPECT_EQ(xorSum(data, 1), 0xAB);
+        EXPECT_EQ(xor_sum(data, 1), 0xAB);
     }
     {
         uint8_t data[] = {0x01, 0x02, 0x03, 0x04, 0x05};
-        EXPECT_EQ(xorSum(data, 5), 0x01);
+        EXPECT_EQ(xor_sum(data, 5), 0x01);
     }
     {
         uint8_t data[] = {0xFF, 0xFF, 0xFF, 0xFF};
-        EXPECT_EQ(xorSum(data, 4), 0x00);
+        EXPECT_EQ(xor_sum(data, 4), 0x00);
     }
 }
 
@@ -461,7 +502,7 @@ TEST_F(TestFPC1020A_Detail, IsValidSum)
         f[3] = 0x03;
         f[4] = 0x04;
         f[5] = 0x00;
-        f[6] = xorSum(f.data() + 1, 5);
+        f[6] = xor_sum(f.data() + 1, 5);
         f[7] = MARKER;
         EXPECT_TRUE(is_valid_sum(f, true));
         EXPECT_TRUE(is_valid_sum(f, false));
@@ -475,7 +516,7 @@ TEST_F(TestFPC1020A_Detail, IsValidSum)
         f[3] = 0x03;
         f[4] = 0x04;
         f[5] = 0x00;
-        f[6] = xorSum(f.data() + 1, 5) ^ 0xFF;
+        f[6] = xor_sum(f.data() + 1, 5) ^ 0xFF;
         f[7] = MARKER;
         EXPECT_FALSE(is_valid_sum(f, true));
         EXPECT_FALSE(is_valid_sum(f, false));
@@ -489,7 +530,7 @@ TEST_F(TestFPC1020A_Detail, IsValidSum)
         f[3] = 0x03;
         f[4] = 0x04;
         f[5] = 0x00;
-        f[6] = xorSum(f.data() + 1, 5);
+        f[6] = xor_sum(f.data() + 1, 5);
         f[7] = MARKER;
         EXPECT_FALSE(is_valid_sum(f, true));
         EXPECT_TRUE(is_valid_sum(f, false));
@@ -501,7 +542,7 @@ TEST_F(TestFPC1020A_Detail, IsValidPayload)
     // Valid: MARKER DATA CHK MARKER
     {
         uint8_t d[] = {MARKER, 0x11, 0x22, 0x00, MARKER};
-        d[3]        = xorSum(d + 1, 2);
+        d[3]        = xor_sum(d + 1, 2);
         EXPECT_TRUE(is_valid_payload(d, sizeof(d)));
     }
     // Bad checksum
@@ -512,7 +553,7 @@ TEST_F(TestFPC1020A_Detail, IsValidPayload)
     // Bad head marker
     {
         uint8_t d[] = {0x00, 0x11, 0x00, MARKER};
-        d[2]        = xorSum(d + 1, 1);
+        d[2]        = xor_sum(d + 1, 1);
         EXPECT_FALSE(is_valid_payload(d, sizeof(d)));
     }
     // Too short

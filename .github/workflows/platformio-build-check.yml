@@ -19,6 +19,7 @@ on:
       - 'examples/UnitUnified/**.c'
       - '.github/workflows/platformio-build-check.yml'
       - 'platformio.ini'
+      - 'boards/**'
   pull_request:
     paths:
       - 'src/**.cpp'
@@ -32,6 +33,7 @@ on:
       - 'examples/UnitUnified/**.c'
       - '.github/workflows/platformio-build-check.yml'
       - 'platformio.ini'
+      - 'boards/**'
   workflow_dispatch:
 
 defaults:
@@ -62,25 +64,27 @@ jobs:
 #          - HatFinger
 
         board:
+          # Reduced from 19 to 5 boards: one per compile config (chip arch x platform).
+          # The other boards differ only in the variant header, so the library code compiles the same.
           - Core
-          - Core2
+#          - Core2  # ESP32: represented by Core
           - CoreS3
-          - Fire
-          - StampS3
-          - Dial
-          - Atom
-          - AtomS3
-          - AtomS3R
+#          - Fire  # ESP32: represented by Core
+#          - StampS3  # ESP32-S3: represented by CoreS3
+#          - Dial  # ESP32-S3: represented by CoreS3
+#          - Atom  # ESP32: represented by Core
+#          - AtomS3  # ESP32-S3: represented by CoreS3
+#          - AtomS3R  # ESP32-S3: represented by CoreS3
           - NanoC6
           - NanoH2
-          - StickCPlus
-          - StickCPlus2
-          - StickS3
-          - Paper
-          - CoreInk
-          - Cardputer
+#          - StickCPlus  # ESP32: represented by Core
+#          - StickCPlus2  # ESP32: represented by Core
+#          - StickS3  # ESP32-S3: represented by CoreS3
+#          - Paper  # ESP32: represented by Core
+#          - CoreInk  # ESP32: represented by Core
+#          - Cardputer  # ESP32-S3: represented by CoreS3
           - Tab5
-          - NessoN1
+#          - NessoN1  # ESP32-C6: represented by NanoC6
 
         framework:
           - Arduino
@@ -106,11 +110,11 @@ jobs:
             framework: Arduino
             espressif32: latest
 
-          - example: PlotToSerial
-            unit: HatFinger
-            board: StickCPlus
-            framework: Arduino
-            espressif32: latest
+#          - example: PlotToSerial  # ESP32: represented by StickCPlus2
+#            unit: HatFinger
+#            board: StickCPlus
+#            framework: Arduino
+#            espressif32: latest
           - example: PlotToSerial
             unit: HatFinger
             board: StickCPlus2
@@ -121,11 +125,11 @@ jobs:
             board: StickS3
             framework: Arduino
             espressif32: latest
-          - example: PlotToSerial
-            unit: HatFinger
-            board: CoreInk
-            framework: Arduino
-            espressif32: latest
+#          - example: PlotToSerial  # ESP32: represented by StickCPlus2
+#            unit: HatFinger
+#            board: CoreInk
+#            framework: Arduino
+#            espressif32: latest
           - example: Capture
             unit: HatFinger
             board: StickCPlus2

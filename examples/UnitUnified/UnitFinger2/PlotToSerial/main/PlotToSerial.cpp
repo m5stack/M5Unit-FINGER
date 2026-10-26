@@ -11,6 +11,9 @@
 #include <M5UnitUnifiedFINGER.h>
 #include <M5Utility.hpp>
 #include <wiring/m5_unit_unified_wiring.hpp>
+#include <algorithm>
+#include <cstring>
+#include <cstdio>
 
 using namespace m5::unit::finger2;
 
@@ -19,6 +22,91 @@ auto& lcd = M5.Display;
 
 m5::unit::UnitUnified Units;
 m5::unit::UnitFinger2 unit;
+
+uint16_t template_count{};
+char last_result[48]{};
+
+// Screen state (the background color tells the state)
+enum class State : uint8_t { Idle, Place, Release, Busy, Success, Failure };
+
+struct StateStyle {
+    uint16_t bg;
+    uint16_t fg;
+};
+constexpr StateStyle state_style[] = {
+    {TFT_DARKGREY, TFT_WHITE},   // Idle
+    {TFT_YELLOW, TFT_BLACK},     // Place
+    {TFT_BLUE, TFT_WHITE},       // Release
+    {TFT_ORANGE, TFT_BLACK},     // Busy
+    {TFT_DARKGREEN, TFT_WHITE},  // Success
+    {TFT_RED, TFT_WHITE},        // Failure
+};
+
+// Small text font: AsciiFont8x16 (scaled on a large screen), or Font0 (6x8) if the text does not fit the width w
+void set_small_font(const char* s, const int32_t w)
+{
+    lcd.setFont(&fonts::AsciiFont8x16);
+    lcd.setTextSize(std::max<int32_t>(1, lcd.width() / 320));
+    if (lcd.textWidth(s) > w) {
+        lcd.setFont(&fonts::Font0);
+        lcd.setTextSize(1);
+    }
+}
+
+// Small text whose top (or bottom if bottom is true) is at y
+// It is split into two lines at the last space if it does not fit, returns the height used
+int32_t draw_small(const char* s, const int32_t x, const int32_t y, const bool bottom)
+{
+    const int32_t w = lcd.width() - x;
+    set_small_font(s, w);
+    lcd.setTextDatum(bottom ? textdatum_t::bottom_left : textdatum_t::top_left);
+    const int32_t fh     = lcd.fontHeight();
+    const char* const sp = strrchr(s, ' ');
+    if (lcd.textWidth(s) <= w || !sp) {
+        lcd.drawString(s, x, y);
+        return fh;
+    }
+    char first[48]{};
+    snprintf(first, sizeof(first), "%.*s", static_cast<int>(sp - s), s);
+    lcd.drawString(first, x, bottom ? y - fh : y);
+    lcd.drawString(sp + 1, x, bottom ? y : y + fh);
+    return fh * 2;
+}
+
+// Header (unit / templates), status (large) and guide / last result
+void draw_screen(const State state, const char* status)
+{
+    if (!lcd.width()) {
+        return;  // No display
+    }
+    const auto& st         = state_style[m5::stl::to_underlying(state)];
+    const int32_t large_sz = std::max<int32_t>(1, lcd.width() / 160);
+
+    char header[48]{};
+    snprintf(header, sizeof(header), "%s templates:%u/%u", unit.deviceName(), template_count, unit.capacity());
+
+    lcd.startWrite();
+    lcd.fillScreen(st.bg);
+    lcd.setTextColor(st.fg, st.bg);
+
+    draw_small(header, 0, 0, false);
+
+    lcd.setFont(&fonts::AsciiFont8x16);
+    lcd.setTextSize(large_sz);
+    lcd.setTextDatum(textdatum_t::middle_center);
+    lcd.drawString(status, lcd.width() >> 1, lcd.height() >> 1);
+
+    const int32_t result_h = draw_small(last_result, 0, lcd.height(), true);
+    draw_small("Hold:Register Click:Search", 0, lcd.height() - result_h, true);
+    lcd.endWrite();
+}
+
+void update_template_count()
+{
+    if (!unit.wakeup() || !unit.readValidTemplates(template_count)) {
+        M5_LOGW("Failed to read the number of templates");
+    }
+}
 
 void print_exists_users()
 {
@@ -41,7 +129,7 @@ void print_exists_users()
 // Example of registration like as autoEnroll
 // Registered IDs will be overwritten.
 // Existing templates will not be considered.
-void register_finger()
+bool register_finger()
 {
     static bool highlow{};
 
@@ -51,7 +139,7 @@ void register_finger()
         if (!(highlow == false ? unit.findLowestAvailablePage(page) : unit.findHighestAvailablePage(page)) ||
             page == 0xFFFF) {
             M5_LOGE("Failed or Invalid page");
-            return;
+            return false;
         }
         M5.Log.printf("Try register to %u\n", page);
 
@@ -59,43 +147,44 @@ void register_finger()
         uint8_t cnt{};
         while (cnt < 5) {
             // Wait touch finger
-            lcd.fillScreen(TFT_ORANGE);
-            lcd.drawString("Please touch finger", 0, 16);
+            char status[24]{};
+            snprintf(status, sizeof(status), "Place %u/5", cnt + 1);
+            draw_screen(State::Place, status);
             M5.Log.printf("Please touch finger(%u)\n", cnt + 1);
 
-            auto timeout_at = m5::utility::millis() + 5000;
+            const auto start_at = m5::utility::millis();
             bool touched{};
             do {
                 touched = unit.capture(detected, true /*for enroll */) && detected;
                 m5::utility::delay(1);
-            } while (!touched && m5::utility::millis() <= timeout_at);
+            } while (!touched && !m5::utility::hasElapsed(start_at, 5000));
             if (!touched) {
                 M5_LOGE("Finger undetected %u", cnt + 1);
-                return;
+                return false;
             }
 
             // Generate characteristic (1-5)
             if (!unit.generateCharacteristic(cnt + 1)) {
                 M5_LOGE("Failed to GenerateCharacteristic %u", cnt + 1);
-                return;
+                return false;
             }
 
             // Wait release finger
             if (cnt < 4) {
                 M5.Speaker.tone(3000, 20);
-                lcd.fillScreen(TFT_BLUE);
-                lcd.drawString("Please release finger", 0, 16);
+                snprintf(status, sizeof(status), "Release %u/5", cnt + 1);
+                draw_screen(State::Release, status);
                 M5.Log.printf("Please release finger(%u)\n", cnt + 1);
 
-                auto timeout_at = m5::utility::millis() + 5000;
+                const auto start_at = m5::utility::millis();
                 bool released{};
                 do {
                     released = unit.capture(detected, true) && !detected;
                     m5::utility::delay(1);
-                } while (!released && m5::utility::millis() <= timeout_at);
+                } while (!released && !m5::utility::hasElapsed(start_at, 5000));
                 if (!released) {
                     M5_LOGE("Finger not released %u", cnt + 1);
-                    return;
+                    return false;
                 }
             }
 
@@ -103,25 +192,28 @@ void register_finger()
         }
 
         // Generate template(merge 1-5)
-        lcd.fillScreen(TFT_DARKGREEN);
+        draw_screen(State::Busy, "Storing");
         if (!unit.generateTemplate()) {
             M5_LOGE("Failed to generateTemplate");
-            return;
+            return false;
         }
 
         // Store template
         if (!unit.storeTemplate(page)) {
             M5_LOGE("Failed to storeTemplate");
-            return;
+            return false;
         }
 
         highlow = !highlow;
         M5.Log.printf("Registered: %u\n", page);
+        snprintf(last_result, sizeof(last_result), "Registered page:%u", page);
+        return true;
     }
+    return false;
 }
 
 // 1:1
-void match_finger(const uint16_t page)
+bool match_finger(const uint16_t page)
 {
     bool detected{};
     if (unit.capture(detected) && detected && unit.generateCharacteristic(1) && unit.loadTemplate(2, page)) {
@@ -129,12 +221,14 @@ void match_finger(const uint16_t page)
         uint16_t score{};
         if (unit.match(matched, score)) {
             M5.Log.printf("<1:1>%u %s, Score:%u\n", page, matched ? "Matched" : "Unmatched", score);
+            return matched;
         } else {
             M5_LOGE("Failed to match");
         }
     } else {
         M5_LOGE("Failed to any function");
     }
+    return false;
 }
 
 // 1:N
@@ -148,12 +242,19 @@ uint16_t search_finger()
         uint16_t score{};
         if (unit.search(matched, page, score, 1 /* buffer id */)) {
             M5.Log.printf("<1:N> %s Page:%u Score:%u\n", matched ? "Found" : "Not found", page, score);
+            if (matched) {
+                snprintf(last_result, sizeof(last_result), "Found page:%u score:%u", page, score);
+            } else {
+                snprintf(last_result, sizeof(last_result), "Not found");
+            }
             return matched ? page : 0xFFFF;
         } else {
             M5_LOGE("Failed to search");
+            snprintf(last_result, sizeof(last_result), "Search failed");
         }
     } else {
         M5_LOGE("Failed to capture/generate");
+        snprintf(last_result, sizeof(last_result), "Capture failed");
     }
     return 0xFFFF;
 }
@@ -200,10 +301,9 @@ void setup()
     M5_LOGI("M5UnitUnified initialized");
     M5_LOGI("%s", Units.debugInfo().c_str());
 
-    lcd.fillScreen(TFT_DARKGREEN);
-    lcd.setFont(&fonts::AsciiFont8x16);
-
     print_exists_users();
+    update_template_count();
+    draw_screen(State::Idle, "Place finger");
 }
 
 void loop()
@@ -214,20 +314,39 @@ void loop()
     // Search,Match
     if (M5.BtnA.wasClicked()) {
         M5.Speaker.tone(2000, 20);
+        draw_screen(State::Busy, "Searching");
         auto page = search_finger();
         if (page != 0xFFFF) {
-            auto page2 = search_now_finger();
-            if (page2 != 0xFFFF) {
-                match_finger(page);
+            // Check the same finger again with searchNow (1:N) and match (1:1)
+            const bool now_ok   = (search_now_finger() == page);
+            const bool match_ok = now_ok && match_finger(page);
+            if (match_ok) {
+                M5.Speaker.tone(2500, 20);
+                draw_screen(State::Success, "Found");
+            } else {
+                M5.Speaker.tone(800, 40);
+                snprintf(last_result, sizeof(last_result), "page:%u %s", page,
+                         now_ok ? "1:1 unmatched" : "1:N(now) unmatched");
+                draw_screen(State::Failure, "Unmatched");
             }
+        } else {
+            M5.Speaker.tone(800, 40);
+            draw_screen(State::Failure, "Not found");
         }
     }
 
     // Register
     if (M5.BtnA.wasHold()) {
         M5.Speaker.tone(4000, 20);
-        register_finger();
-        lcd.fillScreen(TFT_DARKGREEN);
+        if (register_finger()) {
+            M5.Speaker.tone(2000, 20);
+            update_template_count();
+            draw_screen(State::Success, "Registered");
+        } else {
+            M5.Speaker.tone(800, 40);
+            snprintf(last_result, sizeof(last_result), "Register failed");
+            draw_screen(State::Failure, "Try again");
+        }
     }
 }
 
@@ -237,14 +356,16 @@ void loop()
 #include <esp_timer.h>
 
 #if CONFIG_FREERTOS_UNICORE
+// Single-core SoCs: run loop() back-to-back, but every ~2 s yield a 5 ms slice so the IDLE task
+// runs and feeds the task watchdog (default 5 s).
 static inline void feedIdleTaskPeriodically(void)
 {
-    constexpr uint32_t FEED_INTERVAL_MS   = 2000;
-    constexpr TickType_t FEED_SLEEP_TICKS = pdMS_TO_TICKS(5);
-    static uint32_t s_next_feed_ms        = 0;
-    const uint32_t now_ms                 = static_cast<uint32_t>(esp_timer_get_time() / 1000);
-    if (now_ms >= s_next_feed_ms) {
-        s_next_feed_ms = now_ms + FEED_INTERVAL_MS;
+    constexpr uint32_t FEED_INTERVAL_MS{2000};
+    constexpr TickType_t FEED_SLEEP_TICKS{pdMS_TO_TICKS(5)};
+    static uint32_t s_last_feed_ms{};
+    const uint32_t now_ms{static_cast<uint32_t>(esp_timer_get_time() / 1000)};
+    if (now_ms - s_last_feed_ms >= FEED_INTERVAL_MS) {
+        s_last_feed_ms = now_ms;
         vTaskDelay(FEED_SLEEP_TICKS);
     }
 }

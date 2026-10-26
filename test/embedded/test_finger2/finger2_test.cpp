@@ -37,23 +37,6 @@ protected:
         return ptr;
     }
 
-    void get_serial_pins(int& pin_num_in, int& pin_num_out)
-    {
-        pin_num_in  = M5.getPin(m5::pin_name_t::port_c_rxd);
-        pin_num_out = M5.getPin(m5::pin_name_t::port_c_txd);
-        if (pin_num_in < 0 || pin_num_out < 0) {
-            // NanoC6 / NanoH2: Ex_I2C.setPort() registers m5gfx::i2c on GPIO 1/2;
-            // Wire.end() alone won't release it, causing dual-driver conflict on uart_driver_install
-            const auto b = M5.getBoard();
-            if (b == m5::board_t::board_M5NanoC6 || b == m5::board_t::board_M5NanoH2) {
-                M5.Ex_I2C.release();
-            }
-            Wire.end();
-            pin_num_in  = M5.getPin(m5::pin_name_t::port_a_pin1);
-            pin_num_out = M5.getPin(m5::pin_name_t::port_a_pin2);
-        }
-    }
-
     virtual HardwareSerial* init_serial() override
     {
         auto& s = m5::unit::wiring::defaultUartSerial();
@@ -67,17 +50,6 @@ protected:
             return false;
         }
         return m5::unit::wiring::addUART(Units, *unit, 115200) && Units.begin();
-    }
-
-    void reset_serial(const uint32_t baud = 115200)
-    {
-        int pin_num_in{-1}, pin_num_out{-1};
-        get_serial_pins(pin_num_in, pin_num_out);
-        serial->end();
-        serial->begin(baud, SERIAL_8N1, pin_num_in, pin_num_out);
-        while (serial->available()) {
-            serial->read();
-        }
     }
 };
 
@@ -122,9 +94,19 @@ constexpr auto_identify_flag_t identify_flags_table[] = {
 
 void wait_sleep(UnitFinger2* u)
 {
-    m5::utility::delay(10 * 1000 + 100);
+    uint8_t sec{};
+    if (!u->readSleepTime(sec)) {
+        sec = u->config().sleep_time;
+    }
+    const uint32_t sleep_ms{sec * 1000U};
+    m5::utility::delay(sleep_ms + 100);
+    const auto start_at = m5::utility::millis();
     bool awake{true};
     while (awake) {
+        if (m5::utility::hasElapsed(start_at, 5000)) {
+            ADD_FAILURE() << "The unit did not go to sleep";
+            return;
+        }
         bool b{};
         if (u->readModuleStatus(b)) {
             // M5_LOGW("Awake? %u", b);
@@ -200,9 +182,7 @@ TEST_F(TestFinger2, Basic)
         EXPECT_EQ(params.database_capacity, 100u);
         EXPECT_EQ(params.score_level, 3);
         EXPECT_EQ(params.address, 0xFFFFFFFFu);
-        EXPECT_GE(params.packet_size, 0u);
         EXPECT_LE(params.packet_size, 3u);
-        EXPECT_EQ(params.address, 0xFFFFFFFFu);
         EXPECT_EQ(params.baud_rate, 6u);  // 57600 only (STM32 <-> Chip)
 
         //
@@ -229,6 +209,18 @@ TEST_F(TestFinger2, Basic)
         EXPECT_TRUE(unit->writeSystemRegister(RegisterID::PacketSize, 1));
         EXPECT_TRUE(unit->readSystemParams(params));
         EXPECT_EQ(params.packet_size, 1);
+
+        EXPECT_FALSE(unit->writeSystemRegister(RegisterID::ScoreLevel, 0));
+        EXPECT_FALSE(unit->writeSystemRegister(RegisterID::ScoreLevel, 6));
+        for (uint8_t lv = 1; lv <= 5; ++lv) {
+            EXPECT_TRUE(unit->writeSystemRegister(RegisterID::ScoreLevel, lv));
+            EXPECT_TRUE(unit->readSystemParams(params));
+            EXPECT_EQ(params.score_level, lv);
+        }
+        // Restore the default (stored in the module's flash)
+        EXPECT_TRUE(unit->writeSystemRegister(RegisterID::ScoreLevel, 3));
+        EXPECT_TRUE(unit->readSystemParams(params));
+        EXPECT_EQ(params.score_level, 3);
 
         //
         std::vector<uint32_t> rval{};
@@ -338,23 +330,23 @@ TEST_F(TestFinger2, Notepad)
         if (wm == WorkMode::ScheduledSleep) {
             wait_sleep(unit.get());
 
-            for (uint8_t page = 0; page < 8; ++page) {
+            for (uint8_t page = 0; page < 16; ++page) {
                 EXPECT_FALSE(unit->writeNotepad(page, write1, sizeof(write1)));
                 EXPECT_FALSE(unit->writeNotepad(page, write9, sizeof(write9)));
                 EXPECT_FALSE(unit->writeNotepad(page, write32, sizeof(write32)));
                 EXPECT_FALSE(unit->writeNotepad(page, write33, sizeof(write33)));
                 EXPECT_FALSE(unit->readNotepad(buf, page));
             }
-            EXPECT_FALSE(unit->writeNotepad(8, write1, sizeof(write1)));
+            EXPECT_FALSE(unit->writeNotepad(16, write1, sizeof(write1)));
             EXPECT_FALSE(unit->writeNotepad(255, write1, sizeof(write1)));
-            EXPECT_FALSE(unit->readNotepad(buf, 8));
+            EXPECT_FALSE(unit->readNotepad(buf, 16));
             EXPECT_FALSE(unit->readNotepad(buf, 255));
 
             continue;
         }
 
         // In active
-        for (uint8_t page = 0; page < 8; ++page) {
+        for (uint8_t page = 0; page < 16; ++page) {
             auto s = m5::utility::formatString("Page:%u", page);
             SCOPED_TRACE(s.c_str());
 
@@ -386,6 +378,26 @@ TEST_F(TestFinger2, Notepad)
             EXPECT_TRUE(unit->readNotepad(buf, page));
             EXPECT_TRUE(memcmp(buf, write9, 9) == 0);
             EXPECT_TRUE(memcmp(buf + 9, empty + 9, 32 - 9) == 0);
+        }
+
+        // Out of range
+        EXPECT_FALSE(unit->writeNotepad(16, write1, sizeof(write1)));
+        EXPECT_FALSE(unit->writeNotepad(255, write1, sizeof(write1)));
+        EXPECT_FALSE(unit->readNotepad(buf, 16));
+        EXPECT_FALSE(unit->readNotepad(buf, 255));
+
+        // Each page is independent (write all pages first, then read them back)
+        for (uint8_t page = 0; page < 16; ++page) {
+            uint8_t data[32]{};
+            std::fill(std::begin(data), std::end(data), static_cast<uint8_t>(0xA0 + page));
+            EXPECT_TRUE(unit->writeNotepad(page, data, sizeof(data)));
+        }
+        for (uint8_t page = 0; page < 16; ++page) {
+            auto s = m5::utility::formatString("Page:%u", page);
+            SCOPED_TRACE(s.c_str());
+            EXPECT_TRUE(unit->readNotepad(buf, page));
+            EXPECT_TRUE(std::all_of(std::begin(buf), std::end(buf),
+                                    [page](const uint8_t v) { return v == static_cast<uint8_t>(0xA0 + page); }));
         }
     }
 }
@@ -532,6 +544,17 @@ TEST_F(TestFinger2, Template)
         uint16_t actual{};
         EXPECT_TRUE(unit->readTemplateAllBatches(actual, tbuf.data(), tbuf.size()));
         EXPECT_EQ(actual, tbuf.size());
+
+        // buf_size that is not a multiple of batch_size must not write beyond buf_size
+        {
+            constexpr uint16_t part_size{200};
+            constexpr uint8_t guard{0xA5};
+            std::vector<uint8_t> pbuf(part_size + 64, guard);
+            EXPECT_TRUE(unit->readTemplateAllBatches(actual, pbuf.data(), part_size, 128));
+            EXPECT_EQ(actual, part_size);
+            EXPECT_TRUE(std::equal(pbuf.begin(), pbuf.begin() + part_size, tbuf.begin()));
+            EXPECT_TRUE(std::all_of(pbuf.begin() + part_size, pbuf.end(), [](const uint8_t v) { return v == guard; }));
+        }
 
         auto all = num;
         EXPECT_FALSE(unit->deleteTemplate(100));
@@ -680,7 +703,24 @@ TEST_F(TestFinger2, Finger)
     }
 }
 
-TEST_F(TestFinger2, Automatic)
+namespace {
+constexpr uint32_t TEST_AUTO_STEP_TIMEOUT_MS{2000};
+}  // namespace
+
+// Short auto_step_timeout_ms so that the automatic functions without a finger fail quickly
+class TestFinger2Automatic : public TestFinger2 {
+protected:
+    virtual UnitFinger2* get_instance() override
+    {
+        auto ptr                 = new m5::unit::UnitFinger2();
+        auto cfg                 = ptr->config();
+        cfg.auto_step_timeout_ms = TEST_AUTO_STEP_TIMEOUT_MS;
+        ptr->config(cfg);
+        return ptr;
+    }
+};
+
+TEST_F(TestFinger2Automatic, Automatic)
 {
     SCOPED_TRACE(ustr);
     for (auto&& wm : workmode_table) {
@@ -701,8 +741,15 @@ TEST_F(TestFinger2, Automatic)
             continue;
         }
 
+        // In active (no finger)
         ConfirmCode confirm{};
+        const auto restore_ms = serial->getTimeout();
+        const auto start_at   = m5::utility::millis();
         EXPECT_FALSE(unit->autoEnroll(confirm, 0));
+        // A step waits auto_step_timeout_ms, the command check and cancel use the normal timeout
+        EXPECT_LT(m5::utility::millis() - start_at, TEST_AUTO_STEP_TIMEOUT_MS + unit->config().timeout_ms);
+        EXPECT_EQ(serial->getTimeout(), restore_ms);
+
         bool matched{};
         uint16_t page{}, score{};
         EXPECT_FALSE(unit->autoIdentify(matched, page, score));
@@ -731,7 +778,10 @@ TEST_F(TestFinger2, Automatic)
 
 // --- deprecated API compatibility (no hardware required) ---
 
-TEST_F(TestFinger2, DeprecatedAPI)
+// The deprecated names are used on purpose
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+TEST(Finger2Deprecated, Alias)
 {
     // LEDMode::Bleath is a deprecated alias for LEDMode::Breath
     EXPECT_EQ(LEDMode::Bleath, LEDMode::Breath);
@@ -745,7 +795,12 @@ TEST_F(TestFinger2, DeprecatedAPI)
 
     // initializeFailed is a deprecated alias for InitializeFailed
     EXPECT_EQ(ConfirmCode::initializeFailed, ConfirmCode::InitializeFailed);
+
+    // PacketOverflow is a deprecated alias for ModuleBusy (0xFB)
+    EXPECT_EQ(ConfirmCode::PacketOverflow, ConfirmCode::ModuleBusy);
+    EXPECT_EQ(static_cast<uint8_t>(ConfirmCode::ModuleBusy), 0xFB);
 }
+#pragma GCC diagnostic pop
 
 TEST_F(TestFinger2, BeginConfig)
 {
@@ -774,6 +829,38 @@ TEST_F(TestFinger2, BeginConfig)
     // Restore defaults
     EXPECT_TRUE(unit->writeWorkMode(cfg.work_mode));
     EXPECT_TRUE(unit->writeSleepTime(cfg.sleep_time));
+}
+
+// begin() with a non-default config must apply it to the unit
+class TestFinger2Config : public TestFinger2 {
+protected:
+    virtual UnitFinger2* get_instance() override
+    {
+        auto ptr       = new m5::unit::UnitFinger2();
+        auto cfg       = ptr->config();
+        cfg.work_mode  = WorkMode::AlwaysActive;
+        cfg.sleep_time = 30;
+        ptr->config(cfg);
+        return ptr;
+    }
+};
+
+TEST_F(TestFinger2Config, BeginConfig)
+{
+    SCOPED_TRACE(ustr);
+
+    WorkMode mode{};
+    EXPECT_TRUE(unit->readWorkMode(mode));
+    EXPECT_EQ(mode, WorkMode::AlwaysActive);
+
+    uint8_t sec{};
+    EXPECT_TRUE(unit->readSleepTime(sec));
+    EXPECT_EQ(sec, 30);
+
+    // Restore defaults
+    const UnitFinger2::config_t def{};
+    EXPECT_TRUE(unit->writeWorkMode(def.work_mode));
+    EXPECT_TRUE(unit->writeSleepTime(def.sleep_time));
 }
 
 #if 0

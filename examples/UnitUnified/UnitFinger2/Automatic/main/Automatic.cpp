@@ -11,6 +11,9 @@
 #include <M5UnitUnifiedFINGER.h>
 #include <M5Utility.hpp>
 #include <wiring/m5_unit_unified_wiring.hpp>
+#include <algorithm>
+#include <cstring>
+#include <cstdio>
 
 using namespace m5::unit::finger2;
 
@@ -20,6 +23,74 @@ auto& lcd = M5.Display;
 m5::unit::UnitUnified Units;
 m5::unit::UnitFinger2 unit;
 auto_enroll_flag_t enroll_flags = auto_enroll_flag::ALLOW_OVERWRITE_PAGE;
+constexpr uint8_t CAPTURE_TIMES{5};
+
+constexpr char GUIDE[] = "Hold:Register Click:Identify";
+
+// Screen state (the background color tells the state)
+enum class State : uint8_t { Idle, Place, Release, Busy, Success, Failure };
+
+struct StateStyle {
+    uint16_t bg;
+    uint16_t fg;
+};
+constexpr StateStyle state_style[] = {
+    {TFT_DARKGREY, TFT_WHITE},   // Idle
+    {TFT_YELLOW, TFT_BLACK},     // Place
+    {TFT_BLUE, TFT_WHITE},       // Release
+    {TFT_ORANGE, TFT_BLACK},     // Busy
+    {TFT_DARKGREEN, TFT_WHITE},  // Success
+    {TFT_RED, TFT_WHITE},        // Failure
+};
+
+// Small text font: AsciiFont8x16 (scaled on a large screen), or Font0 (6x8) if the text does not fit the width w
+void set_small_font(const char* s, const int32_t w)
+{
+    lcd.setFont(&fonts::AsciiFont8x16);
+    lcd.setTextSize(std::max<int32_t>(1, lcd.width() / 320));
+    if (lcd.textWidth(s) > w) {
+        lcd.setFont(&fonts::Font0);
+        lcd.setTextSize(1);
+    }
+}
+
+// Small text whose top (or bottom if bottom is true) is at y
+// It is split into two lines at the last space if it does not fit, returns the height used
+int32_t draw_small(const char* s, const int32_t x, const int32_t y, const bool bottom)
+{
+    const int32_t w = lcd.width() - x;
+    set_small_font(s, w);
+    lcd.setTextDatum(bottom ? textdatum_t::bottom_left : textdatum_t::top_left);
+    const int32_t fh     = lcd.fontHeight();
+    const char* const sp = strrchr(s, ' ');
+    if (lcd.textWidth(s) <= w || !sp) {
+        lcd.drawString(s, x, y);
+        return fh;
+    }
+    char first[48]{};
+    snprintf(first, sizeof(first), "%.*s", static_cast<int>(sp - s), s);
+    lcd.drawString(first, x, bottom ? y - fh : y);
+    lcd.drawString(sp + 1, x, bottom ? y : y + fh);
+    return fh * 2;
+}
+
+// Status (large, centered) and guide (small, bottom)
+void draw_status(const State state, const char* status, const char* guide = GUIDE)
+{
+    if (!lcd.width()) {
+        return;  // No display
+    }
+    const auto& st = state_style[m5::stl::to_underlying(state)];
+    lcd.startWrite();
+    lcd.fillScreen(st.bg);
+    lcd.setFont(&fonts::AsciiFont8x16);
+    lcd.setTextColor(st.fg, st.bg);
+    lcd.setTextSize(std::max<int32_t>(1, lcd.width() / 160));
+    lcd.setTextDatum(textdatum_t::middle_center);
+    lcd.drawString(status, lcd.width() >> 1, lcd.height() >> 1);
+    draw_small(guide, 0, lcd.height(), true);
+    lcd.endWrite();
+}
 
 void print_exists_users()
 {
@@ -42,33 +113,38 @@ void print_exists_users()
 bool callback_enroll(const uint16_t call_times, const uint16_t page_id, const ConfirmCode confirm,
                      const AutoEnrollStage stage, const uint8_t state)
 {
-    lcd.startWrite();
+    char status[24]{};
     switch (stage) {
         case AutoEnrollStage::GetImage:
-            lcd.fillScreen(TFT_DARKGREEN);
+            snprintf(status, sizeof(status), "Reading %u/%u", state, CAPTURE_TIMES);
+            draw_status(State::Busy, status);
             break;
-        case AutoEnrollStage::GenerateCharacteristic: {
-            M5.Speaker.tone(3000, 20);
-            lcd.fillScreen(TFT_BLUE);
-            lcd.drawString("Please release finger", 0, 16);
-            M5.Log.printf("Please release finger(%u)\n", state);
-        } break;
+        case AutoEnrollStage::GenerateCharacteristic:
+            if (confirm != ConfirmCode::OK) {
+                // The unit waits for the next capture by itself
+                snprintf(status, sizeof(status), "Again %u/%u", state, CAPTURE_TIMES);
+                draw_status(State::Place, status);
+                M5.Log.printf("Please touch finger again(%u)\n", state);
+            } else if (state < CAPTURE_TIMES) {
+                M5.Speaker.tone(3000, 20);
+                snprintf(status, sizeof(status), "Release %u/%u", state, CAPTURE_TIMES);
+                draw_status(State::Release, status);
+                M5.Log.printf("Please release finger(%u)\n", state);
+            }
+            break;
         case AutoEnrollStage::ReleasedFinger:
-            lcd.fillScreen(TFT_ORANGE);
-            lcd.drawString("Please touch finger", 0, 16);
-            M5.Log.printf("Please touch finger(%u)\n", state);
+            snprintf(status, sizeof(status), "Place %u/%u", state + 1, CAPTURE_TIMES);
+            draw_status(State::Place, status);
+            M5.Log.printf("Please touch finger(%u)\n", state + 1);
             break;
         case AutoEnrollStage::MergeTemplate:
-            lcd.fillScreen(TFT_DARKGREEN);
+        case AutoEnrollStage::Inspection:
+            draw_status(State::Busy, "Storing");
             break;
         default:
             break;
     }
-    lcd.setCursor(0, 0);
-    lcd.printf("ENROLL:%02u %02u [%02X] (%02X)", call_times, (uint8_t)stage, (uint8_t)confirm, state);
     M5.Log.printf("  Enroll[%02u]:%02u [%02X] (%02X)\n", call_times, (uint8_t)stage, (uint8_t)confirm, state);
-    lcd.endWrite();
-
     return true;  // Abort if false
 }
 
@@ -87,10 +163,18 @@ void auto_enroll()
         }
 
         M5.Log.printf("Try register to %u\n", page);
-        if (unit.autoEnroll(confirm, page, 5 /* capture times */, enroll_flags, callback_enroll)) {
+        char status[24]{};
+        snprintf(status, sizeof(status), "Place 1/%u", CAPTURE_TIMES);
+        draw_status(State::Place, status);
+        if (unit.autoEnroll(confirm, page, CAPTURE_TIMES, enroll_flags, callback_enroll)) {
             highlow = !highlow;
             M5.Log.printf("Registered: %u\n", page);
+            M5.Speaker.tone(2000, 20);
+            snprintf(status, sizeof(status), "Registered %u", page);
+            draw_status(State::Success, status);
         } else {
+            M5.Speaker.tone(800, 40);
+            draw_status(State::Failure, "Failed");
             M5_LOGE("Failed to autoEnroll %02X, %u", confirm, page);
             switch (confirm) {
                 case ConfirmCode::TemplateNotEmpty:
@@ -107,7 +191,6 @@ void auto_enroll()
                     break;
             }
         }
-        lcd.fillScreen(TFT_DARKGREEN);
     } else {
         M5_LOGE("Failed to wakeup");
     }
@@ -115,10 +198,9 @@ void auto_enroll()
 
 bool callback_identify(const uint16_t call_times, const ConfirmCode confirm, const AutoIdentifyStage stage)
 {
-    lcd.startWrite();
-    lcd.setCursor(0, 0);
-    lcd.printf("IDENTIFY:%02u [%02X]", (uint8_t)stage, (uint8_t)confirm);
-    lcd.endWrite();
+    if (stage == AutoIdentifyStage::GetImage) {
+        draw_status(State::Busy, "Searching");
+    }
     M5.Log.printf("  Identify[%02u]:%02u [%02X]\n", call_times, (uint8_t)stage, (uint8_t)confirm);
     return true;  // Abort if false
 }
@@ -130,19 +212,28 @@ void auto_identify()
     uint16_t score{};
 
     if (unit.wakeup()) {
+        char status[24]{};
         // 1:N
+        draw_status(State::Place, "Place finger");
         if (unit.autoIdentify(matched, page, score, 0xFFFF, 0, 0x0000, callback_identify)) {
             M5.Log.printf("<1:N> %s: Page:%u: Score:%u\n", matched ? "Found" : "Not found", page, score);
             if (matched) {
                 // 1:1
+                draw_status(State::Place, "Place again");
                 if (unit.autoIdentify(matched, page, score, page, 0, 0x0000, callback_identify)) {
                     M5.Log.printf("<1:1> %s: Page:%u: Score:%u\n", matched ? "Match" : "Unmatched", page, score);
+                    snprintf(status, sizeof(status), matched ? "Matched %u" : "Unmatched %u", page);
+                    draw_status(matched ? State::Success : State::Failure, status);
                 } else {
                     M5_LOGE("Failed to autoIdentify(1:1)");
+                    draw_status(State::Failure, "Failed");
                 }
+            } else {
+                draw_status(State::Failure, "Not found");
             }
         } else {
             M5_LOGE("Failed to autoIdentify(1:N)");
+            draw_status(State::Failure, "Failed");
         }
     } else {
         M5_LOGE("Failed to wakeup");
@@ -170,10 +261,8 @@ void setup()
     M5_LOGI("M5UnitUnified initialized");
     M5_LOGI("%s", Units.debugInfo().c_str());
 
-    lcd.fillScreen(TFT_DARKGREEN);
-    lcd.setFont(&fonts::AsciiFont8x16);
-
     print_exists_users();
+    draw_status(State::Idle, "Place finger");
 }
 
 void loop()
@@ -200,14 +289,16 @@ void loop()
 #include <esp_timer.h>
 
 #if CONFIG_FREERTOS_UNICORE
+// Single-core SoCs: run loop() back-to-back, but every ~2 s yield a 5 ms slice so the IDLE task
+// runs and feeds the task watchdog (default 5 s).
 static inline void feedIdleTaskPeriodically(void)
 {
-    constexpr uint32_t FEED_INTERVAL_MS   = 2000;
-    constexpr TickType_t FEED_SLEEP_TICKS = pdMS_TO_TICKS(5);
-    static uint32_t s_next_feed_ms        = 0;
-    const uint32_t now_ms                 = static_cast<uint32_t>(esp_timer_get_time() / 1000);
-    if (now_ms >= s_next_feed_ms) {
-        s_next_feed_ms = now_ms + FEED_INTERVAL_MS;
+    constexpr uint32_t FEED_INTERVAL_MS{2000};
+    constexpr TickType_t FEED_SLEEP_TICKS{pdMS_TO_TICKS(5)};
+    static uint32_t s_last_feed_ms{};
+    const uint32_t now_ms{static_cast<uint32_t>(esp_timer_get_time() / 1000)};
+    if (now_ms - s_last_feed_ms >= FEED_INTERVAL_MS) {
+        s_last_feed_ms = now_ms;
         vTaskDelay(FEED_SLEEP_TICKS);
     }
 }

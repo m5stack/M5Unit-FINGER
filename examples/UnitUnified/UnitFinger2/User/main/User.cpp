@@ -13,6 +13,8 @@
 #include <wiring/m5_unit_unified_wiring.hpp>
 #include <esp_random.h>
 #include <algorithm>
+#include <cstring>
+#include <cstdio>
 
 using namespace m5::unit::finger2;
 
@@ -28,6 +30,110 @@ m5::unit::UnitFinger2 unit;
 uint32_t cur_menu{};
 uint16_t cur_user{0};
 
+constexpr char GUIDE[] = "Hold:Next Click:Select";
+
+// Screen state (the background color tells the state)
+enum class State : uint8_t { Idle, Place, Release, Busy, Success, Failure };
+
+struct StateStyle {
+    uint16_t bg;
+    uint16_t fg;
+};
+constexpr StateStyle state_style[] = {
+    {TFT_DARKGREY, TFT_WHITE},   // Idle
+    {TFT_YELLOW, TFT_BLACK},     // Place
+    {TFT_BLUE, TFT_WHITE},       // Release
+    {TFT_ORANGE, TFT_BLACK},     // Busy
+    {TFT_DARKGREEN, TFT_WHITE},  // Success
+    {TFT_RED, TFT_WHITE},        // Failure
+};
+
+// Small text font: AsciiFont8x16 (scaled on a large screen), or Font0 (6x8) if the text does not fit the width w
+void set_small_font(const char* s, const int32_t w)
+{
+    lcd.setFont(&fonts::AsciiFont8x16);
+    lcd.setTextSize(std::max<int32_t>(1, lcd.width() / 320));
+    if (lcd.textWidth(s) > w) {
+        lcd.setFont(&fonts::Font0);
+        lcd.setTextSize(1);
+    }
+}
+
+// Small text whose top (or bottom if bottom is true) is at y
+// It is split into two lines at the last space if it does not fit, returns the height used
+int32_t draw_small(const char* s, const int32_t x, const int32_t y, const bool bottom)
+{
+    const int32_t w = lcd.width() - x;
+    set_small_font(s, w);
+    lcd.setTextDatum(bottom ? textdatum_t::bottom_left : textdatum_t::top_left);
+    const int32_t fh     = lcd.fontHeight();
+    const char* const sp = strrchr(s, ' ');
+    if (lcd.textWidth(s) <= w || !sp) {
+        lcd.drawString(s, x, y);
+        return fh;
+    }
+    char first[48]{};
+    snprintf(first, sizeof(first), "%.*s", static_cast<int>(sp - s), s);
+    lcd.drawString(first, x, bottom ? y - fh : y);
+    lcd.drawString(sp + 1, x, bottom ? y : y + fh);
+    return fh * 2;
+}
+
+// Status (large, centered) and guide (small, bottom)
+void draw_status(const State state, const char* status, const char* guide = GUIDE)
+{
+    if (!lcd.width()) {
+        return;  // No display
+    }
+    const auto& st = state_style[m5::stl::to_underlying(state)];
+    lcd.startWrite();
+    lcd.fillScreen(st.bg);
+    lcd.setFont(&fonts::AsciiFont8x16);
+    lcd.setTextColor(st.fg, st.bg);
+    lcd.setTextSize(std::max<int32_t>(1, lcd.width() / 160));
+    lcd.setTextDatum(textdatum_t::middle_center);
+    lcd.drawString(status, lcd.width() >> 1, lcd.height() >> 1);
+    draw_small(guide, 0, lcd.height(), true);
+    lcd.endWrite();
+}
+
+char last_result[48]{};
+constexpr const char* menu_items[] = {"Change user", "Show template", "Show all users", "Delete user",
+                                      "Delete all users"};
+
+// Menu with the selected item highlighted, the last result and the guide
+void draw_menu()
+{
+    if (!lcd.width()) {
+        return;  // No display
+    }
+    const int32_t sz     = std::max<int32_t>(1, lcd.width() / 320);
+    const int32_t line_h = 16 * sz;
+
+    char header[32]{};
+    snprintf(header, sizeof(header), "Current user:%u", cur_user);
+
+    lcd.startWrite();
+    lcd.fillScreen(TFT_DARKGREY);
+    lcd.setTextColor(TFT_WHITE, TFT_DARKGREY);
+    draw_small(header, 0, 0, false);
+    lcd.setFont(&fonts::AsciiFont8x16);
+    lcd.setTextSize(sz);
+    for (uint32_t i = 0; i < m5::stl::size(menu_items); ++i) {
+        const bool selected = (i == cur_menu);
+        const int32_t y     = line_h * static_cast<int32_t>(i + 1);
+        if (selected) {
+            lcd.fillRect(0, y, lcd.width(), line_h, TFT_YELLOW);
+        }
+        lcd.setTextColor(selected ? TFT_BLACK : TFT_WHITE, selected ? TFT_YELLOW : TFT_DARKGREY);
+        lcd.drawString(menu_items[i], 0, y);
+    }
+    lcd.setTextColor(TFT_WHITE, TFT_DARKGREY);
+    const int32_t guide_h = draw_small(GUIDE, 0, lcd.height(), true);
+    draw_small(last_result, 0, lcd.height() - guide_h, true);
+    lcd.endWrite();
+}
+
 bool callback_batch(const uint16_t call_times, const uint16_t actual_size, const uint16_t batch_size,
                     const uint16_t total_size, const uint16_t planned_size, const bool completed)
 {
@@ -39,7 +145,10 @@ bool callback_batch(const uint16_t call_times, const uint16_t actual_size, const
 
 void make_random_user()
 {
-    unit.wakeup();
+    if (!unit.wakeup()) {
+        M5_LOGE("Failed to wakeup");
+        return;
+    }
 
     // Template to buffer
     if (!unit.writeTemplateAllBatches(template_data, template_data_size, 128, callback_batch)) {
@@ -87,12 +196,14 @@ void show_menu()
         "%c Delete all users\n",
         cur_user, cur_menu == 0 ? '*' : ' ', cur_menu == 1 ? '*' : ' ', cur_menu == 2 ? '*' : ' ',
         cur_menu == 3 ? '*' : ' ', cur_menu == 4 ? '*' : ' ');
+    draw_menu();
 }
 
 // The function will not return until a selection is made
 int select_menu()
 {
     for (;;) {
+        m5::utility::delay(1);
         M5.update();
         Units.update();
 
@@ -115,13 +226,15 @@ int select_menu()
 bool select_yesno()
 {
     for (;;) {
+        m5::utility::delay(1);
         M5.update();
         Units.update();
+        // Hold to confirm, so that a click by mistake does not delete
         if (M5.BtnA.wasHold()) {
-            return false;
+            return true;
         }
         if (M5.BtnA.wasClicked()) {
-            return true;
+            return false;
         }
     }
 }
@@ -146,7 +259,6 @@ void setup()
 
     M5_LOGI("M5UnitUnified initialized");
     M5_LOGI("%s", Units.debugInfo().c_str());
-    lcd.fillScreen(TFT_DARKGREEN);
 
     // If the number of registered templates is 0, dummy data is registered
     uint16_t num{};
@@ -167,35 +279,48 @@ void loop()
                 std::vector<uint8_t> temp{};
                 temp.resize(m5::unit::UnitFinger2::TEMPLATE_SIZE);
                 uint16_t actual{};
-                if (unit.readTemplateAllBatches(actual, temp.data(), temp.size(), 256, callback_batch)) {
+                if (unit.readTemplateAllBatches(actual, temp.data(), temp.size(), 256, callback_batch) &&
+                    actual == temp.size()) {
                     m5::utility::log::dump(temp.data(), actual, false);
+                    snprintf(last_result, sizeof(last_result), "Template %u on serial", cur_user);
                 } else {
-                    M5_LOGE("Failed to readTemplateAllBatches %u", cur_user);
+                    M5_LOGE("Failed to readTemplateAllBatches %u (%u/%u)", cur_user, actual,
+                            static_cast<unsigned>(temp.size()));
+                    snprintf(last_result, sizeof(last_result), "Failed to read template:%u", cur_user);
                 }
             } else {
                 M5_LOGE("Failed to loadTemplate %u", cur_user);
+                snprintf(last_result, sizeof(last_result), "No template:%u", cur_user);
             }
 
         } break;
         case 2:
             print_exists_users();
+            snprintf(last_result, sizeof(last_result), "Listed on serial");
             break;
         case 3:
             if (unit.wakeup() && unit.deleteTemplate(cur_user)) {
                 M5.Log.printf("==> User %u deleted\n", cur_user);
+                snprintf(last_result, sizeof(last_result), "Deleted user:%u", cur_user);
             } else {
                 M5_LOGE("Failed to deleteTemplate %u", cur_user);
+                snprintf(last_result, sizeof(last_result), "Failed to delete:%u", cur_user);
             }
             break;
         case 4:
-            M5.Log.printf("==> Delete all user sure?\n");
+            M5.Log.printf("==> Delete all users? (Hold:Yes Click:No)\n");
+            draw_status(State::Failure, "Delete all?", "Hold:Yes Click:No");
             if (select_yesno()) {
                 if (unit.wakeup() && unit.clear()) {
                     M5.Log.printf("==> All users deleted\n");
+                    snprintf(last_result, sizeof(last_result), "All users deleted");
                     cur_user = 0;
                 } else {
                     M5_LOGE("Failed to clear");
+                    snprintf(last_result, sizeof(last_result), "Failed to delete all");
                 }
+            } else {
+                snprintf(last_result, sizeof(last_result), "Cancelled");
             }
             break;
         default:
@@ -211,14 +336,16 @@ void loop()
 #include <esp_timer.h>
 
 #if CONFIG_FREERTOS_UNICORE
+// Single-core SoCs: run loop() back-to-back, but every ~2 s yield a 5 ms slice so the IDLE task
+// runs and feeds the task watchdog (default 5 s).
 static inline void feedIdleTaskPeriodically(void)
 {
-    constexpr uint32_t FEED_INTERVAL_MS   = 2000;
-    constexpr TickType_t FEED_SLEEP_TICKS = pdMS_TO_TICKS(5);
-    static uint32_t s_next_feed_ms        = 0;
-    const uint32_t now_ms                 = static_cast<uint32_t>(esp_timer_get_time() / 1000);
-    if (now_ms >= s_next_feed_ms) {
-        s_next_feed_ms = now_ms + FEED_INTERVAL_MS;
+    constexpr uint32_t FEED_INTERVAL_MS{2000};
+    constexpr TickType_t FEED_SLEEP_TICKS{pdMS_TO_TICKS(5)};
+    static uint32_t s_last_feed_ms{};
+    const uint32_t now_ms{static_cast<uint32_t>(esp_timer_get_time() / 1000)};
+    if (now_ms - s_last_feed_ms >= FEED_INTERVAL_MS) {
+        s_last_feed_ms = now_ms;
         vTaskDelay(FEED_SLEEP_TICKS);
     }
 }

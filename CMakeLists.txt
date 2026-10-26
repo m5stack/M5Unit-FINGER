@@ -1,4 +1,4 @@
-# ESP-IDF component manifest for M5Unit-FINGER.
+# ESP-IDF component registration for M5Unit-FINGER.
 # Upstream: https://github.com/m5stack/M5Unit-FINGER
 #
 # UnitFPC1020A (UnitFinger / HatFinger / FacesFinger) and UnitFinger2 over UART.
