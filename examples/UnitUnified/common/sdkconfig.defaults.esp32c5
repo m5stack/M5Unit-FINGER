@@ -1,0 +1,8 @@
+# ESP32-C5 (e.g. M5ToughC5) console selection.
+# Applied automatically for the esp32c5 target alongside common/sdkconfig.defaults.
+#
+# The ESP32-C5 UART0 default pins are G12 (RX) / G11 (TX), which are the GROVE PortC pins on the
+# M5ToughC5. With the default UART0 console, ESP_LOG output would be sent to the unit on PortC.
+# Use the USB-Serial-JTAG as the primary console instead, like Arduino with CDC on boot.
+# The ROM bootloader still prints its banner on G11 at reset (only an eFuse can stop that).
+CONFIG_ESP_CONSOLE_USB_SERIAL_JTAG=y
