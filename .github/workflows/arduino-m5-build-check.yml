@@ -138,13 +138,13 @@ jobs:
             board: m5stack_core
 
           # HatFinger
-          - sketch: PlotToSerial
-            unit: HatFinger
-            platform-url: https://m5stack.oss-cn-shenzhen.aliyuncs.com/resource/arduino/package_m5stack_index.json
-            platform: m5stack
-            archi: esp32
-            platform-version: 3.3.9
-            board: m5stack_stickc_plus
+#          - sketch: PlotToSerial  # ESP32: represented by m5stack_stickc_plus2
+#            unit: HatFinger
+#            platform-url: https://m5stack.oss-cn-shenzhen.aliyuncs.com/resource/arduino/package_m5stack_index.json
+#            platform: m5stack
+#            archi: esp32
+#            platform-version: 3.3.9
+#            board: m5stack_stickc_plus
           - sketch: PlotToSerial
             unit: HatFinger
             platform-url: https://m5stack.oss-cn-shenzhen.aliyuncs.com/resource/arduino/package_m5stack_index.json
@@ -159,34 +159,34 @@ jobs:
             archi: esp32
             platform-version: 3.3.9
             board: m5stack_sticks3
-          - sketch: PlotToSerial
-            unit: HatFinger
-            platform-url: https://m5stack.oss-cn-shenzhen.aliyuncs.com/resource/arduino/package_m5stack_index.json
-            platform: m5stack
-            archi: esp32
-            platform-version: 3.3.9
-            board: m5stack_coreink
-          - sketch: Capture
-            unit: HatFinger
-            platform-url: https://m5stack.oss-cn-shenzhen.aliyuncs.com/resource/arduino/package_m5stack_index.json
-            platform: m5stack
-            archi: esp32
-            platform-version: 3.3.9
-            board: m5stack_stickc_plus2
-          - sketch: Characteristic
-            unit: HatFinger
-            platform-url: https://m5stack.oss-cn-shenzhen.aliyuncs.com/resource/arduino/package_m5stack_index.json
-            platform: m5stack
-            archi: esp32
-            platform-version: 3.3.9
-            board: m5stack_stickc_plus2
-          - sketch: User
-            unit: HatFinger
-            platform-url: https://m5stack.oss-cn-shenzhen.aliyuncs.com/resource/arduino/package_m5stack_index.json
-            platform: m5stack
-            archi: esp32
-            platform-version: 3.3.9
-            board: m5stack_stickc_plus2
+#          - sketch: PlotToSerial  # ESP32: represented by m5stack_stickc_plus2
+#            unit: HatFinger
+#            platform-url: https://m5stack.oss-cn-shenzhen.aliyuncs.com/resource/arduino/package_m5stack_index.json
+#            platform: m5stack
+#            archi: esp32
+#            platform-version: 3.3.9
+#            board: m5stack_coreink
+#          - sketch: Capture  # variant wiring is covered by PlotToSerial
+#            unit: HatFinger
+#            platform-url: https://m5stack.oss-cn-shenzhen.aliyuncs.com/resource/arduino/package_m5stack_index.json
+#            platform: m5stack
+#            archi: esp32
+#            platform-version: 3.3.9
+#            board: m5stack_stickc_plus2
+#          - sketch: Characteristic  # variant wiring is covered by PlotToSerial
+#            unit: HatFinger
+#            platform-url: https://m5stack.oss-cn-shenzhen.aliyuncs.com/resource/arduino/package_m5stack_index.json
+#            platform: m5stack
+#            archi: esp32
+#            platform-version: 3.3.9
+#            board: m5stack_stickc_plus2
+#          - sketch: User  # variant wiring is covered by PlotToSerial
+#            unit: HatFinger
+#            platform-url: https://m5stack.oss-cn-shenzhen.aliyuncs.com/resource/arduino/package_m5stack_index.json
+#            platform: m5stack
+#            archi: esp32
+#            platform-version: 3.3.9
+#            board: m5stack_stickc_plus2
 
           # FacesFinger (M-Bus, Core/Fire only)
           - sketch: PlotToSerial
@@ -196,34 +196,34 @@ jobs:
             archi: esp32
             platform-version: 3.3.9
             board: m5stack_core
-          - sketch: PlotToSerial
-            unit: FacesFinger
-            platform-url: https://m5stack.oss-cn-shenzhen.aliyuncs.com/resource/arduino/package_m5stack_index.json
-            platform: m5stack
-            archi: esp32
-            platform-version: 3.3.9
-            board: m5stack_fire
-          - sketch: Capture
-            unit: FacesFinger
-            platform-url: https://m5stack.oss-cn-shenzhen.aliyuncs.com/resource/arduino/package_m5stack_index.json
-            platform: m5stack
-            archi: esp32
-            platform-version: 3.3.9
-            board: m5stack_core
-          - sketch: Characteristic
-            unit: FacesFinger
-            platform-url: https://m5stack.oss-cn-shenzhen.aliyuncs.com/resource/arduino/package_m5stack_index.json
-            platform: m5stack
-            archi: esp32
-            platform-version: 3.3.9
-            board: m5stack_core
-          - sketch: User
-            unit: FacesFinger
-            platform-url: https://m5stack.oss-cn-shenzhen.aliyuncs.com/resource/arduino/package_m5stack_index.json
-            platform: m5stack
-            archi: esp32
-            platform-version: 3.3.9
-            board: m5stack_core
+#          - sketch: PlotToSerial  # ESP32: represented by m5stack_core
+#            unit: FacesFinger
+#            platform-url: https://m5stack.oss-cn-shenzhen.aliyuncs.com/resource/arduino/package_m5stack_index.json
+#            platform: m5stack
+#            archi: esp32
+#            platform-version: 3.3.9
+#            board: m5stack_fire
+#          - sketch: Capture  # variant wiring is covered by PlotToSerial
+#            unit: FacesFinger
+#            platform-url: https://m5stack.oss-cn-shenzhen.aliyuncs.com/resource/arduino/package_m5stack_index.json
+#            platform: m5stack
+#            archi: esp32
+#            platform-version: 3.3.9
+#            board: m5stack_core
+#          - sketch: Characteristic  # variant wiring is covered by PlotToSerial
+#            unit: FacesFinger
+#            platform-url: https://m5stack.oss-cn-shenzhen.aliyuncs.com/resource/arduino/package_m5stack_index.json
+#            platform: m5stack
+#            archi: esp32
+#            platform-version: 3.3.9
+#            board: m5stack_core
+#          - sketch: User  # variant wiring is covered by PlotToSerial
+#            unit: FacesFinger
+#            platform-url: https://m5stack.oss-cn-shenzhen.aliyuncs.com/resource/arduino/package_m5stack_index.json
+#            platform: m5stack
+#            archi: esp32
+#            platform-version: 3.3.9
+#            board: m5stack_core
 
           # UnitFinger2 extra sketches
           - sketch: Capture

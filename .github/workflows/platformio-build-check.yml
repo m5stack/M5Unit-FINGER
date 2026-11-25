@@ -131,21 +131,21 @@ jobs:
 #            board: CoreInk
 #            framework: Arduino
 #            espressif32: latest
-          - example: Capture
-            unit: HatFinger
-            board: StickCPlus2
-            framework: Arduino
-            espressif32: latest
-          - example: Characteristic
-            unit: HatFinger
-            board: StickCPlus2
-            framework: Arduino
-            espressif32: latest
-          - example: User
-            unit: HatFinger
-            board: StickCPlus2
-            framework: Arduino
-            espressif32: latest
+#          - example: Capture  # variant wiring is covered by PlotToSerial
+#            unit: HatFinger
+#            board: StickCPlus2
+#            framework: Arduino
+#            espressif32: latest
+#          - example: Characteristic  # variant wiring is covered by PlotToSerial
+#            unit: HatFinger
+#            board: StickCPlus2
+#            framework: Arduino
+#            espressif32: latest
+#          - example: User  # variant wiring is covered by PlotToSerial
+#            unit: HatFinger
+#            board: StickCPlus2
+#            framework: Arduino
+#            espressif32: latest
 
 
           # FacesFinger (M-Bus, Core/Fire only)
@@ -154,26 +154,26 @@ jobs:
             board: Core
             framework: Arduino
             espressif32: latest
-          - example: PlotToSerial
-            unit: FacesFinger
-            board: Fire
-            framework: Arduino
-            espressif32: latest
-          - example: Capture
-            unit: FacesFinger
-            board: Core
-            framework: Arduino
-            espressif32: latest
-          - example: Characteristic
-            unit: FacesFinger
-            board: Core
-            framework: Arduino
-            espressif32: latest
-          - example: User
-            unit: FacesFinger
-            board: Core
-            framework: Arduino
-            espressif32: latest
+#          - example: PlotToSerial  # ESP32: represented by Core
+#            unit: FacesFinger
+#            board: Fire
+#            framework: Arduino
+#            espressif32: latest
+#          - example: Capture  # variant wiring is covered by PlotToSerial
+#            unit: FacesFinger
+#            board: Core
+#            framework: Arduino
+#            espressif32: latest
+#          - example: Characteristic  # variant wiring is covered by PlotToSerial
+#            unit: FacesFinger
+#            board: Core
+#            framework: Arduino
+#            espressif32: latest
+#          - example: User  # variant wiring is covered by PlotToSerial
+#            unit: FacesFinger
+#            board: Core
+#            framework: Arduino
+#            espressif32: latest
 
           - example: Capture
             unit: UnitFinger2
