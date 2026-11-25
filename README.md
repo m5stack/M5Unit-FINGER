@@ -86,6 +86,8 @@ The **UnitFinger2** examples drive a single unit over UART and have no variant c
 
 **ESP32-P4 / M5Tab5:** early P4 silicon (M5Tab5 reports revision v1.0) is rejected by the IDF v5.5+ default minimum chip revision (v3.1), so flashing fails with `bootloader.bin requires chip revision in range [v3.1 - v3.99]`. `examples/UnitUnified/common/sdkconfig.defaults.esp32p4` lowers the minimum so every P4 revision boots; it is applied automatically when the target is `esp32p4`.
 
+**ESP32-C5 / M5ToughC5:** ESP-IDF **5.5 or later** is required for the ESP32-C5 (earlier versions only support pre-production silicon). The ESP32-C5 UART0 default pins are G12/G11, the same pins as GROVE PortC on the M5ToughC5. `examples/UnitUnified/common/sdkconfig.defaults.esp32c5` moves the console to USB-Serial-JTAG so that log output is not sent to the unit; it is applied automatically when the target is `esp32c5`. The ROM bootloader still prints its banner on G11 at reset.
+
 ## Doxygen document
 [GitHub Pages](https://m5stack.github.io/M5Unit-FINGER/)
 
