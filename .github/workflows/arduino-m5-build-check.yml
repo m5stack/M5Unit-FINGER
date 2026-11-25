@@ -99,6 +99,7 @@ jobs:
           - m5stack_tab5
 #          - m5stack_timer_cam
 #          - m5stack_tough
+          - m5stack_toughc5  # ESP32-C5 (only m5stack:esp32 carries this FQBN)
 #          - m5stack_unit_c6l
 #          - m5stack_unit_cam
 #          - m5stack_unit_cams3

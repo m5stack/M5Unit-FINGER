@@ -85,6 +85,7 @@ jobs:
 #          - Cardputer  # ESP32-S3: represented by CoreS3
           - Tab5
 #          - NessoN1  # ESP32-C6: represented by NanoC6
+          - ToughC5  # ESP32-C5
 
         framework:
           - Arduino
